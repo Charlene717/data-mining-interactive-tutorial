@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 5: Classification Overview — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html" class="active">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 5 / 20 · MODULE B</div>
+<h1 data-zh="分類概論：KNN 與 Logistic Regression" data-en="Classification Overview: KNN & Logistic Regression">分類概論：KNN 與 Logistic Regression</h1>
+<p class="subtitle" data-lang="zh">分類是監督式學習的基石。從最直觀的 KNN「物以類聚」，到 Logistic Regression 的機率輸出與可解釋係數——兩者分別代表 lazy learner 與 parametric model 的兩端。</p>
+<p class="subtitle" data-lang="en">Classification is the cornerstone of supervised learning. From the intuitive "birds of a feather" KNN to Logistic Regression's probabilistic outputs and interpretable coefficients — they represent the two ends of the lazy-vs-parametric spectrum.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="什麼是分類？" data-en="What is Classification?">什麼是分類？</h2>
+<div data-lang="zh">
+<p>分類 (classification) 是給定特徵 X 預測<strong>離散標籤</strong> y ∈ {0,1,…,K-1} 的監督式學習任務。二元分類（如糖尿病/非糖尿病）最常見，多元分類（如 ICD 章節）需要 softmax 或 one-vs-rest 策略。</p>
+<p>本章聚焦兩個「入門即經典」的方法：<strong>KNN</strong>（無模型、依賴距離）與 <strong>Logistic Regression</strong>（線性參數模型、輸出機率）。它們分別示範了「記憶」與「歸納」兩種根本不同的學習哲學。</p>
+</div>
+<div data-lang="en">
+<p>Classification is the supervised task of predicting a <strong>discrete label</strong> y ∈ {0,1,…,K-1} from features X. Binary tasks (e.g., diabetic vs not) are the most common; multiclass tasks (e.g., ICD chapter) require softmax or one-vs-rest strategies.</p>
+<p>This chapter focuses on two "entry-level classics": <strong>KNN</strong> (non-parametric, distance-based) and <strong>Logistic Regression</strong> (parametric, probabilistic). They embody two fundamentally different learning philosophies — <em>memorize</em> vs <em>generalize</em>.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="KNN" data-en="KNN">KNN</div>
+<h2 data-zh="一、K-Nearest Neighbors" data-en="I. K-Nearest Neighbors">一、K-Nearest Neighbors</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">🧭</div><h4 data-zh="直覺" data-en="Intuition">直覺</h4><div data-lang="zh"><p>查詢點的類別 = 最近 K 個鄰居的多數投票。沒有「訓練」階段，模型 = 全部訓練資料。</p></div><div data-lang="en"><p>The query label = majority vote among the K closest neighbors. No "training" phase — the model IS the training data.</p></div></div>
+<div class="card"><div class="card-icon">🎯</div><h4 data-zh="K 的取捨" data-en="Choosing K">K 的取捨</h4><div data-lang="zh"><p>K 小 → 低偏差高變異（過擬合、易受雜訊影響）；K 大 → 高偏差低變異（過平滑）。常用 √n 或交叉驗證。</p></div><div data-lang="en"><p>Small K → low bias, high variance (overfits noise); large K → high bias, low variance (oversmoothes). Use √n or CV.</p></div></div>
+<div class="card"><div class="card-icon">⚠️</div><h4 data-zh="陷阱" data-en="Pitfalls">陷阱</h4><div data-lang="zh"><p>必須先 scaling；高維時失效（curse of dimensionality）；類別不平衡時投票傾向多數類，需 weighted KNN。</p></div><div data-lang="en"><p>Must scale first; fails in high-D (curse of dimensionality); class imbalance biases votes — use weighted KNN.</p></div></div>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>距離加權：</strong>weighted KNN 將鄰居以 1/d 加權，比單純多數投票更穩健，sklearn 設 <code>weights='distance'</code> 即可。</span>
+<span data-lang="en"><strong>Distance weighting:</strong> Weighted KNN votes by 1/d — more robust than plain majority. In sklearn, set <code>weights='distance'</code>.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="KNN 決策邊界：拖動 K 觀察變化" data-en="KNN Decision Boundary: Drag K to See Change">KNN 決策邊界：拖動 K 觀察變化</h2>
+<div data-lang="zh"><p>在二維玩具資料上跑 KNN——K 小時邊界凹凸不平（過擬合），K 大時邊界平滑但會誤分稀有點。</p></div>
+<div data-lang="en"><p>Run KNN on a 2D toy dataset — small K gives jagged boundaries (overfit), large K oversmoothes and misclassifies rare points.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row" style="align-items:center;gap:1rem">
+<label>K = <strong id="knnKVal">5</strong></label>
+<input type="range" id="knnK" min="1" max="25" value="5" step="2" style="flex:1;max-width:300px">
+</div>
+<div class="chart-container"><canvas id="knnChart"></canvas></div>
+<div id="knnStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="Logistic Regression" data-en="Logistic Regression">Logistic Regression</div>
+<h2 data-zh="二、邏輯迴歸：輸出機率的線性模型" data-en="II. Logistic Regression: A Linear Model that Outputs Probability">二、邏輯迴歸</h2>
+<div data-lang="zh">
+<p>線性迴歸輸出實數，但分類需要 [0,1] 機率。Logistic Regression 用 <strong>sigmoid</strong> σ(z) = 1/(1+e<sup>-z</sup>) 把線性組合 z = β₀ + β·x 壓到 [0,1]。對 odds 取對數即得線性形式：log(p/(1-p)) = β·x，因此係數 β<sub>j</sub> 的解釋是「x<sub>j</sub> 增加 1 單位，log-odds 增加 β<sub>j</sub>」或「odds 乘以 e<sup>β<sub>j</sub></sup>」。</p>
+<p>多元分類用 <strong>Softmax</strong>：p(y=k) = e<sup>z<sub>k</sub></sup> / Σ e<sup>z<sub>j</sub></sup>，等同於 K-way Logistic Regression。</p>
+</div>
+<div data-lang="en">
+<p>Linear regression outputs real numbers, but classification needs probabilities in [0,1]. Logistic Regression uses the <strong>sigmoid</strong> σ(z) = 1/(1+e<sup>-z</sup>) to squash z = β₀ + β·x into [0,1]. Taking log of the odds gives a linear form: log(p/(1-p)) = β·x. Each β<sub>j</sub> means: "a unit increase in x<sub>j</sub> raises log-odds by β<sub>j</sub>" — i.e., multiplies the odds by e<sup>β<sub>j</sub></sup>.</p>
+<p>Multiclass uses <strong>Softmax</strong>: p(y=k) = e<sup>z<sub>k</sub></sup> / Σ e<sup>z<sub>j</sub></sup> — equivalent to K-way Logistic Regression.</p>
+</div>
+<table class="comp-table">
+<thead><tr><th data-zh="正則化" data-en="Regularization">正則化</th><th data-zh="懲罰項" data-en="Penalty">懲罰項</th><th data-zh="效果" data-en="Effect">效果</th><th data-zh="何時用" data-en="When">何時用</th></tr></thead>
+<tbody>
+<tr><td><strong>L1 (Lasso)</strong></td><td>λΣ|β<sub>j</sub>|</td><td data-zh="稀疏解（部分 β=0）→ 自動特徵選擇">稀疏解</td><td data-zh="高維、想做特徵選擇（基因/SNP）">高維特徵選擇</td></tr>
+<tr><td><strong>L2 (Ridge)</strong></td><td>λΣβ<sub>j</sub>²</td><td data-zh="縮小所有係數，不歸零 → 處理多重共線">縮小但不歸零</td><td data-zh="多重共線、預測為主">多重共線</td></tr>
+<tr><td><strong>Elastic Net</strong></td><td>αL1 + (1-α)L2</td><td data-zh="兼具稀疏與穩定">兼具兩者</td><td data-zh="高維且相關特徵成群">相關特徵成群</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="三、KNN vs Logistic：如何選？" data-en="III. KNN vs Logistic: How to Choose?">三、KNN vs Logistic：如何選？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="分類器選擇決策樹" data-en="Classifier Choice Decision Tree">分類器選擇決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>需要<strong>機率輸出 + 可解釋係數</strong>（臨床決策、論文 OR 表）？ <span class="dt-arrow">→ Logistic Regression</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>決策邊界<strong>明顯非線性</strong>且樣本充足？ <span class="dt-arrow">→ KNN（或樹型，見 Ch 6）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>特徵<strong>高維且雜訊多</strong>（&gt;100 維）？ <span class="dt-arrow">→ 避開 KNN；用 L1-Logistic 或樹</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div><strong>類別不平衡</strong>（&lt;5% 陽性）？ <span class="dt-arrow">→ class_weight='balanced' 或 SMOTE</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>需要<strong>多元分類</strong>？ <span class="dt-arrow">→ Softmax / multinomial Logistic</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Need <strong>probability outputs + interpretable coefficients</strong> (clinical decisions, OR tables)? <span class="dt-arrow">→ Logistic Regression</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Decision boundary clearly <strong>nonlinear</strong> with enough samples? <span class="dt-arrow">→ KNN (or trees, Ch 6)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>High-D and noisy (&gt;100 features)? <span class="dt-arrow">→ Avoid KNN; use L1-Logistic or trees</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div><strong>Class imbalance</strong> (&lt;5% positive)? <span class="dt-arrow">→ class_weight='balanced' or SMOTE</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Need <strong>multiclass</strong>? <span class="dt-arrow">→ Softmax / multinomial Logistic</span></div></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>係數 ≠ 因果：</strong>Logistic 係數只是「相關」程度，未控制的混雜會讓 OR 偏移。臨床因果推論請用 Causal Inference (do-calculus, PSM, IPTW)。</span>
+<span data-lang="en"><strong>Coefficient ≠ causation:</strong> Logistic coefficients are associations, not causal effects. Unmeasured confounders distort the OR. For causal claims use causal-inference frameworks (do-calculus, PSM, IPTW).</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：訓練、調 K、看係數" data-en="Implementation: Train, Tune K, Inspect Coefficients">實作：訓練、調 K、看係數</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / class + tidymodels</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(class); <span class="func">library</span>(tidymodels)
+data(iris); X &lt;- <span class="func">scale</span>(iris[, <span class="num">1</span>:<span class="num">4</span>])
+idx &lt;- <span class="func">sample</span>(<span class="func">nrow</span>(X), <span class="num">100</span>)
+
+<span class="comment"># KNN（class 套件，最直接） / KNN</span>
+pred &lt;- class::<span class="func">knn</span>(train=X[idx,], test=X[-idx,], cl=iris$Species[idx], k=<span class="num">5</span>)
+<span class="func">mean</span>(pred == iris$Species[-idx])
+
+<span class="comment"># tidymodels 統一介面 + CV 調 K / tidymodels with CV</span>
+rec  &lt;- <span class="func">recipe</span>(Species ~ ., data=iris) |&gt; <span class="func">step_normalize</span>(<span class="func">all_numeric</span>())
+spec &lt;- <span class="func">nearest_neighbor</span>(neighbors=<span class="func">tune</span>()) |&gt; <span class="func">set_engine</span>(<span class="str">"kknn"</span>) |&gt; <span class="func">set_mode</span>(<span class="str">"classification"</span>)
+wf   &lt;- <span class="func">workflow</span>() |&gt; <span class="func">add_recipe</span>(rec) |&gt; <span class="func">add_model</span>(spec)
+res  &lt;- <span class="func">tune_grid</span>(wf, resamples=<span class="func">vfold_cv</span>(iris, v=<span class="num">5</span>), grid=<span class="func">tibble</span>(neighbors=<span class="func">seq</span>(<span class="num">1</span>,<span class="num">25</span>,<span class="num">2</span>)))
+
+<span class="comment"># Logistic Regression with L1 (glmnet) / L1-Logistic</span>
+<span class="func">library</span>(glmnet)
+fit &lt;- <span class="func">cv.glmnet</span>(X[idx,], <span class="func">as.integer</span>(iris$Species[idx]==<span class="str">"versicolor"</span>),
+                  family=<span class="str">"binomial"</span>, alpha=<span class="num">1</span>)  <span class="comment"># alpha=1 → Lasso</span>
+<span class="func">coef</span>(fit, s=<span class="str">"lambda.min"</span>)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.neighbors <span class="kw">import</span> KNeighborsClassifier
+<span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LogisticRegression
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> cross_val_score, GridSearchCV
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+
+<span class="comment"># KNN with CV on K / KNN + CV</span>
+pipe = Pipeline([(<span class="str">"sc"</span>, StandardScaler()), (<span class="str">"knn"</span>, KNeighborsClassifier(weights=<span class="str">"distance"</span>))])
+gs = GridSearchCV(pipe, {<span class="str">"knn__n_neighbors"</span>: <span class="kw">range</span>(<span class="num">1</span>,<span class="num">26</span>,<span class="num">2</span>)}, cv=<span class="num">5</span>, scoring=<span class="str">"accuracy"</span>)
+gs.fit(X, y); <span class="func">print</span>(gs.best_params_, gs.best_score_)
+
+<span class="comment"># Logistic Regression — L2 / L1 / Elastic Net</span>
+lr_l2 = LogisticRegression(penalty=<span class="str">"l2"</span>, C=<span class="num">1.0</span>, max_iter=<span class="num">1000</span>)
+lr_l1 = LogisticRegression(penalty=<span class="str">"l1"</span>, C=<span class="num">0.5</span>, solver=<span class="str">"liblinear"</span>)
+lr_en = LogisticRegression(penalty=<span class="str">"elasticnet"</span>, l1_ratio=<span class="num">0.5</span>, solver=<span class="str">"saga"</span>)
+
+<span class="comment"># Multinomial (softmax) for multiclass / softmax</span>
+lr_mc = LogisticRegression(multi_class=<span class="str">"multinomial"</span>, solver=<span class="str">"lbfgs"</span>, max_iter=<span class="num">1000</span>)
+lr_mc.fit(X, y);  <span class="func">print</span>(<span class="str">"coefs"</span>, lr_mc.coef_.shape)  <span class="comment"># (K, n_features)</span>
+
+<span class="comment"># Class imbalance / 不平衡資料</span>
+lr_bal = LogisticRegression(class_weight=<span class="str">"balanced"</span>)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. 在 KNN 中，增大 K 值的主要效果是？</p>
+<p data-lang="en">1. In KNN, the main effect of increasing K is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 增加變異、減低偏差</span><span data-lang="en">A. Increase variance, decrease bias</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 減低變異、增加偏差（更平滑）</span><span data-lang="en">B. Decrease variance, increase bias (smoother)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 提升訓練速度</span><span data-lang="en">C. Speed up training</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 消除高維詛咒</span><span data-lang="en">D. Cure curse of dimensionality</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. Logistic Regression 透過什麼把線性組合映射到機率？</p>
+<p data-lang="en">2. Logistic Regression maps a linear combination to a probability via?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. ReLU</span><span data-lang="en">A. ReLU</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Tanh</span><span data-lang="en">B. Tanh</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Sigmoid σ(z)=1/(1+e⁻ᶻ)</span><span data-lang="en">C. Sigmoid σ(z)=1/(1+e⁻ᶻ)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Softplus</span><span data-lang="en">D. Softplus</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 對於 Logistic Regression，L1 (Lasso) 正則化會產生什麼樣的解？</p>
+<p data-lang="en">3. For Logistic Regression, L1 (Lasso) regularization produces what kind of solution?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 稀疏解（部分係數為 0，自動特徵選擇）</span><span data-lang="en">A. Sparse solution (some coefficients = 0, automatic feature selection)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 全部係數縮小但不為 0</span><span data-lang="en">B. All coefficients shrunk but nonzero</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 必然線性可分</span><span data-lang="en">C. Guaranteed linear separability</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 提高訓練速度</span><span data-lang="en">D. Faster training</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="similarity-distance.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 4: 相似度與距離度量" data-en="Ch 4: Similarity &amp; Distance Metrics">Ch 4: 相似度與距離度量</span></a>
+<a href="decision-trees-rf.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 6: 決策樹、隨機森林與梯度提升" data-en="Ch 6: Decision Trees, Random Forests &amp; Gradient Boosting">Ch 6: 決策樹、隨機森林與梯度提升</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Toy 2D dataset: two classes with some overlap + noise
+const TRAIN=[];
+function seed(){let s=42;return ()=>{s=(s*9301+49297)%233280;return s/233280;}}
+const rnd=seed();
+for(let i=0;i<40;i++){TRAIN.push({x:2+rnd()*3,y:2+rnd()*3,c:0});}
+for(let i=0;i<40;i++){TRAIN.push({x:5+rnd()*3,y:5+rnd()*3,c:1});}
+// add some noisy outliers
+for(let i=0;i<6;i++){TRAIN.push({x:5+rnd()*3,y:2+rnd()*3,c:0});}
+for(let i=0;i<6;i++){TRAIN.push({x:2+rnd()*3,y:5+rnd()*3,c:1});}
+
+function knnPredict(qx,qy,K){
+  const ds=TRAIN.map(p=>[Math.hypot(p.x-qx,p.y-qy),p.c]).sort((a,b)=>a[0]-b[0]).slice(0,K);
+  let n0=0,n1=0;ds.forEach(d=>{if(d[1]===0)n0++;else n1++;});return n1>n0?1:0;
+}
+// grid for boundary visualization
+const GRID=[];for(let x=0;x<=10;x+=0.4)for(let y=0;y<=10;y+=0.4)GRID.push({x,y});
+
+const knnChart=new Chart(document.getElementById('knnChart'),{type:'scatter',data:{datasets:[
+ {label:'boundary 0',data:[],backgroundColor:'rgba(37,99,235,0.12)',pointRadius:4,pointStyle:'rect'},
+ {label:'boundary 1',data:[],backgroundColor:'rgba(220,38,38,0.12)',pointRadius:4,pointStyle:'rect'},
+ {label:'Class 0',data:TRAIN.filter(p=>p.c===0),backgroundColor:'#2563eb',pointRadius:6,borderColor:'#1e3a8a',borderWidth:1},
+ {label:'Class 1',data:TRAIN.filter(p=>p.c===1),backgroundColor:'#dc2626',pointRadius:6,borderColor:'#7f1d1d',borderWidth:1}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:10,title:{display:true,text:'x₁'}},y:{min:0,max:10,title:{display:true,text:'x₂'}}},plugins:{legend:{position:'top'}}}});
+
+function updateK(K){
+  document.getElementById('knnKVal').textContent=K;
+  const g0=[],g1=[];GRID.forEach(p=>{const pred=knnPredict(p.x,p.y,K);(pred===0?g0:g1).push(p);});
+  knnChart.data.datasets[0].data=g0;knnChart.data.datasets[1].data=g1;knnChart.update();
+  // count misclassifications via leave-one-out style (use training fit)
+  let mis=0;TRAIN.forEach(p=>{const others=TRAIN.filter(q=>q!==p).map(q=>[Math.hypot(q.x-p.x,q.y-p.y),q.c]).sort((a,b)=>a[0]-b[0]).slice(0,K);let n0=0,n1=0;others.forEach(d=>{if(d[1]===0)n0++;else n1++;});if((n1>n0?1:0)!==p.c)mis++;});
+  const L=I18n.get();const lab=L==='zh'?'LOO 誤分':'LOO misclassified';const acc=L==='zh'?'準確率':'accuracy';
+  document.getElementById('knnStats').innerHTML=
+    `<span class="sim-stat ${K<3?'warn':'neutral'}">K = ${K}</span>`+
+    `<span class="sim-stat ${mis<=8?'pass':'warn'}">${lab}: ${mis} / ${TRAIN.length}</span>`+
+    `<span class="sim-stat pass">${acc}: ${((1-mis/TRAIN.length)*100).toFixed(1)}%</span>`;
+}
+document.getElementById('knnK').addEventListener('input',e=>updateK(+e.target.value));
+document.addEventListener('langchange',()=>updateK(+document.getElementById('knnK').value));
+updateK(5);
+
+const QF={zh:{q1_y:'K 越大越平滑：變異減低、偏差升高。',q1_n:'B 為正確答案。',q2_y:'Sigmoid 是 Logistic Regression 的核心。',q2_n:'C 為正確答案。',q3_y:'L1 (Lasso) 會把不重要係數壓到零，產生稀疏解。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'Larger K → smoother boundary, lower variance, higher bias.',q1_n:'Correct answer is B.',q2_y:'Sigmoid is the core of Logistic Regression.',q2_n:'Correct answer is C.',q3_y:'L1 zeros out unimportant coefficients — sparse solution.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

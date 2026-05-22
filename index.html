@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Data Mining Interactive Tutorial</title>
+<meta name="description" content="Complete bilingual data mining interactive tutorial — from CRISP-DM to biomedical applications.">
+<link rel="stylesheet" href="styles.css"></head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li>
+    <li><a href="data-preparation.html">Prep.</a></li>
+    <li><a href="eda-visualization.html">EDA</a></li>
+    <li><a href="similarity-distance.html">Dist.</a></li>
+    <li><a href="classification-overview.html">Classif.</a></li>
+    <li><a href="decision-trees-rf.html">Tree/RF</a></li>
+    <li><a href="naive-bayes-svm.html">NB/SVM</a></li>
+    <li><a href="model-evaluation.html">Eval.</a></li>
+    <li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li>
+    <li><a href="density-based-dbscan.html">DBSCAN</a></li>
+    <li><a href="association-rules-apriori.html">Apriori</a></li>
+    <li><a href="sequential-pattern-mining.html">Seq.</a></li>
+    <li><a href="anomaly-detection.html">Anomaly</a></li>
+    <li><a href="text-mining-nlp.html">Text</a></li>
+    <li><a href="time-series-mining.html">TimeSer.</a></li>
+    <li><a href="graph-network-mining.html">Graph</a></li>
+    <li><a href="ehr-mining.html">EHR</a></li>
+    <li><a href="omics-mining.html">Omics</a></li>
+    <li><a href="pubmed-literature-mining.html">PubMed</a></li>
+    <li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<header class="hub-hero"><div style="position:relative;z-index:1;">
+<h1 data-zh="資料探勘 互動式教學" data-en="Data Mining Interactive Tutorial">資料探勘 互動式教學</h1>
+<p data-lang="zh">從 CRISP-DM 方法論到生物醫學應用——20 章節帶你掌握分類、分群、關聯規則、異常偵測、文本與圖網絡探勘，並附 R / Python 並列範例與互動模擬。</p>
+<p data-lang="en">From CRISP-DM methodology to biomedical applications — master classification, clustering, association rules, anomaly detection, text and graph mining in 20 chapters with parallel R / Python examples and interactive simulations.</p>
+</div></header>
+
+<h2 class="hub-section-title"><span>A</span> <span data-zh="基礎與方法論" data-en="Module A — Foundations">基礎與方法論</span></h2>
+<div class="hub-steps-grid">
+  <a href="intro-crisp-dm.html" class="hub-card"><div class="hub-emoji">🧭</div><span class="step-num">Ch 1</span><h3 data-zh="資料探勘導論與 CRISP-DM" data-en="Intro & CRISP-DM">資料探勘導論與 CRISP-DM</h3><p data-lang="zh">什麼是資料探勘？六階段 CRISP-DM、KDD、SEMMA 與 2024 bizML 框架的比較。</p><p data-lang="en">What is data mining? Six-phase CRISP-DM, KDD, SEMMA, and 2024 bizML framework comparison.</p></a>
+  <a href="data-preparation.html" class="hub-card"><div class="hub-emoji">🧹</div><span class="step-num">Ch 2</span><h3 data-zh="資料準備與前處理" data-en="Data Preparation">資料準備與前處理</h3><p data-lang="zh">缺失值處理、離群值、編碼、標準化、不平衡資料 SMOTE/ADASYN。</p><p data-lang="en">Missing values, outliers, encoding, scaling, imbalanced data SMOTE/ADASYN.</p></a>
+  <a href="eda-visualization.html" class="hub-card"><div class="hub-emoji">📊</div><span class="step-num">Ch 3</span><h3 data-zh="EDA 與視覺化" data-en="EDA & Visualization">EDA 與視覺化</h3><p data-lang="zh">單變量/雙變量/多變量分析、ggplot2/Seaborn、相關矩陣、平行座標。</p><p data-lang="en">Univariate/bivariate/multivariate analysis, ggplot2/Seaborn, correlation heatmaps, parallel coordinates.</p></a>
+  <a href="similarity-distance.html" class="hub-card"><div class="hub-emoji">📐</div><span class="step-num">Ch 4</span><h3 data-zh="相似度與距離度量" data-en="Similarity & Distance">相似度與距離度量</h3><p data-lang="zh">Euclidean、Manhattan、Cosine、Jaccard、Gower、DTW；如何挑選最適合的距離。</p><p data-lang="en">Euclidean, Manhattan, Cosine, Jaccard, Gower, DTW — how to choose the right distance.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>B</span> <span data-zh="監督學習與分類" data-en="Module B — Supervised Learning">監督學習與分類</span></h2>
+<div class="hub-steps-grid">
+  <a href="classification-overview.html" class="hub-card"><div class="hub-emoji">🎯</div><span class="step-num">Ch 5</span><h3 data-zh="分類概論：KNN 與 Logistic" data-en="Classification Basics">分類概論</h3><p data-lang="zh">KNN、Logistic Regression、決策邊界、bias-variance trade-off。</p><p data-lang="en">KNN, Logistic Regression, decision boundaries, bias-variance trade-off.</p></a>
+  <a href="decision-trees-rf.html" class="hub-card"><div class="hub-emoji">🌲</div><span class="step-num">Ch 6</span><h3 data-zh="決策樹與隨機森林" data-en="Decision Trees & RF">決策樹與隨機森林</h3><p data-lang="zh">CART、ID3、C4.5、Gini/Entropy、Random Forest、Gradient Boosting、XGBoost、LightGBM。</p><p data-lang="en">CART, ID3, C4.5, Gini/Entropy, Random Forest, Gradient Boosting, XGBoost, LightGBM.</p></a>
+  <a href="naive-bayes-svm.html" class="hub-card"><div class="hub-emoji">🧮</div><span class="step-num">Ch 7</span><h3 data-zh="樸素貝氏與 SVM" data-en="Naive Bayes & SVM">樸素貝氏與 SVM</h3><p data-lang="zh">Bayes 定理、Gaussian/Multinomial NB、SVM 與 kernel trick、軟邊界 C 參數。</p><p data-lang="en">Bayes theorem, Gaussian/Multinomial NB, SVM and kernel trick, soft margin C.</p></a>
+  <a href="model-evaluation.html" class="hub-card"><div class="hub-emoji">📈</div><span class="step-num">Ch 8</span><h3 data-zh="模型評估與調參" data-en="Model Evaluation">模型評估與調參</h3><p data-lang="zh">Holdout / k-fold / stratified / nested CV、confusion matrix、ROC、PR、Calibration、Grid/Random/Bayesian search。</p><p data-lang="en">Holdout / k-fold / stratified / nested CV, confusion matrix, ROC, PR, calibration, Grid/Random/Bayesian search.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>C</span> <span data-zh="非監督學習與關聯" data-en="Module C — Unsupervised & Association">非監督學習與關聯</span></h2>
+<div class="hub-steps-grid">
+  <a href="clustering-kmeans-hierarchical.html" class="hub-card"><div class="hub-emoji">🧩</div><span class="step-num">Ch 9</span><h3 data-zh="K-Means 與階層分群" data-en="K-Means & Hierarchical">K-Means 與階層分群</h3><p data-lang="zh">K-Means / K-Medoids / 階層 (single/complete/Ward) 連結、肘部法、輪廓係數。</p><p data-lang="en">K-Means / K-Medoids / hierarchical (single/complete/Ward) linkage, elbow, silhouette.</p></a>
+  <a href="density-based-dbscan.html" class="hub-card"><div class="hub-emoji">🌌</div><span class="step-num">Ch 10</span><h3 data-zh="密度型分群 DBSCAN/HDBSCAN" data-en="DBSCAN / HDBSCAN">密度型分群</h3><p data-lang="zh">DBSCAN、OPTICS、HDBSCAN、Mean-Shift、GMM、Spectral Clustering。</p><p data-lang="en">DBSCAN, OPTICS, HDBSCAN, Mean-Shift, GMM, Spectral Clustering.</p></a>
+  <a href="association-rules-apriori.html" class="hub-card"><div class="hub-emoji">🛒</div><span class="step-num">Ch 11</span><h3 data-zh="關聯規則：Apriori / FP-Growth" data-en="Association Rules">關聯規則</h3><p data-lang="zh">Support / Confidence / Lift / Conviction、Apriori、FP-Growth、Eclat、ASEA。</p><p data-lang="en">Support / Confidence / Lift / Conviction, Apriori, FP-Growth, Eclat, ASEA.</p></a>
+  <a href="sequential-pattern-mining.html" class="hub-card"><div class="hub-emoji">🔗</div><span class="step-num">Ch 12</span><h3 data-zh="序列樣式探勘" data-en="Sequential Patterns">序列樣式探勘</h3><p data-lang="zh">GSP、SPADE、PrefixSpan、CloSpan、process mining 介紹。</p><p data-lang="en">GSP, SPADE, PrefixSpan, CloSpan, process mining intro.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>D</span> <span data-zh="進階主題" data-en="Module D — Advanced Topics">進階主題</span></h2>
+<div class="hub-steps-grid">
+  <a href="anomaly-detection.html" class="hub-card"><div class="hub-emoji">🚨</div><span class="step-num">Ch 13</span><h3 data-zh="異常偵測 Anomaly Detection" data-en="Anomaly Detection">異常偵測</h3><p data-lang="zh">統計 / 距離 / 密度 / 隔離 / 自編碼器；PyOD 2.0、Isolation Forest、LOF、ECOD。</p><p data-lang="en">Statistical / distance / density / isolation / autoencoder; PyOD 2.0, Isolation Forest, LOF, ECOD.</p></a>
+  <a href="text-mining-nlp.html" class="hub-card"><div class="hub-emoji">📚</div><span class="step-num">Ch 14</span><h3 data-zh="文本探勘與 NLP 基礎" data-en="Text Mining & NLP">文本探勘</h3><p data-lang="zh">Tokenize、TF-IDF、Word2Vec、LDA topic modeling、sentiment、BioBERT/PubMedBERT。</p><p data-lang="en">Tokenize, TF-IDF, Word2Vec, LDA topic modeling, sentiment, BioBERT/PubMedBERT.</p></a>
+  <a href="time-series-mining.html" class="hub-card"><div class="hub-emoji">⏱️</div><span class="step-num">Ch 15</span><h3 data-zh="時序資料探勘" data-en="Time Series Mining">時序資料探勘</h3><p data-lang="zh">ARIMA、Prophet、DTW、shapelets、matrix profile、change-point detection。</p><p data-lang="en">ARIMA, Prophet, DTW, shapelets, matrix profile, change-point detection.</p></a>
+  <a href="graph-network-mining.html" class="hub-card"><div class="hub-emoji">🕸️</div><span class="step-num">Ch 16</span><h3 data-zh="圖與網絡探勘" data-en="Graph & Network Mining">圖與網絡探勘</h3><p data-lang="zh">PageRank、社群偵測 Louvain/Leiden、node2vec、GNN 簡介、knowledge graph。</p><p data-lang="en">PageRank, community detection Louvain/Leiden, node2vec, GNN intro, knowledge graph.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>E</span> <span data-zh="生醫應用與最佳實踐" data-en="Module E — Biomedical Applications">生醫應用與最佳實踐</span></h2>
+<div class="hub-steps-grid">
+  <a href="ehr-mining.html" class="hub-card"><div class="hub-emoji">🏥</div><span class="step-num">Ch 17</span><h3 data-zh="電子病歷 EHR 資料探勘" data-en="EHR Data Mining">EHR 探勘</h3><p data-lang="zh">phenotyping、SNOMED CT、ICD-10、OMOP CDM、survival mining、treatment pathway。</p><p data-lang="en">Phenotyping, SNOMED CT, ICD-10, OMOP CDM, survival mining, treatment pathways.</p></a>
+  <a href="omics-mining.html" class="hub-card"><div class="hub-emoji">🧬</div><span class="step-num">Ch 18</span><h3 data-zh="組學資料探勘" data-en="Omics Data Mining">組學探勘</h3><p data-lang="zh">特徵選擇（LASSO/Boruta）、subgroup discovery、multi-omics integration、batch correction。</p><p data-lang="en">Feature selection (LASSO/Boruta), subgroup discovery, multi-omics integration, batch correction.</p></a>
+  <a href="pubmed-literature-mining.html" class="hub-card"><div class="hub-emoji">🔍</div><span class="step-num">Ch 19</span><h3 data-zh="文獻探勘 PubMed Literature Mining" data-en="Literature Mining">文獻探勘</h3><p data-lang="zh">PubMed API、MeSH、entity recognition、relation extraction、drug repurposing、KG construction。</p><p data-lang="en">PubMed API, MeSH, entity recognition, relation extraction, drug repurposing, KG construction.</p></a>
+  <a href="ethics-reproducibility.html" class="hub-card"><div class="hub-emoji">⚖️</div><span class="step-num">Ch 20</span><h3 data-zh="倫理與可重現性" data-en="Ethics & Reproducibility">倫理與可重現性</h3><p data-lang="zh">HIPAA / GDPR、re-identification、fairness、SHAP、FAIR、git/docker/snakemake、EU AI Act 2026。</p><p data-lang="en">HIPAA / GDPR, re-identification, fairness, SHAP, FAIR, git/docker/snakemake, EU AI Act 2026.</p></a>
+</div>
+
+<h2 class="hub-section-title"><span>F</span> <span data-zh="延伸學習" data-en="Further Learning">延伸學習</span></h2>
+<div class="hub-steps-grid">
+  <a href="references/index.html" class="hub-card"><div class="hub-emoji">📚</div><span class="step-num">References</span><h3 data-zh="參考資料佐證" data-en="References & Citations">參考資料佐證</h3><p data-lang="zh">20 章節的學術論文、textbooks、官方文件、benchmark 綜述與 best practices，附 DOI 連結與 errata 注記。</p><p data-lang="en">Academic papers, textbooks, official docs, benchmarks, and best practices for all 20 topics — with DOI links and errata notes.</p></a>
+  <a href="data-mining-quiz/index.html" class="hub-card" target="_blank" rel="noopener"><div class="hub-emoji">📝</div><span class="step-num">Quiz</span><h3 data-zh="互動式考題" data-en="Interactive Quiz">互動式考題</h3><p data-lang="zh">單選 + 多選 + 是非題；含錯題複習、隨機練習、全範圍模擬考與多使用者進度。</p><p data-lang="en">Single + multi + T/F questions; wrong-answer review, random practice, full exam, multi-user progress.</p></a>
+</div>
+<div style="height:60px"></div>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+</body></html>

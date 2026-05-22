@@ -1,0 +1,284 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 9: K-Means & Hierarchical Clustering — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html" class="active">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 9 / 20 · MODULE C</div>
+<h1 data-zh="K-Means 與階層式分群" data-en="K-Means & Hierarchical Clustering">K-Means 與階層式分群</h1>
+<p class="subtitle" data-lang="zh">分群是探索性學習的代表：給未標記的資料找到「自然的群組」。K-Means 重速度、Hierarchical 重結構，兩者互補。</p>
+<p class="subtitle" data-lang="en">Clustering is the flagship of exploratory learning: find natural groups in unlabeled data. K-Means is fast; hierarchical reveals structure — they complement each other.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="兩大派典：劃分式 vs 階層式" data-en="Two Paradigms: Partitional vs Hierarchical">兩大派典：劃分式 vs 階層式</h2>
+<div data-lang="zh">
+<p><strong>劃分式 (partitional)</strong>：使用者事先指定 k，演算法找到使類內平方和 (WCSS) 最小的指派。代表：K-Means、K-Medoids (PAM)、CLARA。</p>
+<p><strong>階層式 (hierarchical)</strong>：建立樹狀 dendrogram，可由下而上 (agglomerative) 或由上而下 (divisive)。不需事先決定 k——切樹高度即得分群。</p>
+<p>在生物醫學應用上：基因表現的 patient subtyping（TCGA 各 cancer type 都用 Ward + Euclidean 起家），單細胞 RNA-seq 用 Leiden / Louvain，臨床表型分群常用 K-Medoids + Gower。</p>
+</div>
+<div data-lang="en">
+<p><strong>Partitional</strong>: user specifies k, the algorithm finds an assignment that minimizes within-cluster sum of squares (WCSS). Examples: K-Means, K-Medoids (PAM), CLARA.</p>
+<p><strong>Hierarchical</strong>: builds a dendrogram, either bottom-up (agglomerative) or top-down (divisive). k need not be pre-specified — cut the tree at a chosen height.</p>
+<p>Biomedical examples: patient subtyping from gene expression (TCGA tumor-type analyses often start with Ward + Euclidean), single-cell RNA-seq uses Leiden / Louvain, and clinical phenotype clustering often pairs K-Medoids with Gower distance.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="K-MEANS 細節" data-en="K-MEANS DETAILS">K-MEANS 細節</div>
+<h2 data-zh="一、Lloyd 演算法與 k-means++" data-en="I. Lloyd Algorithm and k-means++">一、Lloyd 演算法與 k-means++</h2>
+<div class="card-grid cols-2">
+<div class="card"><h4 data-zh="Lloyd 迭代" data-en="Lloyd Iteration">Lloyd 迭代</h4>
+<p data-lang="zh">1) 初始化 k 個質心。2) 指派每點到最近質心。3) 重算每群平均成為新質心。4) 重複至收斂或 max_iter。</p>
+<p data-lang="en">1) Initialize k centroids. 2) Assign each point to nearest centroid. 3) Recompute means as new centroids. 4) Repeat until convergence or max_iter.</p></div>
+<div class="card"><h4>k-means++</h4>
+<p data-lang="zh">隨機初始化常陷入區域最小值。k-means++ 以「距離平方加權」依序挑質心，提高初始品質——sklearn 與 R 的 stats::kmeans 預設皆採用。</p>
+<p data-lang="en">Random init often stalls at local minima. k-means++ picks subsequent seeds with probability proportional to squared distance — both sklearn and R's stats::kmeans use it by default.</p></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>K-Means 的隱含假設：</strong>(1) 群為<strong>球狀且等變異</strong>、(2) 群大小相近、(3) 特徵須事先 scaling。違反任一條件時，DBSCAN / GMM 更合適。</span>
+<span data-lang="en"><strong>K-Means assumes:</strong> (1) clusters are <strong>spherical with equal variance</strong>, (2) similar cluster sizes, (3) features are pre-scaled. Violate any of these and DBSCAN / GMM may be better.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="挑 K" data-en="CHOOSING K">挑 K</div>
+<h2 data-zh="二、如何決定 k？三種主要指標" data-en="II. How to Choose k? Three Main Criteria">二、如何決定 k？三種主要指標</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="方法" data-en="Method">方法</th><th data-zh="原理" data-en="Idea">原理</th><th data-zh="優缺" data-en="Pros / Cons">優缺</th></tr></thead>
+<tbody>
+<tr><td><strong>Elbow / WCSS</strong></td><td data-zh="繪 WCSS vs k，找「肘部」轉折">繪 WCSS vs k</td><td data-en="Plot WCSS vs k, find the elbow"><span data-lang="zh">直覺；肘部常模糊</span><span data-lang="en">Intuitive; elbow often ambiguous</span></td></tr>
+<tr><td><strong>Silhouette</strong></td><td>s(i)=(b−a)/max(a,b)</td><td><span data-lang="zh">[-1,1]，越大越好；可逐點檢查</span><span data-lang="en">In [-1,1], higher is better; per-point inspection</span></td></tr>
+<tr><td><strong>Gap statistic</strong></td><td data-zh="比對於 null reference 的 WCSS 差">比對 null reference</td><td data-en="Compare WCSS gap vs null reference"><span data-lang="zh">統計嚴謹；計算昂貴 (bootstrap)</span><span data-lang="en">Rigorous; expensive (bootstrap)</span></td></tr>
+<tr><td><strong>Calinski–Harabasz</strong></td><td>BCSS/WCSS × (n-k)/(k-1)</td><td><span data-lang="zh">快速；偏好較大 k</span><span data-lang="en">Fast; biased toward larger k</span></td></tr>
+<tr><td><strong>Davies–Bouldin</strong></td><td data-zh="平均的群內/群間比">平均群內/群間比</td><td data-en="Mean within/between ratio"><span data-lang="zh">越小越好；對形狀敏感</span><span data-lang="en">Lower is better; shape-sensitive</span></td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="拖動 k 觀察分群與 silhouette 變化" data-en="Slide k to See Clusters and Silhouette">拖動 k 觀察分群與 silhouette 變化</h2>
+<div data-lang="zh"><p>下方為 3 個自然群的玩具資料。試試 k=2 到 7，並觀察 silhouette 與 WCSS 變化。理想 k 應使 silhouette 高、WCSS 仍合理。</p></div>
+<div data-lang="en"><p>Toy data with 3 natural clusters. Try k from 2 to 7 and watch silhouette and WCSS change. Ideal k should maximize silhouette while keeping WCSS reasonable.</p></div>
+<div class="interactive-panel">
+<div class="slider-row">
+<label>k = <span id="kVal">3</span></label>
+<input type="range" id="kSlider" min="2" max="7" value="3" step="1">
+</div>
+<div class="chart-container"><canvas id="kmChart"></canvas></div>
+<div id="kmStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="階層式分群" data-en="HIERARCHICAL">階層式分群</div>
+<h2 data-zh="三、Linkage 比較與 dendrogram 切法" data-en="III. Linkage Comparison and Dendrogram Cut">三、Linkage 比較與 dendrogram 切法</h2>
+<table class="comp-table">
+<thead><tr><th>Linkage</th><th data-zh="定義" data-en="Definition">定義</th><th data-zh="形狀偏好" data-en="Shape Bias">形狀偏好</th></tr></thead>
+<tbody>
+<tr><td><strong>Single</strong></td><td>min d(x,y), x∈A, y∈B</td><td><span data-lang="zh">鏈狀 (chaining)，對 outlier 敏感</span><span data-lang="en">Chaining; outlier-sensitive</span></td></tr>
+<tr><td><strong>Complete</strong></td><td>max d(x,y)</td><td><span data-lang="zh">緊湊球狀，怕內部噪聲</span><span data-lang="en">Compact spheres; noise-averse</span></td></tr>
+<tr><td><strong>Average (UPGMA)</strong></td><td data-zh="所有兩點對的平均">兩點對平均</td><td data-en="Mean of all pairs"><span data-lang="zh">折衷；演化樹常用</span><span data-lang="en">Balanced; common in phylogenetics</span></td></tr>
+<tr><td><strong>Ward</strong></td><td data-zh="最小化合併後 WCSS 增量">最小化 WCSS 增量</td><td data-en="Minimize WCSS increment"><span data-lang="zh">球狀、大小相近；最常用</span><span data-lang="en">Spherical, equal-size; most common</span></td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>Cophenetic correlation</strong>：dendrogram 中兩點被合併時的高度 vs 原始距離的相關係數。&gt;0.75 通常被認為 dendrogram 忠實反映原距離結構。</span>
+<span data-lang="en"><strong>Cophenetic correlation</strong>: correlation between dendrogram merge heights and original pairwise distances. &gt;0.75 usually means the tree faithfully preserves the distance structure.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="四、K-Means 還是 Hierarchical？" data-en="IV. K-Means or Hierarchical?">四、K-Means 還是 Hierarchical？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="分群演算法決策樹" data-en="Clustering Algorithm Decision Tree">分群演算法決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>資料量 &gt; 10 萬筆 且 已知 k？ <span class="dt-arrow">→ K-Means / MiniBatchKMeans</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>群為球狀、特徵已 scale？ <span class="dt-arrow">→ K-Means (k-means++ 初始化)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>有 outlier 或希望中位數型代表？ <span class="dt-arrow">→ K-Medoids (PAM)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>需可解釋的樹狀結構 / 不確定 k？ <span class="dt-arrow">→ Hierarchical (Ward + Euclidean)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>群形狀奇怪、密度不均？ <span class="dt-arrow">→ DBSCAN / HDBSCAN (Ch 10)</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>&gt;100k rows and k known? <span class="dt-arrow">→ K-Means / MiniBatchKMeans</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Spherical clusters, scaled features? <span class="dt-arrow">→ K-Means (k-means++ init)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Outliers present or want medoid representatives? <span class="dt-arrow">→ K-Medoids (PAM)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Need interpretable tree / unsure of k? <span class="dt-arrow">→ Hierarchical (Ward + Euclidean)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Irregular shape, varying density? <span class="dt-arrow">→ DBSCAN / HDBSCAN (Ch 10)</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：K-Means、PAM、Ward" data-en="Implementation: K-Means, PAM, Ward">實作：K-Means、PAM、Ward</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / stats + cluster + factoextra</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn + scipy</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(cluster); <span class="func">library</span>(factoextra)
+X &lt;- <span class="func">scale</span>(iris[, <span class="num">1</span>:<span class="num">4</span>])
+
+<span class="comment"># 1) K-Means（k-means++ 由 nstart 模擬）/ K-Means with multi-start</span>
+km &lt;- stats::<span class="func">kmeans</span>(X, centers = <span class="num">3</span>, nstart = <span class="num">25</span>, iter.max = <span class="num">100</span>)
+km$tot.withinss        <span class="comment"># WCSS</span>
+factoextra::<span class="func">fviz_nbclust</span>(X, kmeans, method = <span class="str">"wss"</span>)         <span class="comment"># Elbow</span>
+factoextra::<span class="func">fviz_nbclust</span>(X, kmeans, method = <span class="str">"silhouette"</span>) <span class="comment"># Silhouette</span>
+factoextra::<span class="func">fviz_nbclust</span>(X, kmeans, method = <span class="str">"gap_stat"</span>, nboot = <span class="num">50</span>)
+
+<span class="comment"># 2) K-Medoids (PAM) — outlier-robust</span>
+pam.res &lt;- cluster::<span class="func">pam</span>(X, k = <span class="num">3</span>, metric = <span class="str">"euclidean"</span>)
+
+<span class="comment"># 3) Hierarchical + Ward / Hierarchical with Ward linkage</span>
+d  &lt;- <span class="func">dist</span>(X, method = <span class="str">"euclidean"</span>)
+hc &lt;- stats::<span class="func">hclust</span>(d, method = <span class="str">"ward.D2"</span>)
+clu &lt;- <span class="func">cutree</span>(hc, k = <span class="num">3</span>)
+coph &lt;- <span class="func">cor</span>(d, <span class="func">cophenetic</span>(hc))     <span class="comment"># &gt;0.75 = 忠實</span>
+factoextra::<span class="func">fviz_dend</span>(hc, k = <span class="num">3</span>, rect = TRUE)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> KMeans, AgglomerativeClustering
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> silhouette_score
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> scipy.cluster.hierarchy <span class="kw">import</span> linkage, dendrogram, fcluster, cophenet
+<span class="kw">from</span> scipy.spatial.distance <span class="kw">import</span> pdist
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+X = StandardScaler().fit_transform(X_raw)
+
+<span class="comment"># 1) K-Means with k-means++ / K-Means 內建 k-means++</span>
+km = <span class="func">KMeans</span>(n_clusters=<span class="num">3</span>, init=<span class="str">"k-means++"</span>, n_init=<span class="num">25</span>, random_state=<span class="num">42</span>).fit(X)
+print(km.inertia_, silhouette_score(X, km.labels_))
+
+<span class="comment"># Elbow + silhouette sweep / 一次掃過多個 k</span>
+<span class="kw">for</span> k <span class="kw">in</span> range(<span class="num">2</span>, <span class="num">8</span>):
+    m = <span class="func">KMeans</span>(n_clusters=k, n_init=<span class="num">10</span>).fit(X)
+    print(k, m.inertia_, silhouette_score(X, m.labels_))
+
+<span class="comment"># 2) Hierarchical (Ward) + dendrogram cut</span>
+Z = linkage(X, method=<span class="str">"ward"</span>)
+labels = fcluster(Z, t=<span class="num">3</span>, criterion=<span class="str">"maxclust"</span>)
+coph_corr, _ = cophenet(Z, pdist(X))   <span class="comment"># 0.75+ 良好</span>
+
+<span class="comment"># 3) sklearn AgglomerativeClustering / sklearn 版本</span>
+agg = <span class="func">AgglomerativeClustering</span>(n_clusters=<span class="num">3</span>, linkage=<span class="str">"ward"</span>).fit(X)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. K-Means 對群形狀的隱含假設是？</p>
+<p data-lang="en">1. K-Means implicitly assumes clusters are?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 任意形狀皆可</span><span data-lang="en">A. Any shape works</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 球狀、等變異、大小相近</span><span data-lang="en">B. Spherical, equal variance, similar size</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 鏈狀</span><span data-lang="en">C. Chain-shaped</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 高斯混合即可</span><span data-lang="en">D. Gaussian mixture is enough</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. Ward linkage 最小化的是？</p>
+<p data-lang="en">2. Ward linkage minimizes?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 兩點對最大距離</span><span data-lang="en">A. Maximum pairwise distance</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 兩點對最小距離</span><span data-lang="en">B. Minimum pairwise distance</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 合併後類內平方和的增量</span><span data-lang="en">C. The increase in WCSS after merging</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. silhouette 平均</span><span data-lang="en">D. Mean silhouette</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. Elbow method 嘗試找到？</p>
+<p data-lang="en">3. The elbow method tries to find?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. WCSS 對 k 的曲線轉折點</span><span data-lang="en">A. The bend in WCSS vs k curve</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 最大 silhouette 的 k</span><span data-lang="en">B. The k with maximum silhouette</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 最小 BIC 的 k</span><span data-lang="en">C. The k with minimum BIC</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 真實標籤的 k</span><span data-lang="en">D. The k from true labels</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="model-evaluation.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 8: 模型評估與調參" data-en="Ch 8: Model Evaluation &amp; Hyperparameter Tuning">Ch 8: 模型評估與調參</span></a>
+<a href="density-based-dbscan.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 10: 密度型與機率型分群" data-en="Ch 10: Density-Based and Probabilistic Clustering">Ch 10: 密度型與機率型分群</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Deterministic toy data — 3 Gaussian blobs
+function randn(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;const u=s/233280;s=(s*9301+49297)%233280;const v=s/233280;return Math.sqrt(-2*Math.log(Math.max(u,1e-9)))*Math.cos(2*Math.PI*v);};}
+const rng=randn(7);
+const centers=[{x:2,y:2},{x:7,y:6},{x:3,y:7}];
+const points=[];
+centers.forEach((c,ci)=>{for(let i=0;i<40;i++)points.push({x:c.x+rng()*0.8,y:c.y+rng()*0.8,true_c:ci});});
+
+const palette=['#2563eb','#dc2626','#16a34a','#d97706','#9333ea','#0891b2','#db2777'];
+function kmeans(pts,k){
+ let cents=[];const idxs=[];
+ // k-means++ init
+ cents.push({x:pts[Math.floor(pts.length/2)].x,y:pts[Math.floor(pts.length/2)].y});
+ while(cents.length<k){
+  const d2=pts.map(p=>Math.min(...cents.map(c=>(p.x-c.x)**2+(p.y-c.y)**2)));
+  const sum=d2.reduce((a,b)=>a+b,0);let r=Math.random()*sum,acc=0,ci=0;
+  for(let i=0;i<d2.length;i++){acc+=d2[i];if(acc>=r){ci=i;break;}}
+  cents.push({x:pts[ci].x,y:pts[ci].y});
+ }
+ let labels=new Array(pts.length).fill(0);
+ for(let iter=0;iter<30;iter++){
+  labels=pts.map(p=>{let best=0,bd=Infinity;cents.forEach((c,i)=>{const d=(p.x-c.x)**2+(p.y-c.y)**2;if(d<bd){bd=d;best=i;}});return best;});
+  const ncents=cents.map(()=>({x:0,y:0,n:0}));
+  pts.forEach((p,i)=>{ncents[labels[i]].x+=p.x;ncents[labels[i]].y+=p.y;ncents[labels[i]].n++;});
+  cents=ncents.map((c,i)=>c.n?{x:c.x/c.n,y:c.y/c.n}:cents[i]);
+ }
+ // WCSS
+ let wcss=0;pts.forEach((p,i)=>{const c=cents[labels[i]];wcss+=(p.x-c.x)**2+(p.y-c.y)**2;});
+ // Silhouette (subset for speed — all here, n=120)
+ let sils=[];
+ for(let i=0;i<pts.length;i++){
+  const ci=labels[i];const own=[],others={};
+  pts.forEach((q,j)=>{if(i===j)return;const d=Math.sqrt((pts[i].x-q.x)**2+(pts[i].y-q.y)**2);if(labels[j]===ci)own.push(d);else{(others[labels[j]]=others[labels[j]]||[]).push(d);}});
+  const a=own.length?own.reduce((x,y)=>x+y,0)/own.length:0;
+  const bs=Object.values(others).map(arr=>arr.reduce((x,y)=>x+y,0)/arr.length);
+  const b=bs.length?Math.min(...bs):a;
+  sils.push((b-a)/Math.max(a,b,1e-9));
+ }
+ const sil=sils.reduce((x,y)=>x+y,0)/sils.length;
+ return{labels,cents,wcss,sil};
+}
+
+const kmChart=new Chart(document.getElementById('kmChart'),{type:'scatter',data:{datasets:[]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:10},y:{min:0,max:10}},plugins:{legend:{position:'top'}}}});
+
+function refresh(){
+ const k=+document.getElementById('kSlider').value;
+ document.getElementById('kVal').textContent=k;
+ const{labels,cents,wcss,sil}=kmeans(points,k);
+ const ds=[];
+ for(let c=0;c<k;c++){
+  ds.push({label:'C'+(c+1),data:points.filter((_,i)=>labels[i]===c).map(p=>({x:p.x,y:p.y})),backgroundColor:palette[c%palette.length],pointRadius:6});
+ }
+ ds.push({label:'Centroids',data:cents.map(c=>({x:c.x,y:c.y})),backgroundColor:'#000',pointStyle:'rectRot',pointRadius:11,borderColor:'#fff',borderWidth:2});
+ kmChart.data.datasets=ds;kmChart.update('none');
+ const L=I18n.get();
+ document.getElementById('kmStats').innerHTML=
+  `<span class="sim-stat neutral">k = ${k}</span>`+
+  `<span class="sim-stat ${sil>0.5?'pass':'neutral'}">${L==='zh'?'Silhouette':'Silhouette'}: ${sil.toFixed(3)}</span>`+
+  `<span class="sim-stat neutral">WCSS: ${wcss.toFixed(1)}</span>`+
+  `<span class="sim-stat ${k===3?'pass':'neutral'}">${L==='zh'?'真實群數 = 3':'True k = 3'}</span>`;
+}
+document.getElementById('kSlider').addEventListener('input',refresh);
+document.addEventListener('langchange',refresh);
+refresh();
+
+const QF={zh:{q1_y:'K-Means 假設球狀、等變異、大小相近。',q1_n:'B 為正確答案。',q2_y:'Ward 最小化合併後 WCSS 增量。',q2_n:'C 為正確答案。',q3_y:'Elbow 就是找 WCSS-vs-k 的轉折點。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'K-Means assumes spherical, equal-variance, similar-size clusters.',q1_n:'Correct answer is B.',q2_y:'Ward minimizes the increment in WCSS after merging.',q2_n:'Correct answer is C.',q3_y:'Elbow finds the bend in the WCSS-vs-k curve.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

@@ -1,0 +1,297 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 16: Graph & Network Mining — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html" class="active">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 16 / 20 · MODULE D</div>
+<h1 data-zh="圖與網路探勘" data-en="Graph & Network Mining">圖與網路探勘</h1>
+<p class="subtitle" data-lang="zh">蛋白質互動網路、基因調控、社交網路、藥物-靶點——關係本身就是訊號。</p>
+<p class="subtitle" data-lang="en">PPI networks, gene regulation, social graphs, drug-target — relationships themselves are the signal.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="什麼是圖？" data-en="What is a Graph?">什麼是圖？</h2>
+<div data-lang="zh">
+<p>圖 (Graph) G=(V,E) 由 <strong>節點 (V)</strong> 與 <strong>邊 (E)</strong> 組成。依結構分：(1) <strong>有向 vs 無向</strong>（Twitter follow 有向，Facebook 朋友無向）、(2) <strong>加權 vs 無加權</strong>（蛋白質互動置信度）、(3) <strong>同質 vs 異質</strong>（藥物–基因–疾病多型態 KG）、(4) <strong>靜態 vs 動態 (temporal)</strong>。</p>
+<p>圖探勘任務：<strong>中心性</strong>（找重要節點）、<strong>社群偵測</strong>（cluster 模組）、<strong>節點嵌入</strong>（轉成向量做下游 ML）、<strong>連結預測 (link prediction)</strong>、<strong>知識圖譜推理</strong>。生醫應用：藥物再利用 (drug repurposing)、副作用預測、致病基因排序。</p>
+</div>
+<div data-lang="en">
+<p>A graph G=(V,E) consists of <strong>nodes (V)</strong> and <strong>edges (E)</strong>. Structurally: (1) <strong>directed vs undirected</strong> (Twitter follow vs Facebook friend), (2) <strong>weighted vs unweighted</strong> (PPI confidence), (3) <strong>homogeneous vs heterogeneous</strong> (drug–gene–disease KG), (4) <strong>static vs dynamic / temporal</strong>.</p>
+<p>Tasks: <strong>centrality</strong> (important nodes), <strong>community detection</strong> (modules), <strong>node embedding</strong> (vectors for downstream ML), <strong>link prediction</strong>, <strong>knowledge-graph reasoning</strong>. Biomedical use: drug repurposing, side-effect prediction, disease-gene ranking.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="中心性" data-en="CENTRALITY">中心性</div>
+<h2 data-zh="一、四種重要的中心性" data-en="I. Four Key Centralities">一、四種重要的中心性</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">🔢</div><h4 data-zh="① Degree 度中心性" data-en="① Degree Centrality">① Degree</h4><div data-lang="zh"><p>節點鄰居數。最簡單：人脈廣的人；連結最多的蛋白。</p></div><div data-lang="en"><p>Number of neighbors. Simplest: well-connected person; high-degree protein.</p></div></div>
+<div class="card"><div class="card-icon">🌉</div><h4 data-zh="② Betweenness 中介中心性" data-en="② Betweenness">② Betweenness</h4><div data-lang="zh"><p>該節點落在多少對最短路徑上。「橋樑」型：交通樞紐、跨社群中介者。</p></div><div data-lang="en"><p>Fraction of shortest paths passing through. "Bridge" nodes: hubs, cross-community brokers.</p></div></div>
+<div class="card"><div class="card-icon">⭐</div><h4 data-zh="③ Eigenvector 特徵向量" data-en="③ Eigenvector">③ Eigenvector</h4><div data-lang="zh"><p>「重要鄰居讓你也重要」。是鄰接矩陣最大特徵值對應的特徵向量。</p></div><div data-lang="en"><p>"Important neighbors make you important". Eigenvector of the largest eigenvalue of the adjacency matrix.</p></div></div>
+<div class="card"><div class="card-icon">🏆</div><h4 data-zh="④ PageRank (Google 1998)" data-en="④ PageRank (Google 1998)">④ PageRank</h4><div data-lang="zh"><p>有向圖版的 eigenvector + 「random surfer + 阻尼 d」。<strong>PR(v) = (1−d)/N + d · Σ PR(u)/L(u)</strong>。當 d=0.85 是經典設定。</p></div><div data-lang="en"><p>Directed-graph version + "random surfer + damping d". <strong>PR(v) = (1−d)/N + d · Σ PR(u)/L(u)</strong>. d=0.85 is classic.</p></div></div>
+<div class="card"><div class="card-icon">⏱️</div><h4 data-zh="⑤ Closeness 接近中心性" data-en="⑤ Closeness">⑤ Closeness</h4><div data-lang="zh"><p>到所有其他節點最短路徑的倒數平均。值高=「離大家都近」。</p></div><div data-lang="en"><p>Inverse mean shortest-path to all others. High = "close to everyone".</p></div></div>
+<div class="card"><div class="card-icon">🔄</div><h4 data-zh="⑥ HITS Hub & Authority" data-en="⑥ HITS Hub/Authority">⑥ HITS</h4><div data-lang="zh"><p>Kleinberg：好的 hub 連到很多 authority，好的 authority 被很多 hub 連。雙向迭代。</p></div><div data-lang="en"><p>Kleinberg: good hubs link to many authorities; good authorities are linked by many hubs. Mutually iterative.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="PageRank 模擬：阻尼因子 d 的影響" data-en="PageRank Simulation: How Damping d Matters">PageRank 模擬：阻尼因子 d 的影響</h2>
+<div data-lang="zh"><p>6 個節點的有向小網路。調整阻尼 <strong>d</strong>（0=完全隨機跳、1=只跟連結走），觀察節點 PageRank（圓點大小）改變。</p></div>
+<div data-lang="en"><p>A 6-node directed mini-graph. Adjust the damping <strong>d</strong> (0 = pure teleport, 1 = follow links only) and watch PageRank (dot size) change.</p></div>
+<div class="interactive-panel">
+<div class="sim-stats"><span class="sim-stat pass" id="dStat">d: 0.85</span><span class="sim-stat neutral" id="topNode">Top: —</span><span class="sim-stat neutral" id="iterStat">Iter: 30</span></div>
+<div class="slider-group"><label><span data-zh="阻尼因子 d" data-en="Damping d">阻尼因子 d</span> <span id="valD">0.85</span></label><input type="range" id="sliderDamp" min="0" max="1" step="0.05" value="0.85"></div>
+<div class="chart-container"><canvas id="prChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">圓圈大小 = PageRank；箭頭 = 有向連結（簡化標示）</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">Circle size = PageRank; edges = directed links (simplified labels)</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="社群與嵌入" data-en="COMMUNITY & EMBEDDING">社群與嵌入</div>
+<h2 data-zh="二、社群偵測與節點嵌入" data-en="II. Community Detection & Node Embedding">二、社群偵測與節點嵌入</h2>
+<table class="comp-table">
+<thead><tr><th>Method</th><th data-zh="類型" data-en="Type">類型</th><th data-zh="原理" data-en="Principle">原理</th><th data-zh="代表用途" data-en="Use">用途</th></tr></thead>
+<tbody>
+<tr><td><strong>Louvain</strong></td><td data-zh="社群偵測">社群偵測</td><td data-zh="逐節點移動、最大化 modularity Q">最大化 modularity Q</td><td data-zh="快速、廣用">快速、廣用</td></tr>
+<tr><td><strong>Leiden (Traag 2019)</strong></td><td data-zh="社群偵測">社群偵測</td><td data-zh="保證連通社群、refinement 步驟">refinement 修正 Louvain 不連通缺陷</td><td data-zh="現代首選">現代首選</td></tr>
+<tr><td><strong>DeepWalk (2014)</strong></td><td data-zh="節點嵌入">節點嵌入</td><td data-zh="隨機走訪 → Word2Vec">random walk → Word2Vec</td><td data-zh="一般網路嵌入">一般網路</td></tr>
+<tr><td><strong>node2vec (2016)</strong></td><td data-zh="節點嵌入">節點嵌入</td><td data-zh="偏向參數 p, q 平衡 BFS/DFS">p, q 控制 BFS/DFS 偏向</td><td data-zh="可調社群/結構">可調社群/結構</td></tr>
+<tr><td><strong>GraphSAGE / GCN / GAT</strong></td><td data-zh="GNN">GNN</td><td data-zh="鄰居訊息聚合 (message passing)">message passing</td><td data-zh="可歸納新節點">inductive、可新節點</td></tr>
+<tr><td><strong>Knowledge Graph (TransE, RotatE)</strong></td><td data-zh="KG embedding">KG embedding</td><td data-zh="(head, rel, tail) 三元組嵌入">subject-predicate-object</td><td data-zh="連結預測、推理">link prediction</td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>Leiden vs Louvain：</strong>Louvain 偶爾會產出「不連通」的社群（一個 community 內部其實斷開）。Leiden 加上 refinement 與 fast local move，<strong>保證每個社群皆連通</strong>，且收斂更好，已被 Scanpy、Seurat v5 設為預設。</span>
+<span data-lang="en"><strong>Leiden vs Louvain:</strong> Louvain occasionally returns "disconnected" communities. Leiden adds a refinement + fast local move that <strong>guarantees connected communities</strong> and converges better. Now default in Scanpy and Seurat v5.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="GNN 與 KG" data-en="GNN & KG">GNN 與 KG</div>
+<h2 data-zh="三、GNN 與生醫知識圖譜" data-en="III. GNN & Biomedical Knowledge Graphs">三、GNN 與生醫知識圖譜</h2>
+<div data-lang="zh">
+<p><strong>GNN (Graph Neural Network)</strong> 透過 <em>message passing</em>：每層中每個節點把自己 + 鄰居的特徵 aggregate → transform → 更新隱藏狀態。GCN (Kipf 2017)、GAT (attention)、GraphSAGE (sampling) 是三大基本款；GIN 在分子預測上常見。</p>
+<p><strong>生醫知識圖譜 (Biomedical KG)</strong> 將藥、基因、蛋白、疾病、副作用、文獻等串成異質網路：<strong>Hetionet</strong> (Himmelstein 2017, 47K nodes / 2M edges, 11 types)、<strong>DisGeNET</strong> (gene-disease)、<strong>PrimeKG</strong> (2023, 4M+ relations) 用於藥物再利用、罕病基因排序。</p>
+</div>
+<div data-lang="en">
+<p><strong>GNN</strong> = <em>message passing</em>: at each layer, every node aggregates self + neighbor features → transform → update hidden state. GCN (Kipf 2017), GAT (attention), GraphSAGE (sampling) are the three classics; GIN dominates molecular tasks.</p>
+<p><strong>Biomedical KGs</strong> connect drug-gene-protein-disease-side effect-literature as heterogeneous networks: <strong>Hetionet</strong> (Himmelstein 2017, 47K nodes / 2M edges, 11 types), <strong>DisGeNET</strong> (gene-disease), <strong>PrimeKG</strong> (2023, 4M+ relations) — used for drug repurposing, disease-gene ranking.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="四、如何選擇圖探勘方法？" data-en="IV. How to Pick a Graph Method?">四、如何選擇圖探勘方法？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="圖探勘決策樹" data-en="Graph Method Decision Tree">圖探勘決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>找 <strong>重要節點</strong>？ <span class="dt-arrow">→ Degree / Betweenness / PageRank / Eigenvector</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>找 <strong>社群 / 模組</strong>？ <span class="dt-arrow">→ Leiden &gt; Louvain（前者保證連通）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>要把節點變成 <strong>向量</strong> 做下游 ML？ <span class="dt-arrow">→ node2vec (BFS/DFS 可調) 或 DeepWalk</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>有 <strong>節點特徵</strong> 且要可歸納到新節點？ <span class="dt-arrow">→ GraphSAGE / GAT (PyG, DGL)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>異質圖</strong>（多種節點/邊）？ <span class="dt-arrow">→ KG 嵌入 (TransE, RotatE) 或 RGCN</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>要 <strong>連結預測</strong>（推薦、藥物再利用）？ <span class="dt-arrow">→ GNN + 邊分類器 / KG 三元組 score</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Find <strong>important nodes</strong>? <span class="dt-arrow">→ Degree / Betweenness / PageRank / Eigenvector</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Detect <strong>communities</strong>? <span class="dt-arrow">→ Leiden &gt; Louvain (the former guarantees connectivity)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Need node <strong>vectors</strong> for downstream ML? <span class="dt-arrow">→ node2vec (BFS/DFS tunable) or DeepWalk</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Have <strong>node features</strong>, need inductive on new nodes? <span class="dt-arrow">→ GraphSAGE / GAT (PyG, DGL)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>Heterogeneous graph</strong> (multi-type nodes/edges)? <span class="dt-arrow">→ KG embedding (TransE, RotatE) or RGCN</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div><strong>Link prediction</strong> (recommendation, drug repurposing)? <span class="dt-arrow">→ GNN + edge classifier / KG triple score</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：PageRank + Leiden + node2vec + GNN" data-en="Implementation: PageRank + Leiden + node2vec + GNN">實作：PageRank + Leiden + node2vec + GNN</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / igraph + tidygraph + ggraph</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / networkx + igraph + PyG</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(igraph); <span class="func">library</span>(tidygraph); <span class="func">library</span>(ggraph)
+
+<span class="comment"># 1) 建圖 / Create graph</span>
+g &lt;- <span class="func">graph_from_data_frame</span>(edges_df, directed = TRUE)
+
+<span class="comment"># 2) 中心性 / Centralities</span>
+deg &lt;- <span class="func">degree</span>(g, mode = <span class="str">"in"</span>)
+btw &lt;- <span class="func">betweenness</span>(g, normalized = TRUE)
+pr  &lt;- <span class="func">page_rank</span>(g, damping = <span class="num">0.85</span>)$vector
+
+<span class="comment"># 3) 社群偵測 — Leiden（首選）</span>
+clu &lt;- igraph::<span class="func">cluster_leiden</span>(g, objective_function = <span class="str">"modularity"</span>,
+                                resolution_parameter = <span class="num">1</span>)
+V(g)$comm &lt;- <span class="func">membership</span>(clu)
+
+<span class="comment"># 4) 視覺化 / Plot</span>
+<span class="func">ggraph</span>(<span class="func">as_tbl_graph</span>(g), layout = <span class="str">"fr"</span>) +
+  <span class="func">geom_edge_link</span>(alpha = .<span class="num">3</span>) +
+  <span class="func">geom_node_point</span>(<span class="func">aes</span>(size = pr, color = <span class="func">factor</span>(comm))) +
+  <span class="func">geom_node_text</span>(<span class="func">aes</span>(label = name), repel = TRUE)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">import</span> networkx <span class="kw">as</span> nx
+<span class="kw">import</span> igraph    <span class="kw">as</span> ig
+<span class="kw">from</span> node2vec <span class="kw">import</span> Node2Vec
+<span class="kw">import</span> torch
+<span class="kw">from</span> torch_geometric.nn <span class="kw">import</span> GCNConv
+
+<span class="comment"># 1) 建圖 & 中心性 / Build graph + centralities</span>
+G = nx.read_edgelist(<span class="str">"edges.tsv"</span>, create_using=nx.DiGraph)
+pr  = nx.pagerank(G, alpha=<span class="num">0.85</span>)
+btw = nx.betweenness_centrality(G)
+deg = dict(G.in_degree())
+
+<span class="comment"># 2) Leiden 社群（透過 igraph）</span>
+g_ig  = ig.Graph.TupleList(G.edges(), directed=<span class="kw">True</span>)
+parts = g_ig.community_leiden(objective_function=<span class="str">"modularity"</span>,
+                              resolution=<span class="num">1.0</span>)
+
+<span class="comment"># 3) node2vec — 64-D 節點嵌入</span>
+n2v = Node2Vec(G, dimensions=<span class="num">64</span>, walk_length=<span class="num">30</span>,
+               num_walks=<span class="num">200</span>, p=<span class="num">1</span>, q=<span class="num">1</span>)
+model = n2v.fit(window=<span class="num">10</span>, min_count=<span class="num">1</span>)
+emb   = {n: model.wv[n] <span class="kw">for</span> n <span class="kw">in</span> G.nodes()}
+
+<span class="comment"># 4) GNN — GCN 兩層（PyTorch Geometric）</span>
+<span class="kw">class</span> GCN(torch.nn.Module):
+    <span class="kw">def</span> __init__(self, in_d, h, out_d):
+        super().__init__()
+        self.c1 = GCNConv(in_d, h); self.c2 = GCNConv(h, out_d)
+    <span class="kw">def</span> forward(self, x, edge_index):
+        x = self.c1(x, edge_index).relu()
+        <span class="kw">return</span> self.c2(x, edge_index)
+<span class="comment"># 5) 知識圖譜 / Knowledge Graph</span>
+<span class="comment"># PyKEEN: TransE, RotatE, ComplEx ... for biomedical KG (Hetionet, PrimeKG)</span></pre></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>圖深度學習的常見陷阱：</strong>(1) 過度平滑 (over-smoothing) — 太多層後節點變得彼此相似；(2) 訊息只能在 k-hop 內傳遞；(3) 大圖無法整批訓練——需 GraphSAGE-style 抽樣或 GNN+mini-batch (PyG NeighborLoader)。</span>
+<span data-lang="en"><strong>Common GNN pitfalls:</strong> (1) over-smoothing — too many layers make nodes look alike; (2) information only travels within k-hop; (3) large graphs don't fit memory — use GraphSAGE sampling or PyG NeighborLoader.</span>
+</div></div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. PageRank 的基本機制是？</p>
+<p data-lang="en">1. PageRank fundamentally works by?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 計算節點度數</span><span data-lang="en">A. Counting node degree</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 找最短路徑</span><span data-lang="en">B. Finding shortest paths</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 隨機漫步 + 阻尼因子（重要鄰居傳遞重要性）</span><span data-lang="en">C. Random walk + damping (important neighbors confer importance)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 最小生成樹</span><span data-lang="en">D. Minimum spanning tree</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. Leiden 相對 Louvain 的關鍵改善是？</p>
+<p data-lang="en">2. Leiden's key improvement over Louvain is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 速度更快 10 倍</span><span data-lang="en">A. 10× faster</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 加入 refinement，保證每個社群內部連通</span><span data-lang="en">B. Adds refinement, guarantees connected communities</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 採用深度學習</span><span data-lang="en">C. Uses deep learning</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 不需要 modularity</span><span data-lang="en">D. Does not need modularity</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. GNN 的 message passing 指的是？</p>
+<p data-lang="en">3. GNN "message passing" refers to?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 每層中每個節點聚合鄰居特徵後更新自己</span><span data-lang="en">A. Each layer, every node aggregates neighbor features and updates itself</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 在節點間傳送 HTTP 訊息</span><span data-lang="en">B. Sending HTTP messages between nodes</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 邊上的權重共享</span><span data-lang="en">C. Edge weight sharing</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 隨機 dropout</span><span data-lang="en">D. Random dropout</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="time-series-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 15: 時間序列探勘" data-en="Ch 15: Time Series Mining">Ch 15: 時間序列探勘</span></a>
+<a href="ehr-mining.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 17: 電子病歷資料探勘" data-en="Ch 17: EHR Data Mining">Ch 17: 電子病歷資料探勘</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// 6-node directed graph: nodes laid out on a circle
+const nodes=['A','B','C','D','E','F'];
+const positions=[
+ {x:1,y:5},{x:5,y:5.5},{x:7,y:3},
+ {x:5,y:0.7},{x:1,y:1},{x:-1,y:3}
+];
+// directed edges (from, to)
+const edges=[
+ [0,1],[1,2],[2,3],[3,4],[4,0],[4,5],[5,0],
+ [1,3],[2,0],[5,1]
+];
+const N=nodes.length;
+// Build adjacency: outLinks[i] = list of j such that edge i->j
+const out=Array.from({length:N},()=>[]);
+edges.forEach(([a,b])=>out[a].push(b));
+const Lout=out.map(o=>o.length);   // out-degree (L(u))
+
+function pagerank(d, iters=30){
+ let pr=Array(N).fill(1/N);
+ for(let t=0;t<iters;t++){
+  const next=Array(N).fill((1-d)/N);
+  for(let u=0;u<N;u++){
+   if(Lout[u]===0){ // dangling: distribute evenly
+    for(let v=0;v<N;v++) next[v]+=d*pr[u]/N;
+   } else {
+    for(const v of out[u]) next[v]+=d*pr[u]/Lout[u];
+   }
+  }
+  pr=next;
+ }
+ return pr;
+}
+
+const prChart=new Chart(document.getElementById('prChart'),{
+ type:'scatter',
+ data:{datasets:[
+  {label:'Nodes',data:positions.map((p,i)=>({x:p.x,y:p.y,label:nodes[i]})),
+   backgroundColor:'rgba(217,119,6,.7)',borderColor:'rgba(180,83,9,.95)',borderWidth:2,pointRadius:[]},
+  // edges as line datasets
+  ...edges.map(([a,b])=>({
+   label:'',data:[positions[a],positions[b]],
+   showLine:true,borderColor:'rgba(100,116,139,.45)',borderWidth:1,
+   pointRadius:0,fill:false,tension:0
+  }))
+ ]},
+ options:{responsive:true,maintainAspectRatio:false,animation:false,
+  plugins:{legend:{display:false},
+   tooltip:{callbacks:{label:(c)=>c.dataset.label==='Nodes'?(c.raw.label+': PR='+(c.raw.pr||0).toFixed(3)):''}}},
+  scales:{x:{display:false,min:-2,max:8},y:{display:false,min:-1,max:7}}}});
+
+function update(){
+ const d=+document.getElementById('sliderDamp').value;
+ document.getElementById('valD').textContent=d.toFixed(2);
+ document.getElementById('dStat').textContent='d: '+d.toFixed(2);
+ const pr=pagerank(d,30);
+ const maxPr=Math.max(...pr);
+ // attach pr to node points and scale radius
+ prChart.data.datasets[0].data=positions.map((p,i)=>({x:p.x,y:p.y,label:nodes[i],pr:pr[i]}));
+ prChart.data.datasets[0].pointRadius=pr.map(v=>6+24*(v/maxPr));
+ prChart.update('none');
+ const topI=pr.indexOf(maxPr);
+ const L=I18n.get();
+ document.getElementById('topNode').textContent=(L==='zh'?'最高 PR: ':'Top PR: ')+nodes[topI]+' ('+pr[topI].toFixed(3)+')';
+}
+document.getElementById('sliderDamp').addEventListener('input',update);
+document.addEventListener('langchange',update);
+update();
+
+const QF={zh:{q1_y:'PageRank 是隨機漫步 + 阻尼，重要鄰居會把重要性傳遞給你。',q1_n:'C 為正確答案。',q2_y:'Leiden 加 refinement 步驟，保證每個社群連通並改進收斂。',q2_n:'B 為正確答案。',q3_y:'GNN 每層中節點聚合鄰居 → 變換 → 更新自身表徵。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'PageRank = random walk + damping; important neighbors confer importance.',q1_n:'Correct answer is C.',q2_y:'Leiden adds a refinement step, guarantees connected communities and better convergence.',q2_n:'Correct answer is B.',q3_y:'GNN: each layer aggregates neighbors → transform → update self representation.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

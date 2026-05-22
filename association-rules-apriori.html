@@ -1,0 +1,288 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 11: Apriori, FP-Growth, Eclat — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html" class="active">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 11 / 20 · MODULE C</div>
+<h1 data-zh="關聯規則探勘：Apriori 與 FP-Growth" data-en="Association Rule Mining: Apriori & FP-Growth">關聯規則探勘</h1>
+<p class="subtitle" data-lang="zh">「買啤酒的人也常買尿布」——關聯規則的故事人盡皆知，但背後的支援度、信賴度、Lift 三個基本量才是評估規則的真功夫。</p>
+<p class="subtitle" data-lang="en">"People who buy beer also buy diapers." The story is famous; the real craft is the trio of support, confidence, and lift that judges whether a rule is meaningful.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="交易、項集、規則" data-en="Transactions, Itemsets, Rules">交易、項集、規則</h2>
+<div data-lang="zh">
+<p>輸入資料是「交易資料庫」：每筆交易 T 是一個項目集合（如購物車、共現症狀、共處方）。任意項目組合稱為 <strong>itemset</strong>，被夠多交易支持的稱為 <em>frequent itemset</em>。形如 X ⇒ Y 的稱為 <strong>關聯規則</strong>（X、Y 互不相交）。</p>
+<p>生物醫學應用：共現症狀網絡、共處方藥物模式、SNP 共現、ICD 碼共現、單細胞共表達。Nature Sci Rep 2026 提出的 <strong>ASEA</strong>（Association Subgraph Enrichment Analysis）就是把關聯規則與基因本體 (Gene Ontology) 結合的 ontology-driven 變體。</p>
+</div>
+<div data-lang="en">
+<p>The input is a transaction database: each transaction T is a set of items (shopping cart, co-occurring symptoms, co-prescriptions). Any item combination is an <strong>itemset</strong>; if enough transactions support it, it's <em>frequent</em>. An <strong>association rule</strong> takes the form X ⇒ Y (X and Y disjoint).</p>
+<p>Biomedical uses: symptom co-occurrence networks, co-prescription patterns, SNP co-occurrence, ICD code combinations, single-cell co-expression. <strong>ASEA</strong> (Association Subgraph Enrichment Analysis, Nature Sci Rep 2026) is an ontology-driven variant that fuses association rules with the Gene Ontology.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="三大指標" data-en="THREE METRICS">三大指標</div>
+<h2 data-zh="一、Support / Confidence / Lift（與其他輔助）" data-en="I. Support / Confidence / Lift (+ Helpers)">一、Support / Confidence / Lift</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="指標" data-en="Metric">指標</th><th data-zh="公式" data-en="Formula">公式</th><th data-zh="意義" data-en="Meaning">意義</th></tr></thead>
+<tbody>
+<tr><td><strong>Support</strong></td><td>P(X∪Y) = |T含X∪Y| / |T|</td><td><span data-lang="zh">該組合出現的頻率，過低代表罕見</span><span data-lang="en">Frequency of the combination — low = rare</span></td></tr>
+<tr><td><strong>Confidence</strong></td><td>P(Y|X) = supp(X∪Y) / supp(X)</td><td><span data-lang="zh">在含 X 的交易中，含 Y 的比例</span><span data-lang="en">Among X-transactions, fraction also containing Y</span></td></tr>
+<tr><td><strong>Lift</strong></td><td>P(Y|X) / P(Y) = conf / supp(Y)</td><td><span data-lang="zh">&gt;1 正相關、=1 獨立、&lt;1 負相關</span><span data-lang="en">&gt;1 positive, =1 independent, &lt;1 negative</span></td></tr>
+<tr><td><strong>Leverage</strong></td><td>P(X∪Y) − P(X)·P(Y)</td><td><span data-lang="zh">超出獨立假設的「絕對」差</span><span data-lang="en">Absolute deviation from independence</span></td></tr>
+<tr><td><strong>Conviction</strong></td><td>(1−supp(Y)) / (1−conf)</td><td><span data-lang="zh">∞ 表示 X 完全暗示 Y；1 表示獨立</span><span data-lang="en">∞ if X always implies Y; 1 if independent</span></td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>為什麼需要 Lift？</strong>高信賴度可能只是因為 Y 本來就常見（如「啤酒 ⇒ 麵包」conf=0.9，但其實買麵包的本來就 0.92）。Lift &gt; 1 才代表 X 真的「提升」了 Y 出現的可能性。</span>
+<span data-lang="en"><strong>Why lift?</strong> High confidence can simply reflect Y being common (e.g., beer ⇒ bread with 0.9 confidence, but bread itself is bought by 92%). Lift &gt; 1 means X genuinely <em>raises</em> the chance of Y.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="演算法" data-en="ALGORITHMS">演算法</div>
+<h2 data-zh="二、Apriori、FP-Growth、Eclat" data-en="II. Apriori, FP-Growth, Eclat">二、三大演算法</h2>
+<div class="card-grid cols-3">
+<div class="card"><h4>Apriori (1994)</h4>
+<p data-lang="zh">逐層搜尋：先找 1-itemset，再合併成候選 2-itemset，掃資料庫過濾，再 3-itemset…。核心利器是 <strong>反單調性 (anti-monotone)</strong>：若任一子集不頻繁，超集必不頻繁——可大幅剪枝。</p>
+<p data-lang="en">Level-wise search: find 1-itemsets, join into candidate 2-itemsets, scan DB to prune, then 3-itemsets... Key: the <strong>anti-monotone</strong> property — if a subset is infrequent, every superset must be — enabling massive pruning.</p></div>
+<div class="card"><h4>FP-Growth (2000)</h4>
+<p data-lang="zh">建立壓縮的 <strong>FP-tree</strong>，僅需<strong>兩次</strong>掃資料庫，避免 Apriori 的候選集爆炸。在密集資料上比 Apriori 快 10–100×。</p>
+<p data-lang="en">Builds a compact <strong>FP-tree</strong>; only <strong>two</strong> DB scans, avoiding Apriori's candidate explosion. On dense data, 10–100× faster than Apriori.</p></div>
+<div class="card"><h4>Eclat (2000)</h4>
+<p data-lang="zh">使用 <strong>垂直 tidlist</strong>（每個 item 記錄它出現在哪些交易 ID）。藉由 tidlist 交集計算支援度，記憶體效率高，適合中等大小資料。</p>
+<p data-lang="en">Uses <strong>vertical tidlists</strong> (each item lists transaction IDs it appears in). Support is computed by tidlist intersection — memory-efficient, good for mid-sized data.</p></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>規則數爆炸：</strong>低 support 可產生數百萬規則。實務上會 (1) 設定足夠的 min_support，(2) 取 Top-N by Lift，(3) 用 <strong>closed</strong> 或 <strong>maximal</strong> itemset 限縮輸出，(4) 視覺化用 arulesViz 的 grouped matrix / graph。</span>
+<span data-lang="en"><strong>Rule explosion:</strong> low support yields millions of rules. In practice: (1) set min_support high enough, (2) take Top-N by lift, (3) restrict to <strong>closed</strong> or <strong>maximal</strong> itemsets, (4) visualize with arulesViz grouped matrix / graph.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="調整 min support 觀察規則數變化" data-en="Slide min support and watch rules shrink">互動：support / confidence 雙閘門</h2>
+<div data-lang="zh"><p>下面以 200 筆模擬處方資料試算，請拖動門檻——看通過的規則數如何變化，以及 Top-5 規則的 Lift 條形圖。</p></div>
+<div data-lang="en"><p>Using 200 simulated prescription transactions — slide the thresholds and watch the rule count and top-5 lift bar chart change.</p></div>
+<div class="interactive-panel">
+<div class="slider-row">
+<label>min support = <span id="suppVal">0.10</span></label>
+<input type="range" id="suppSlider" min="0.02" max="0.40" value="0.10" step="0.01">
+</div>
+<div class="slider-row">
+<label>min confidence = <span id="confVal">0.40</span></label>
+<input type="range" id="confSlider" min="0.20" max="0.95" value="0.40" step="0.05">
+</div>
+<div class="chart-container"><canvas id="arChart"></canvas></div>
+<div id="arStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="三、演算法選擇與規則篩選" data-en="III. Picking an Algorithm and Filtering Rules">三、演算法與規則篩選</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="關聯規則探勘決策樹" data-en="Association Mining Decision Tree">關聯規則探勘決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>小資料、教學示範、需逐層解釋？ <span class="dt-arrow">→ Apriori (arules / mlxtend)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>大型密集資料？ <span class="dt-arrow">→ FP-Growth（更少 DB 掃描）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>中型稀疏資料、記憶體有限？ <span class="dt-arrow">→ Eclat（垂直 tidlist 交集）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>規則太多想壓縮？ <span class="dt-arrow">→ 只保留 closed 或 maximal itemset</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>需驗證統計顯著性？ <span class="dt-arrow">→ Fisher exact + BH 多重檢定校正</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>生醫資料需結合本體？ <span class="dt-arrow">→ ASEA（Gene Ontology + 關聯規則）</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Small data, teaching, need step-by-step? <span class="dt-arrow">→ Apriori (arules / mlxtend)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Large dense data? <span class="dt-arrow">→ FP-Growth (fewer DB scans)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Mid-size sparse data, memory-tight? <span class="dt-arrow">→ Eclat (vertical tidlist intersect)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Too many rules — compress? <span class="dt-arrow">→ Keep closed or maximal itemsets only</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Need statistical significance? <span class="dt-arrow">→ Fisher exact + BH multiple-testing correction</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>Biomedical data with ontology context? <span class="dt-arrow">→ ASEA (Gene Ontology + rules)</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：Apriori、FP-Growth、規則篩選" data-en="Implementation: Apriori, FP-Growth, Rule Filtering">實作</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / arules + arulesViz</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / mlxtend</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(arules); <span class="func">library</span>(arulesViz)
+
+<span class="comment"># 1) 載入 transactions / load transactions</span>
+data(<span class="str">"Groceries"</span>)        <span class="comment"># 9835 個雜貨店交易 / 9835 grocery baskets</span>
+
+<span class="comment"># 2) Apriori 找頻繁項集 + 關聯規則</span>
+rules &lt;- <span class="func">apriori</span>(Groceries,
+  parameter = list(support = <span class="num">0.005</span>,
+                   confidence = <span class="num">0.30</span>,
+                   minlen = <span class="num">2</span>, maxlen = <span class="num">5</span>))
+inspect(<span class="func">head</span>(<span class="func">sort</span>(rules, by = <span class="str">"lift"</span>), <span class="num">10</span>))
+
+<span class="comment"># 3) FP-Growth（透過 fim4r 或 SPMF 介面）/ FP-Growth alt</span>
+fi &lt;- <span class="func">eclat</span>(Groceries, parameter = list(support = <span class="num">0.005</span>))
+rules2 &lt;- <span class="func">ruleInduction</span>(fi, Groceries, confidence = <span class="num">0.3</span>)
+
+<span class="comment"># 4) 去冗：closed / maximal</span>
+closed &lt;- <span class="func">is.closed</span>(fi); maxset &lt;- <span class="func">is.maximal</span>(fi)
+
+<span class="comment"># 5) 視覺化 / visualize</span>
+plot(rules, method = <span class="str">"grouped"</span>)
+plot(<span class="func">head</span>(rules, <span class="num">20</span>, by = <span class="str">"lift"</span>), method = <span class="str">"graph"</span>)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> mlxtend.preprocessing <span class="kw">import</span> TransactionEncoder
+<span class="kw">from</span> mlxtend.frequent_patterns <span class="kw">import</span> apriori, fpgrowth, association_rules
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+
+<span class="comment"># 1) 編碼為 one-hot DataFrame / encode as one-hot</span>
+te = <span class="func">TransactionEncoder</span>()
+te_ary = te.fit(transactions).transform(transactions)
+df = pd.<span class="func">DataFrame</span>(te_ary, columns=te.columns_)
+
+<span class="comment"># 2) Apriori 找頻繁項集</span>
+fi_apr = <span class="func">apriori</span>(df, min_support=<span class="num">0.05</span>, use_colnames=<span class="kw">True</span>)
+
+<span class="comment"># 3) FP-Growth（更快，dense data）/ FP-Growth (faster on dense)</span>
+fi_fp  = <span class="func">fpgrowth</span>(df, min_support=<span class="num">0.05</span>, use_colnames=<span class="kw">True</span>)
+
+<span class="comment"># 4) 產生並按 lift 排序 / generate rules sorted by lift</span>
+rules = <span class="func">association_rules</span>(fi_fp, metric=<span class="str">"lift"</span>, min_threshold=<span class="num">1.2</span>)
+rules = rules[(rules[<span class="str">"confidence"</span>] &gt;= <span class="num">0.30</span>) &amp;
+              (rules[<span class="str">"support"</span>]    &gt;= <span class="num">0.05</span>)] \
+        .sort_values(<span class="str">"lift"</span>, ascending=<span class="kw">False</span>)
+print(rules[[<span class="str">"antecedents"</span>,<span class="str">"consequents"</span>,<span class="str">"support"</span>,<span class="str">"confidence"</span>,<span class="str">"lift"</span>]].head(<span class="num">10</span>))
+
+<span class="comment"># 5) 對 lift 進一步排序並視覺化 / visualise top rules</span>
+<span class="kw">import</span> matplotlib.pyplot <span class="kw">as</span> plt
+plt.barh([str(s) <span class="kw">for</span> s <span class="kw">in</span> rules.antecedents.head(<span class="num">10</span>)], rules.lift.head(<span class="num">10</span>))</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. Lift &gt; 1 表示什麼？</p>
+<p data-lang="en">1. Lift &gt; 1 means?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. X 與 Y 統計上獨立</span><span data-lang="en">A. X and Y are statistically independent</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. X 出現會「提升」Y 出現機率（正相關）</span><span data-lang="en">B. X "lifts" the chance of Y (positive association)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. X 與 Y 負相關</span><span data-lang="en">C. X and Y are negatively associated</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 規則的信賴度大於 1</span><span data-lang="en">D. Confidence is greater than 1</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. FP-Growth 相較於 Apriori 的主要優勢？</p>
+<p data-lang="en">2. The main advantage of FP-Growth over Apriori is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 結果規則數更少</span><span data-lang="en">A. Fewer rules produced</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 支援連續變數</span><span data-lang="en">B. Supports continuous variables</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 僅兩次掃資料庫，無候選集爆炸</span><span data-lang="en">C. Only 2 DB scans, no candidate explosion</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 不需要 min_support</span><span data-lang="en">D. Needs no min_support</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 支援度的「反單調性」(anti-monotone) 指？</p>
+<p data-lang="en">3. The anti-monotone property of support means?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 若 X 不頻繁，則 X∪Y 必不頻繁——可剪枝</span><span data-lang="en">A. If X is infrequent, every superset X∪Y is too — enables pruning</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 支援度永遠單調遞增</span><span data-lang="en">B. Support is monotonically increasing</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 支援度與 lift 反向</span><span data-lang="en">C. Support inversely tracks lift</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 支援度永遠 = 信賴度</span><span data-lang="en">D. Support always equals confidence</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="density-based-dbscan.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 10: 密度型與機率型分群" data-en="Ch 10: Density-Based and Probabilistic Clustering">Ch 10: 密度型與機率型分群</span></a>
+<a href="sequential-pattern-mining.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 12: 序列模式探勘與流程探勘導論" data-en="Ch 12: Sequential Pattern Mining + Process Mining Intro">Ch 12: 序列模式探勘與流程探勘導論</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Simulated prescription transactions / 模擬處方交易
+const items=['Metformin','Aspirin','Statin','ACEi','Beta-blocker','PPI','Warfarin','Insulin','Diuretic','NSAID'];
+function rng(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+const rr=rng(42);
+const txns=[];
+for(let i=0;i<200;i++){
+ const t=new Set();
+ if(rr()<0.45){t.add('Metformin');if(rr()<0.6)t.add('Statin');if(rr()<0.4)t.add('ACEi');if(rr()<0.3)t.add('Insulin');}
+ if(rr()<0.40){t.add('Aspirin');if(rr()<0.7)t.add('Statin');if(rr()<0.5)t.add('Beta-blocker');}
+ if(rr()<0.30){t.add('Warfarin');if(rr()<0.5)t.add('PPI');}
+ if(rr()<0.25){t.add('NSAID');if(rr()<0.6)t.add('PPI');}
+ if(rr()<0.20)t.add('Diuretic');
+ while(t.size<2)t.add(items[Math.floor(rr()*items.length)]);
+ txns.push([...t]);
+}
+
+function support(set,T){let c=0;for(const t of T){if(set.every(s=>t.includes(s)))c++;}return c/T.length;}
+function genRules(T,minS,minC){
+ // 1-itemset
+ const itemSupp={};items.forEach(i=>{itemSupp[i]=support([i],T);});
+ const f1=items.filter(i=>itemSupp[i]>=minS);
+ // 2-itemset
+ const f2=[];
+ for(let i=0;i<f1.length;i++)for(let j=i+1;j<f1.length;j++){
+  const s=support([f1[i],f1[j]],T);if(s>=minS)f2.push({set:[f1[i],f1[j]],supp:s});
+ }
+ // 3-itemset (limited)
+ const f3=[];
+ for(let i=0;i<f2.length;i++)for(let k=0;k<f1.length;k++){
+  if(f2[i].set.includes(f1[k]))continue;
+  const set=[...f2[i].set,f1[k]].sort();
+  if(f3.find(x=>x.set.join()===set.join()))continue;
+  const s=support(set,T);if(s>=minS)f3.push({set,supp:s});
+ }
+ const allF=[...f2,...f3];
+ // generate rules
+ const rules=[];
+ for(const fi of allF){
+  for(let mask=1;mask<(1<<fi.set.length)-1;mask++){
+   const X=[],Y=[];
+   fi.set.forEach((it,k)=>{((mask>>k)&1)?X.push(it):Y.push(it);});
+   const sX=support(X,T),sY=support(Y,T);
+   const conf=fi.supp/sX;const lift=conf/sY;
+   if(conf>=minC)rules.push({X,Y,supp:fi.supp,conf,lift});
+  }
+ }
+ return{n_freq:allF.length,rules:rules.sort((a,b)=>b.lift-a.lift)};
+}
+
+const arChart=new Chart(document.getElementById('arChart'),{type:'bar',data:{labels:[],datasets:[{label:'Lift',data:[],backgroundColor:'rgba(217,119,6,.7)'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{beginAtZero:true,title:{display:true,text:'Lift'}}},plugins:{legend:{display:false}}}});
+
+function refresh(){
+ const minS=+document.getElementById('suppSlider').value,minC=+document.getElementById('confSlider').value;
+ document.getElementById('suppVal').textContent=minS.toFixed(2);
+ document.getElementById('confVal').textContent=minC.toFixed(2);
+ const{n_freq,rules}=genRules(txns,minS,minC);
+ const top=rules.slice(0,5);
+ arChart.data.labels=top.map(r=>r.X.join('+')+' ⇒ '+r.Y.join('+'));
+ arChart.data.datasets[0].data=top.map(r=>+r.lift.toFixed(2));
+ arChart.update('none');
+ const L=I18n.get();
+ document.getElementById('arStats').innerHTML=
+  `<span class="sim-stat neutral">${L==='zh'?'頻繁項集':'Frequent itemsets'}: ${n_freq}</span>`+
+  `<span class="sim-stat ${rules.length>0?'pass':'fail'}">${L==='zh'?'規則數':'Rules'}: ${rules.length}</span>`+
+  `<span class="sim-stat neutral">${L==='zh'?'最高 lift':'Top lift'}: ${rules.length?rules[0].lift.toFixed(2):'-'}</span>`+
+  `<span class="sim-stat neutral">supp≥${minS.toFixed(2)} · conf≥${minC.toFixed(2)}</span>`;
+}
+['suppSlider','confSlider'].forEach(id=>document.getElementById(id).addEventListener('input',refresh));
+document.addEventListener('langchange',refresh);
+refresh();
+
+const QF={zh:{q1_y:'Lift>1 表示 X 提升 Y 的出現機率。',q1_n:'B 為正確答案。',q2_y:'FP-Growth 只掃兩次資料庫，無候選集爆炸。',q2_n:'C 為正確答案。',q3_y:'反單調性：子集不頻繁則超集必不頻繁。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'Lift > 1 means X raises the chance of Y.',q1_n:'Correct answer is B.',q2_y:'FP-Growth needs only two DB scans and avoids candidate explosion.',q2_n:'Correct answer is C.',q3_y:'Anti-monotone: if a subset is infrequent every superset is too.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

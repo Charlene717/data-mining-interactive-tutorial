@@ -1,0 +1,238 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 19: Literature Mining — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html" class="active">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 19 / 20 · MODULE E</div>
+<h1 data-zh="PubMed 與文獻探勘" data-en="PubMed & Literature Mining">PubMed 與文獻探勘</h1>
+<p class="subtitle" data-lang="zh">3,800 萬篇摘要、每年新增百萬——把生醫文獻變成可查詢、可推理的知識圖譜。</p>
+<p class="subtitle" data-lang="en">38M abstracts, growing by ~1M / year — turning biomedical literature into a queryable, inferable knowledge graph.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="從關鍵字查詢到知識圖譜" data-en="From Keyword Search to Knowledge Graph">從關鍵字查詢到知識圖譜</h2>
+<div data-lang="zh">
+<p>PubMed 由 NLM 維護，2025 年已超過 3,800 萬筆引用。文獻探勘的層次大致為：(1) <strong>檢索 / Boolean</strong>，(2) <strong>實體辨識 (NER)</strong>，(3) <strong>關係抽取 (RE)</strong>，(4) <strong>知識圖譜 (KG) 建構與推理</strong>，(5) <strong>藥物再利用</strong> (drug repurposing) 與 <strong>假說生成</strong> (Swanson ABC)。</p>
+<p>近年 LLM/領域 BERT 大幅提升了 NER 與 RE 的 F1：<strong>BioBERT</strong> (2019)、<strong>PubMedBERT</strong> (2020)、<strong>SciSpacy</strong>、<strong>BERN2</strong> (2022)、<strong>BioGPT</strong> (2022)、<strong>Med-Gemini</strong> (2024)、<strong>BioMistral 7B</strong> (2024)。但<strong>幻覺 (hallucination)</strong> 與<strong>引用偽造</strong>仍是 LLM 在文獻萃取上的最大風險。</p>
+</div>
+<div data-lang="en">
+<p>PubMed (NLM) holds 38M+ citations as of 2025. Literature mining layers roughly as: (1) <strong>retrieval / Boolean</strong>, (2) <strong>NER</strong>, (3) <strong>relation extraction</strong>, (4) <strong>knowledge-graph construction &amp; inference</strong>, (5) <strong>drug repurposing</strong> and <strong>hypothesis generation</strong> (Swanson's ABC).</p>
+<p>Domain BERTs and LLMs lift NER/RE F1 dramatically: <strong>BioBERT</strong> (2019), <strong>PubMedBERT</strong> (2020), <strong>SciSpacy</strong>, <strong>BERN2</strong> (2022), <strong>BioGPT</strong> (2022), <strong>Med-Gemini</strong> (2024), <strong>BioMistral 7B</strong> (2024). But <strong>hallucination</strong> and <strong>fabricated citations</strong> remain the biggest LLM risks in literature extraction.</p>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>NCBI API 速率限制：</strong>未申請 API key = 3 req/sec；申請後可至 10 req/sec。違反限制會被臨時封 IP。</span>
+<span data-lang="en"><strong>NCBI API rate limit:</strong> 3 req/sec without API key, 10 req/sec with key. Abuse leads to temporary IP block.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="檢索與 MeSH" data-en="RETRIEVAL & MESH">檢索與 MeSH</div>
+<h2 data-zh="一、E-utilities 與 MeSH 索引" data-en="I. E-utilities and MeSH Indexing">一、E-utilities 與 MeSH 索引</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="工具" data-en="Tool">工具</th><th data-zh="用途" data-en="Purpose">用途</th><th data-zh="範例" data-en="Example">範例</th></tr></thead>
+<tbody>
+<tr><td><strong>ESearch</strong></td><td data-zh="關鍵字 → PMID list">keyword → PMID list</td><td>db=pubmed&amp;term=metformin[MeSH]</td></tr>
+<tr><td><strong>EFetch</strong></td><td data-zh="PMID → 摘要 XML/JSON">PMID → abstract XML/JSON</td><td>retmode=xml&amp;rettype=abstract</td></tr>
+<tr><td><strong>ELink</strong></td><td data-zh="文獻間 / 跨資料庫鏈接">paper-paper / cross-db links</td><td>cmd=neighbor</td></tr>
+<tr><td><strong>EPost / ESummary</strong></td><td data-zh="批次 history / 摘要 metadata">batch history / metadata</td><td>WebEnv + query_key</td></tr>
+<tr><td><strong>MeSH</strong></td><td data-zh="29,000+ 受控詞彙，自動上推階層">29k+ controlled terms, hierarchical</td><td>"Diabetes Mellitus, Type 2"</td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>MeSH 自動爆展 (explosion)：</strong>查 <code>"Antineoplastic Agents"[MeSH]</code> 會自動包含所有下層藥物類別；用 <code>[Mesh:NoExp]</code> 可關閉此行為。</span>
+<span data-lang="en"><strong>MeSH explosion:</strong> querying <code>"Antineoplastic Agents"[MeSH]</code> auto-includes all child drug classes; use <code>[Mesh:NoExp]</code> to disable.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="PubMed 共現實體：基因 vs 疾病焦點" data-en="PubMed Co-occurrence: Gene vs Disease Focus">PubMed 共現實體：基因 vs 疾病焦點</h2>
+<div data-lang="zh"><p>切換焦點，顯示與「metformin」共現次數最高的實體（每個圓圈大小 = co-occurrence count，玩具資料）。</p></div>
+<div data-lang="en"><p>Toggle focus to show top entities co-occurring with "metformin" (bubble size = co-occurrence count; toy data).</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-focus="gene" data-zh="🧬 基因" data-en="🧬 Gene">🧬 基因</button>
+<button class="toggle-btn" data-focus="disease" data-zh="🦠 疾病" data-en="🦠 Disease">🦠 疾病</button>
+<button class="toggle-btn" data-focus="drug" data-zh="💊 共用藥物" data-en="💊 Co-Drug">💊 共用藥物</button>
+</div>
+<div class="chart-container"><canvas id="coChart"></canvas></div>
+<div id="coNote" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="NER 與 RE" data-en="NER & RE">NER 與 RE</div>
+<h2 data-zh="二、命名實體辨識 vs 關係抽取" data-en="II. NER vs Relation Extraction">二、命名實體辨識 vs 關係抽取</h2>
+<div class="card-grid cols-2">
+<div class="card"><div class="card-icon">🏷️</div><h4>NER</h4><div data-lang="zh"><p>把 token 分類為 GENE / DISEASE / DRUG / CHEMICAL / SPECIES。代表：SciSpacy（en_ner_bionlp13cg_md）、PubTator Central、BERN2 (2022)、BioMedical-NER-All。</p></div><div data-lang="en"><p>Classify tokens as GENE / DISEASE / DRUG / CHEMICAL / SPECIES. Tools: SciSpacy (en_ner_bionlp13cg_md), PubTator Central, BERN2 (2022), BioMedical-NER-All.</p></div></div>
+<div class="card"><div class="card-icon">↔️</div><h4>RE</h4><div data-lang="zh"><p>判斷兩實體間關係：treats / causes / inhibits / interacts_with。代表：BioRED (2022)、ChemProt、DDI corpus、GDA / CDR (BioCreative)。</p></div><div data-lang="en"><p>Classify the relation between two entities: treats / causes / inhibits / interacts_with. Datasets: BioRED (2022), ChemProt, DDI corpus, GDA / CDR (BioCreative).</p></div></div>
+</div>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="文獻探勘任務決策樹" data-en="Literature Mining Decision Tree">文獻探勘任務決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>只要<strong>找文章</strong>？ <span class="dt-arrow">→ E-utilities + MeSH Boolean</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>要從摘要<strong>抽實體</strong>？ <span class="dt-arrow">→ SciSpacy / PubTator Central / BERN2</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>要找<strong>實體間關係</strong>？ <span class="dt-arrow">→ 微調 PubMedBERT / BioRED 模型</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>要做<strong>藥物再利用</strong>？ <span class="dt-arrow">→ Hetionet / PrimeKG (2024) 上做 link prediction</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>要做<strong>系統性回顧自動化</strong>？ <span class="dt-arrow">→ Rayyan / ASReview（active learning）</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Just <strong>find papers</strong>? <span class="dt-arrow">→ E-utilities + MeSH Boolean</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div><strong>Extract entities</strong> from abstracts? <span class="dt-arrow">→ SciSpacy / PubTator Central / BERN2</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Find <strong>entity relations</strong>? <span class="dt-arrow">→ Fine-tune PubMedBERT / BioRED</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div><strong>Drug repurposing</strong>? <span class="dt-arrow">→ Link prediction on Hetionet / PrimeKG (2024)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>Automate systematic review</strong>? <span class="dt-arrow">→ Rayyan / ASReview (active learning)</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="藥物再利用 & KG" data-en="DRUG REPURPOSING & KG">藥物再利用 & KG</div>
+<h2 data-zh="三、知識圖譜與藥物再利用" data-en="III. Knowledge Graphs & Drug Repurposing">三、知識圖譜與藥物再利用</h2>
+<div data-lang="zh">
+<p>主流生醫 KG：<strong>Hetionet</strong> (47k node / 2.25M edge, 2017)、<strong>BioKG</strong>、<strong>DRKG</strong> (COVID-19, 2020)、<strong>PrimeKG</strong> (Harvard, 2023/2024 — 4M edges, 17 sources)、<strong>OpenTargets Platform</strong>、<strong>DrugBank 5</strong>。藥物再利用核心：在 (drug)–[?]→(disease) 邊上做 <strong>link prediction</strong>（如 RotatE、TransE、ComplEx、HGNN）。著名案例：sildenafil 從 angina → erectile dysfunction → pulmonary hypertension。</p>
+<p><strong>Swanson 的 ABC 假說：</strong>若 A→B 與 B→C 都在文獻中，但 A→C 未被連起來，就是可能的新假說（1986 經典 Raynaud × fish oil）。</p>
+</div>
+<div data-lang="en">
+<p>Mainstream biomedical KGs: <strong>Hetionet</strong> (47k nodes / 2.25M edges, 2017), <strong>BioKG</strong>, <strong>DRKG</strong> (COVID-19, 2020), <strong>PrimeKG</strong> (Harvard, 2023/2024 — 4M edges, 17 sources), <strong>OpenTargets Platform</strong>, <strong>DrugBank 5</strong>. Drug repurposing core: link prediction on (drug)–[?]→(disease) edges (RotatE, TransE, ComplEx, HGNN). Classic: sildenafil from angina → ED → pulmonary hypertension.</p>
+<p><strong>Swanson's ABC hypothesis:</strong> if A→B and B→C exist in literature but A→C is not yet linked, that is a candidate new hypothesis (1986: Raynaud × fish oil).</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：E-utilities + SciSpacy NER + KG" data-en="Implementation: E-utilities + SciSpacy NER + KG">實作：E-utilities + SciSpacy NER + KG</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r19')">R / easyPubMed + pubmed.mineR + udpipe</button><button class="code-tab-btn" onclick="switchTab(this,'py19')">Python / Biopython + SciSpacy + spaCy</button></div>
+<div class="code-tab-content active" id="r19"><pre><span class="func">library</span>(easyPubMed); <span class="func">library</span>(pubmed.mineR); <span class="func">library</span>(udpipe); <span class="func">library</span>(igraph)
+
+<span class="comment"># --- query PubMed via E-utilities ---</span>
+q       &lt;- <span class="str">'metformin[MeSH] AND "Type 2 Diabetes"[MeSH] AND 2024[PDAT]'</span>
+ids     &lt;- <span class="func">get_pubmed_ids</span>(q)
+abs_xml &lt;- <span class="func">fetch_pubmed_data</span>(ids, retmax = <span class="num">500</span>)
+df      &lt;- <span class="func">articles_to_list</span>(abs_xml) |&gt; <span class="func">articles_to_dataframe</span>()
+
+<span class="comment"># --- udpipe biomedical model + tokenize + lemmatize ---</span>
+m  &lt;- udpipe::<span class="func">udpipe_download_model</span>(language = <span class="str">"english-ewt"</span>)
+ud &lt;- udpipe::<span class="func">udpipe_load_model</span>(m$file_model)
+tk &lt;- udpipe::<span class="func">udpipe_annotate</span>(ud, x = df$abstract) |&gt; <span class="func">as.data.frame</span>()
+
+<span class="comment"># --- co-occurrence at sentence level &amp; KG ---</span>
+co &lt;- udpipe::<span class="func">cooccurrence</span>(tk, term = <span class="str">"lemma"</span>, group = <span class="func">c</span>(<span class="str">"doc_id"</span>,<span class="str">"sentence_id"</span>))
+g  &lt;- igraph::<span class="func">graph_from_data_frame</span>(co)
+igraph::<span class="func">plot</span>(g, vertex.size = <span class="num">5</span>, edge.arrow.size = <span class="num">0.3</span>)</pre></div>
+<div class="code-tab-content" id="py19"><pre><span class="kw">from</span> Bio <span class="kw">import</span> Entrez
+<span class="kw">import</span> scispacy, spacy
+<span class="kw">from</span> spacy.lang.en <span class="kw">import</span> English
+<span class="kw">import</span> networkx <span class="kw">as</span> nx
+Entrez.email = <span class="str">"you@uni.edu"</span>; Entrez.api_key = <span class="str">"…"</span>
+
+<span class="comment"># --- E-utilities: ESearch + EFetch ---</span>
+h    = Entrez.esearch(db=<span class="str">"pubmed"</span>, term=<span class="str">'metformin[MeSH] AND "Type 2 Diabetes"[MeSH] AND 2024[PDAT]'</span>, retmax=<span class="num">500</span>)
+ids  = Entrez.read(h)[<span class="str">"IdList"</span>]
+abs_ = Entrez.efetch(db=<span class="str">"pubmed"</span>, id=ids, rettype=<span class="str">"abstract"</span>, retmode=<span class="str">"xml"</span>).read()
+
+<span class="comment"># --- SciSpacy NER (biomed) + linker to UMLS ---</span>
+nlp = spacy.load(<span class="str">"en_ner_bionlp13cg_md"</span>)
+<span class="kw">from</span> scispacy.linking <span class="kw">import</span> EntityLinker
+nlp.add_pipe(<span class="str">"scispacy_linker"</span>, config={<span class="str">"linker_name"</span>: <span class="str">"umls"</span>, <span class="str">"resolve_abbreviations"</span>: <span class="kw">True</span>})
+
+<span class="comment"># --- entity extraction + sentence co-occurrence KG ---</span>
+G = nx.Graph()
+<span class="kw">for</span> doc <span class="kw">in</span> nlp.pipe(abstracts, batch_size=<span class="num">32</span>):
+    <span class="kw">for</span> sent <span class="kw">in</span> doc.sents:
+        ents = [(e.text, e.label_) <span class="kw">for</span> e <span class="kw">in</span> sent.ents]
+        <span class="kw">for</span> a, b <span class="kw">in</span> combinations(ents, <span class="num">2</span>):
+            G.add_edge(a[<span class="num">0</span>], b[<span class="num">0</span>], rel=f<span class="str">"{a[1]}-{b[1]}"</span>)
+
+<span class="comment"># --- LLM-augmented RE with PubMedBERT ---</span>
+<span class="kw">from</span> transformers <span class="kw">import</span> pipeline
+re = pipeline(<span class="str">"text-classification"</span>, model=<span class="str">"microsoft/BiomedNLP-PubMedBERT-base-uncased-abstract-fulltext"</span>)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. MeSH (Medical Subject Headings) 是？</p>
+<p data-lang="en">1. MeSH (Medical Subject Headings) is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 一個 LLM</span><span data-lang="en">A. An LLM</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. PubMed 的全文檔案格式</span><span data-lang="en">B. PubMed's full-text format</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. NLM 維護的受控詞彙與階層分類系統</span><span data-lang="en">C. NLM-maintained controlled vocabulary with hierarchical classification</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 一種 deep-learning embedding</span><span data-lang="en">D. A deep-learning embedding</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. NER 與 RE 的差別？</p>
+<p data-lang="en">2. NER vs RE — what's the difference?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. NER 用 LLM，RE 用 RNN</span><span data-lang="en">A. NER uses LLMs, RE uses RNNs</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. NER 辨識實體本身；RE 判斷兩實體間的關係類型</span><span data-lang="en">B. NER identifies the entities; RE classifies the relation between two entities</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. NER 只用於英文</span><span data-lang="en">C. NER works only in English</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 兩者完全相同</span><span data-lang="en">D. Same thing</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. 知識圖譜上的藥物再利用 (drug repurposing) 主要利用？</p>
+<p data-lang="en">3. KG-based drug repurposing primarily exploits?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 在 (drug)–[?]→(disease) 上的 link prediction</span><span data-lang="en">A. Link prediction on (drug)–[?]→(disease) edges</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 重新合成新化合物</span><span data-lang="en">B. Synthesizing brand-new compounds</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 隨機抽 PubMed 文章</span><span data-lang="en">C. Random sampling of PubMed</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. SQL JOIN</span><span data-lang="en">D. SQL JOIN</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="omics-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 18: 組學資料探勘" data-en="Ch 18: Omics Data Mining">Ch 18: 組學資料探勘</span></a>
+<a href="ethics-reproducibility.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 20: 倫理、公平性與再現性" data-en="Ch 20: Ethics, Fairness &amp; Reproducibility">Ch 20: 倫理、公平性與再現性</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// --- Co-occurrence bubbles (toy) ---
+const FOCUS = {
+ gene:    [{label:'AMPK',co:312,x:1,y:5},{label:'PRKAA2',co:184,x:3,y:7},{label:'mTOR',co:267,x:5,y:4},{label:'PPARG',co:142,x:7,y:6},{label:'SLC22A1 (OCT1)',co:201,x:9,y:3}],
+ disease: [{label:'Type 2 Diabetes',co:920,x:1,y:5},{label:'PCOS',co:312,x:3,y:7},{label:'NAFLD',co:248,x:5,y:4},{label:'Cardiovascular Dz',co:402,x:7,y:6},{label:'Cancer (colorectal)',co:178,x:9,y:3}],
+ drug:    [{label:'Sitagliptin',co:188,x:1,y:5},{label:'Empagliflozin',co:241,x:3,y:7},{label:'Insulin',co:512,x:5,y:4},{label:'Liraglutide',co:174,x:7,y:6},{label:'Pioglitazone',co:139,x:9,y:3}]
+};
+function colorFor(k){return {gene:'#7c3aed',disease:'#dc2626',drug:'#0891b2'}[k];}
+const coChart = new Chart(document.getElementById('coChart'),{
+  type:'bubble',
+  data:{datasets:[{label:'metformin co-occurs', data:[], backgroundColor:'rgba(124,58,237,.55)'}]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+    scales:{x:{min:0,max:10,display:false},y:{min:0,max:10,display:false}},
+    plugins:{legend:{display:false},
+             tooltip:{callbacks:{label:c=>c.raw.label+' — n='+c.raw.co}}}}
+});
+function updCo(k){
+  const data = FOCUS[k].map(d=>({x:d.x,y:d.y,r:Math.sqrt(d.co)*1.4,label:d.label,co:d.co}));
+  coChart.data.datasets[0].data = data;
+  coChart.data.datasets[0].backgroundColor = colorFor(k)+'8c';
+  coChart.update('none');
+  const L = I18n.get();
+  const top = FOCUS[k].slice().sort((a,b)=>b.co-a.co).slice(0,3);
+  document.getElementById('coNote').innerHTML = top.map((d,i)=>`<span class="sim-stat ${i===0?'pass':'neutral'}">#${i+1} ${d.label}: ${d.co}</span>`).join('');
+}
+document.querySelectorAll('[data-focus]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-focus]').forEach(x=>x.classList.remove('active'));b.classList.add('active');updCo(b.dataset.focus);}));
+document.addEventListener('langchange',()=>updCo(document.querySelector('[data-focus].active').dataset.focus));
+updCo('gene');
+
+const QF={zh:{q1_y:'MeSH 是 NLM 控制詞彙，支援上推與爆展查詢。',q1_n:'C 為正確答案。',q2_y:'NER = 找實體；RE = 判斷實體間關係。',q2_n:'B 為正確答案。',q3_y:'KG 上做 link prediction 是再利用主流方法。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'MeSH is an NLM controlled vocabulary supporting hierarchical/exploded queries.',q1_n:'Correct answer is C.',q2_y:'NER finds entities; RE classifies the relation between two entities.',q2_n:'Correct answer is B.',q3_y:'Link prediction over KGs is the mainstream repurposing approach.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

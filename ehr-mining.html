@@ -1,0 +1,268 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 17: EHR Data Mining — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html" class="active">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 17 / 20 · MODULE E</div>
+<h1 data-zh="電子病歷資料探勘" data-en="EHR Data Mining">電子病歷資料探勘</h1>
+<p class="subtitle" data-lang="zh">從 ICD 碼到自由文字、從表型計算到存活分析——把醫院日常累積的資料變成可重現的證據。</p>
+<p class="subtitle" data-lang="en">From ICD codes to free text, from computable phenotypes to survival analysis — turning hospital exhaust data into reproducible evidence.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="EHR 資料的雙重結構" data-en="The Dual Structure of EHR Data">EHR 資料的雙重結構</h2>
+<div data-lang="zh">
+<p>電子病歷 (EHR) 同時包含<strong>結構化</strong> (診斷、用藥、檢驗、生命徵象) 與<strong>非結構化</strong> (出院摘要、影像報告、護理紀錄) 兩類資料。前者用標準術語 (ICD-9/10/11、CPT、LOINC、RxNorm、SNOMED CT) 編碼，後者需 NLP 萃取。任何一個臨床問題的探勘——再住院預測、敗血症早期警示、藥物副作用偵測——都必須先把這兩端整合成「<em>分析就緒</em>」資料表。</p>
+<p>大型公開資料集 (<strong>MIMIC-IV 2023</strong>、<strong>eICU</strong>、<strong>All of Us</strong>、<strong>N3C</strong>) 與通用資料模型 (<strong>OMOP CDM 5.4</strong>、Sentinel CDM、PCORnet CDM) 讓跨機構分析變得可能；但 <strong>缺失非隨機 (MNAR)</strong>、<strong>編碼漂移 (code drift)</strong>、<strong>記錄者偏差 (charting bias)</strong> 是每個 EHR 探勘專案都得正面處理的三大陷阱。</p>
+</div>
+<div data-lang="en">
+<p>EHR contains both <strong>structured</strong> (diagnoses, meds, labs, vitals) and <strong>unstructured</strong> (discharge summaries, imaging reports, nursing notes) data. The first uses standardized terminologies (ICD-9/10/11, CPT, LOINC, RxNorm, SNOMED CT); the second requires NLP extraction. Any clinical mining problem — readmission prediction, sepsis early warning, ADR surveillance — must first merge both sides into an <em>analysis-ready</em> table.</p>
+<p>Large open resources (<strong>MIMIC-IV 2023</strong>, <strong>eICU</strong>, <strong>All of Us</strong>, <strong>N3C</strong>) and common data models (<strong>OMOP CDM 5.4</strong>, Sentinel CDM, PCORnet CDM) enable cross-institution analytics; but <strong>MNAR missingness</strong>, <strong>code drift</strong>, and <strong>charting bias</strong> are the three traps every EHR mining project must confront.</p>
+</div>
+<div class="callout danger"><span class="callout-icon">🚨</span><div>
+<span data-lang="zh"><strong>Charting bias：</strong>「沒有記錄 ≠ 沒有發生」。一個 ICU 病人沒有 GCS 紀錄，往往代表他清醒，而不是缺失。直接 mean-impute 會嚴重失真。</span>
+<span data-lang="en"><strong>Charting bias:</strong> "Not charted ≠ did not happen." A missing GCS in an ICU patient often means alert, not missing. Naive mean-imputation will badly distort signal.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="標準術語" data-en="TERMINOLOGIES">標準術語</div>
+<h2 data-zh="一、五大標準術語體系" data-en="I. Five Major Terminology Systems">一、五大標準術語體系</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="體系" data-en="System">體系</th><th data-zh="領域" data-en="Domain">領域</th><th data-zh="範例" data-en="Example">範例</th></tr></thead>
+<tbody>
+<tr><td><strong>ICD-10-CM / ICD-11</strong></td><td data-zh="診斷">診斷</td><td>I10 = essential hypertension</td></tr>
+<tr><td><strong>CPT / HCPCS</strong></td><td data-zh="處置/服務">處置/服務</td><td>99213 = office visit, level 3</td></tr>
+<tr><td><strong>LOINC</strong></td><td data-zh="檢驗 / 觀察">檢驗 / 觀察</td><td>4548-4 = HbA1c %</td></tr>
+<tr><td><strong>RxNorm</strong></td><td data-zh="藥物">藥物</td><td>314076 = lisinopril 10 MG tablet</td></tr>
+<tr><td><strong>SNOMED CT</strong></td><td data-zh="跨領域臨床概念">跨領域臨床概念</td><td>22298006 = myocardial infarction</td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh">OHDSI <strong>Athena</strong> 提供完整 vocabulary 下載與 concept_id 映射，是 OMOP 化的第一步。</span>
+<span data-lang="en">OHDSI <strong>Athena</strong> provides full vocabulary downloads and concept_id mappings — step one of OMOP-ification.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="OMOP CDM" data-en="OMOP CDM">OMOP CDM</div>
+<h2 data-zh="二、OMOP Common Data Model 5.4" data-en="II. OMOP Common Data Model 5.4">二、OMOP Common Data Model 5.4</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">👤</div><h4>person</h4><div data-lang="zh"><p>每位病人一列；含 gender、race、ethnicity、年生日。</p></div><div data-lang="en"><p>One row per patient; gender, race, ethnicity, year of birth.</p></div></div>
+<div class="card"><div class="card-icon">📅</div><h4>observation_period</h4><div data-lang="zh"><p>定義病人在資料庫中「可被觀察」的時間窗，避免左截右刪偏差。</p></div><div data-lang="en"><p>Defines the window a patient is observable in the source — guards against left-truncation / right-censoring bias.</p></div></div>
+<div class="card"><div class="card-icon">🩺</div><h4>condition_occurrence</h4><div data-lang="zh"><p>所有診斷事件；指向 SNOMED-mapped concept_id。</p></div><div data-lang="en"><p>All diagnosis events; references SNOMED-mapped concept_id.</p></div></div>
+<div class="card"><div class="card-icon">💊</div><h4>drug_exposure</h4><div data-lang="zh"><p>所有處方/施用記錄；含 days_supply、route，可推算 era。</p></div><div data-lang="en"><p>All prescriptions / administrations; with days_supply, route, drug_era derivable.</p></div></div>
+<div class="card"><div class="card-icon">🧪</div><h4>measurement</h4><div data-lang="zh"><p>檢驗值；含 value_as_number、unit_concept_id、normal range。</p></div><div data-lang="en"><p>Lab values; with value_as_number, unit_concept_id, normal range.</p></div></div>
+<div class="card"><div class="card-icon">⚙️</div><h4>procedure_occurrence</h4><div data-lang="zh"><p>手術 / 處置；CPT / HCPCS / SNOMED 全部映射至 concept_id。</p></div><div data-lang="en"><p>Procedures; CPT / HCPCS / SNOMED all mapped to concept_id.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="Kaplan-Meier 存活曲線：治療 vs 對照" data-en="Kaplan-Meier Survival: Treatment vs Control">Kaplan-Meier 存活曲線：治療 vs 對照</h2>
+<div data-lang="zh"><p>調整治療相對於對照的<strong>風險比 (Hazard Ratio)</strong>。HR&lt;1 表示治療有保護效果；HR=1 兩組相同；HR&gt;1 表示治療反而有害。</p></div>
+<div data-lang="en"><p>Adjust the treatment-vs-control <strong>hazard ratio</strong>. HR&lt;1 = treatment protective; HR=1 = identical; HR&gt;1 = harmful.</p></div>
+<div class="interactive-panel">
+<div class="sim-stats"><span class="sim-stat pass" id="kmCtrl">Control median: —</span><span class="sim-stat fail" id="kmTrt">Treatment median: —</span><span class="sim-stat neutral" id="kmLR">Log-rank p: —</span></div>
+<div class="slider-group"><label><span data-zh="風險比 HR (治療/對照)" data-en="Hazard Ratio (Trt/Ctrl)">風險比 HR</span> <span id="valHR">0.60</span></label><input type="range" id="sliderHR" min="0.2" max="2.0" value="0.6" step="0.05"></div>
+<div class="chart-container"><canvas id="kmChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">x = 時間（月），y = 存活機率</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">x = time (months), y = survival probability</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="可計算表型" data-en="COMPUTABLE PHENOTYPE">可計算表型</div>
+<h2 data-zh="三、Computable Phenotype" data-en="III. Computable Phenotype">三、Computable Phenotype</h2>
+<div data-lang="zh">
+<p><strong>表型 (phenotype)</strong> = 把「這個病人是不是 type 2 diabetes」的臨床定義轉成「在 EHR 上可以執行的查詢」。<strong>PheKB</strong> 與 <strong>eMERGE Network</strong> 提供經驗證、跨機構通用的演算法庫；<strong>OHDSI ATLAS</strong> 則讓你用 cohort definition JSON 跨網絡執行。</p>
+<p>典型 T2DM 表型：(2 次門診 ICD-10 E11.* &gt; 30 天) OR (1 次住院 E11.*) OR (HbA1c ≥ 6.5%) OR (處方降血糖藥) — 並排除 type 1 與妊娠糖尿病。</p>
+</div>
+<div data-lang="en">
+<p>A <strong>phenotype</strong> turns the clinical definition of "this patient has type 2 diabetes" into an executable EHR query. <strong>PheKB</strong> and the <strong>eMERGE Network</strong> publish validated, cross-institution algorithm libraries; <strong>OHDSI ATLAS</strong> lets you run cohort-definition JSON across a network.</p>
+<p>Canonical T2DM phenotype: (2 outpatient ICD-10 E11.* &gt; 30 days apart) OR (1 inpatient E11.*) OR (HbA1c ≥ 6.5%) OR (antihyperglycemic prescription) — excluding type 1 and gestational diabetes.</p>
+</div>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="EHR 探勘任務決策樹" data-en="EHR Mining Task Decision Tree">EHR 探勘任務決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>要做<strong>時間到事件</strong>分析？ <span class="dt-arrow">→ Kaplan-Meier + log-rank → Cox PH；競爭風險用 Fine-Gray</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>要找<strong>典型治療流程</strong>？ <span class="dt-arrow">→ Treatment Pathway (bupaR / pm4py)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>要在<strong>多家醫院</strong>跑同一分析？ <span class="dt-arrow">→ OMOP CDM + OHDSI tools（聯邦式）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>要<strong>定義病人群</strong>？ <span class="dt-arrow">→ PheKB / eMERGE phenotype + chart review 驗證 PPV</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>要從<strong>自由文字</strong>抽取資訊？ <span class="dt-arrow">→ clinical NLP（cTAKES / MedSpaCy / Clinical-BERT）</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div><strong>Time-to-event</strong>? <span class="dt-arrow">→ Kaplan-Meier + log-rank → Cox PH; Fine-Gray for competing risks</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Find <strong>typical treatment trajectories</strong>? <span class="dt-arrow">→ Treatment Pathway (bupaR / pm4py)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Run the same analysis at <strong>multiple sites</strong>? <span class="dt-arrow">→ OMOP CDM + OHDSI tools (federated)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Define a <strong>patient cohort</strong>? <span class="dt-arrow">→ PheKB / eMERGE phenotype + chart-review PPV</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Extract info from <strong>free text</strong>? <span class="dt-arrow">→ Clinical NLP (cTAKES / MedSpaCy / Clinical-BERT)</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="存活分析" data-en="SURVIVAL ANALYSIS">存活分析</div>
+<h2 data-zh="四、Survival Mining" data-en="IV. Survival Mining">四、Survival Mining</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="方法" data-en="Method">方法</th><th data-zh="輸出" data-en="Output">輸出</th><th data-zh="假設 / 用途" data-en="Assumption / Use">假設 / 用途</th></tr></thead>
+<tbody>
+<tr><td><strong>Kaplan-Meier</strong></td><td data-zh="非參數存活函數 S(t)">非參數存活函數 S(t)</td><td data-zh="可視化、無假設；單一分組描述">可視化、無假設；單一分組描述</td></tr>
+<tr><td><strong>Log-rank test</strong></td><td data-zh="兩組存活曲線是否相等的 χ² 檢定">χ² for two-curve equality</td><td data-zh="假設成比例風險">Assumes proportional hazards</td></tr>
+<tr><td><strong>Cox PH</strong></td><td data-zh="HR 與信賴區間">HR with CI</td><td data-zh="比例風險假設；可含多協變項">PH assumption; multi-covariate</td></tr>
+<tr><td><strong>Fine-Gray (subdistribution)</strong></td><td data-zh="競爭風險下的累積發生函數">CIF with competing risks</td><td data-zh="存在競爭事件（如死亡 vs 出院）">When competing events exist</td></tr>
+<tr><td><strong>RSF / DeepSurv</strong></td><td data-zh="非線性、高維、互動效應">Non-linear, high-D, interactions</td><td data-zh="ML/DL 取代 Cox 的選項">ML/DL alternative to Cox</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：KM + Cox + OMOP 查詢 + 流程探勘" data-en="Implementation: KM + Cox + OMOP + Process Mining">實作：KM + Cox + OMOP 查詢 + 流程探勘</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r17')">R / survival + CDMConnector + bupaR</button><button class="code-tab-btn" onclick="switchTab(this,'py17')">Python / lifelines + pyhealth + pycaret</button></div>
+<div class="code-tab-content active" id="r17"><pre><span class="func">library</span>(survival); <span class="func">library</span>(survminer); <span class="func">library</span>(CDMConnector); <span class="func">library</span>(bupaR)
+
+<span class="comment"># --- KM + log-rank + Cox ---</span>
+fit  &lt;- <span class="func">survfit</span>(<span class="func">Surv</span>(time, status) ~ trt, data = df)
+<span class="func">ggsurvplot</span>(fit, pval = <span class="kw">TRUE</span>, risk.table = <span class="kw">TRUE</span>, conf.int = <span class="kw">TRUE</span>)
+<span class="func">survdiff</span>(<span class="func">Surv</span>(time, status) ~ trt, data = df)            <span class="comment"># log-rank</span>
+cox  &lt;- <span class="func">coxph</span>(<span class="func">Surv</span>(time, status) ~ trt + age + sex, data = df)
+
+<span class="comment"># --- OMOP CDM cohort 查詢 ---</span>
+con  &lt;- <span class="func">dbConnect</span>(duckdb::duckdb(), <span class="str">"omop_eunomia.duckdb"</span>)
+cdm  &lt;- <span class="func">cdmFromCon</span>(con, cdmSchema = <span class="str">"main"</span>, writeSchema = <span class="str">"main"</span>)
+t2dm &lt;- cdm$condition_occurrence |&gt;
+        dplyr::<span class="func">filter</span>(condition_concept_id %in% t2dm_concepts) |&gt;
+        dplyr::<span class="func">distinct</span>(person_id)
+
+<span class="comment"># --- Treatment Pathway / process mining ---</span>
+log &lt;- <span class="func">eventlog</span>(df_events, case_id = <span class="str">"person_id"</span>, activity_id = <span class="str">"drug"</span>,
+               activity_instance_id = <span class="str">"era_id"</span>, lifecycle_id = <span class="str">"status"</span>,
+               timestamp = <span class="str">"era_start"</span>, resource_id = <span class="str">"hospital"</span>)
+log |&gt; <span class="func">process_map</span>(type = <span class="func">frequency</span>(<span class="str">"absolute"</span>))</pre></div>
+<div class="code-tab-content" id="py17"><pre><span class="kw">from</span> lifelines <span class="kw">import</span> KaplanMeierFitter, CoxPHFitter
+<span class="kw">from</span> lifelines.statistics <span class="kw">import</span> logrank_test
+<span class="kw">import</span> pyhealth.datasets <span class="kw">as</span> ph
+<span class="kw">from</span> pycaret.survival_analysis <span class="kw">import</span> *
+<span class="kw">import</span> pm4py
+
+<span class="comment"># --- KM + log-rank + Cox ---</span>
+kmf = KaplanMeierFitter()
+<span class="kw">for</span> name, grp <span class="kw">in</span> df.groupby(<span class="str">"trt"</span>):
+    kmf.fit(grp[<span class="str">"time"</span>], grp[<span class="str">"status"</span>], label=name).plot_survival_function()
+lr  = logrank_test(df.loc[df.trt==<span class="num">1</span>,<span class="str">"time"</span>], df.loc[df.trt==<span class="num">0</span>,<span class="str">"time"</span>],
+                   df.loc[df.trt==<span class="num">1</span>,<span class="str">"status"</span>], df.loc[df.trt==<span class="num">0</span>,<span class="str">"status"</span>])
+cox = CoxPHFitter().fit(df, duration_col=<span class="str">"time"</span>, event_col=<span class="str">"status"</span>)
+
+<span class="comment"># --- MIMIC-IV via pyhealth (OMOP-ready) ---</span>
+ds  = ph.MIMIC4Dataset(root=<span class="str">"data/mimic4"</span>, tables=[<span class="str">"diagnoses_icd"</span>, <span class="str">"prescriptions"</span>])
+ds.stat()
+
+<span class="comment"># --- Treatment pathway / process mining ---</span>
+log = pm4py.format_dataframe(events_df, case_id=<span class="str">"person_id"</span>,
+                             activity_key=<span class="str">"drug"</span>, timestamp_key=<span class="str">"era_start"</span>)
+net, im, fm = pm4py.discover_petri_net_inductive(log)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. OMOP CDM 主要解決什麼問題？</p>
+<p data-lang="en">1. What problem does OMOP CDM primarily solve?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 自動 imputation 缺失值</span><span data-lang="en">A. Auto-imputes missing values</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 加密 PHI</span><span data-lang="en">B. Encrypts PHI</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 將不同來源 EHR 標準化為同一資料模型 + 詞彙</span><span data-lang="en">C. Standardizes heterogeneous EHRs into one data model + vocabulary</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 取代 ICD-10</span><span data-lang="en">D. Replaces ICD-10</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. PheKB / eMERGE 提供的是？</p>
+<p data-lang="en">2. PheKB / eMERGE provide?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 大型病人資料集</span><span data-lang="en">A. Large patient datasets</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 經驗證的可計算表型演算法庫</span><span data-lang="en">B. Validated computable-phenotype algorithm libraries</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 一種 deep learning 模型</span><span data-lang="en">C. A deep learning model</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. ICD-10 → SNOMED 翻譯器</span><span data-lang="en">D. ICD-10 → SNOMED translator</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. Log-rank 檢定是用來？</p>
+<p data-lang="en">3. The log-rank test is used to?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 檢定兩組（以上）的存活曲線是否相等</span><span data-lang="en">A. Test equality of two-or-more survival curves</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 估計 HR 的點估計</span><span data-lang="en">B. Estimate point HR</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 處理競爭風險</span><span data-lang="en">C. Handle competing risks</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 自動選 covariates</span><span data-lang="en">D. Auto-select covariates</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="graph-network-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 16: 圖與網路探勘" data-en="Ch 16: Graph &amp; Network Mining">Ch 16: 圖與網路探勘</span></a>
+<a href="omics-mining.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 18: 組學資料探勘" data-en="Ch 18: Omics Data Mining">Ch 18: 組學資料探勘</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// --- Kaplan-Meier interactive ---
+const T = Array.from({length:25}, (_,i)=>i);     // months 0..24
+const lambdaC = 0.06;                              // baseline hazard /month
+function kmCurves(hr){
+  const sC = T.map(t=>Math.exp(-lambdaC*t));
+  const sT = T.map(t=>Math.exp(-lambdaC*hr*t));
+  return [sC, sT];
+}
+function median(s){
+  for(let i=0;i<s.length;i++) if(s[i]<=0.5) return i;
+  return '>24';
+}
+function approxLogrankP(hr){
+  // toy: |log HR| ~ effect size, mock p falling with distance from 1
+  const z = Math.abs(Math.log(hr))*3.2;
+  const p = Math.max(1e-4, 2*(1-0.5*(1+Math.tanh(z/Math.SQRT2))));
+  return p;
+}
+const kmChart = new Chart(document.getElementById('kmChart'),{
+  type:'line',
+  data:{labels:T, datasets:[
+    {label:'Control', data:kmCurves(0.6)[0], borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.15)', stepped:true, fill:false, pointRadius:0, borderWidth:2.5},
+    {label:'Treatment', data:kmCurves(0.6)[1], borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,.15)', stepped:true, fill:false, pointRadius:0, borderWidth:2.5}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+    scales:{x:{title:{display:true,text:'months'}},y:{min:0,max:1,title:{display:true,text:'S(t)'}}},
+    plugins:{legend:{position:'top'}}}
+});
+function updKM(){
+  const hr = +document.getElementById('sliderHR').value;
+  document.getElementById('valHR').textContent = hr.toFixed(2);
+  const [sC,sT] = kmCurves(hr);
+  kmChart.data.datasets[0].data = sC;
+  kmChart.data.datasets[1].data = sT;
+  kmChart.update('none');
+  document.getElementById('kmCtrl').textContent = (I18n.get()==='zh'?'對照中位數: ':'Control median: ')+median(sC)+' mo';
+  document.getElementById('kmTrt').textContent  = (I18n.get()==='zh'?'治療中位數: ':'Treatment median: ')+median(sT)+' mo';
+  const p = approxLogrankP(hr);
+  document.getElementById('kmLR').textContent   = 'log-rank p ≈ '+(p<0.001?'<0.001':p.toFixed(3));
+}
+document.getElementById('sliderHR').addEventListener('input', updKM);
+document.addEventListener('langchange', updKM);
+updKM();
+
+const QF={zh:{q1_y:'OMOP CDM 透過共通 schema + Athena vocabulary 達到跨機構互通。',q1_n:'C 為正確答案。',q2_y:'PheKB / eMERGE 是表型演算法庫，附帶 PPV 驗證。',q2_n:'B 為正確答案。',q3_y:'log-rank 為非參數兩組（或多組）存活曲線等價檢定。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'OMOP CDM provides a common schema + Athena vocabulary for cross-site interoperability.',q1_n:'Correct answer is C.',q2_y:'PheKB / eMERGE are phenotype algorithm libraries with PPV validation.',q2_n:'Correct answer is B.',q3_y:'log-rank is a non-parametric test for equality of survival curves.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

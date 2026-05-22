@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data Mining 互動考題</title>
+<style>
+:root{
+  --bg:#f5f8fa; --card:#fff; --ink:#1a2733; --soft:#5a6b7b; --line:#e0e6eb;
+  --primary:#6D4C41; --primary-soft:#EEE9E7; --primary-dark:#402D26;
+  --accent:#00897B; --accent-soft:#E0F5F3;
+  --exam:#7c3aed; --exam-soft:#f3e8ff;
+  --green:#2f9e44; --green-soft:#d3f9d8;
+  --red:#c92a2a; --red-soft:#ffe3e3;
+  --yellow:#d9a700; --yellow-soft:#fff4c2;
+  --grey:#f1f3f5; --grey-soft:#f8f9fa;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(0,0,0,.04);
+  --radius:10px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:-apple-system,"Segoe UI","PingFang TC","Microsoft JhengHei","Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;font-size:16px}
+
+header{background:linear-gradient(135deg,var(--primary-dark) 0%,var(--primary) 60%,var(--accent) 100%);color:#fff;padding:14px 22px;position:sticky;top:0;z-index:10;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.h-row{max-width:1280px;margin:0 auto;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+h1{font-size:18px;margin:0;font-weight:700;display:flex;align-items:center;gap:8px}
+.homelink{color:#fff;text-decoration:none;font-size:13px;padding:5px 12px;border:1px solid rgba(255,255,255,.5);border-radius:999px;white-space:nowrap;cursor:pointer;background:transparent;font-family:inherit}
+.homelink:hover{background:rgba(255,255,255,.15);border-color:#fff}
+.profile-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid rgba(255,255,255,.5);border-radius:999px;background:rgba(255,255,255,.12);cursor:pointer;font-size:13px;color:#fff;font-family:inherit}
+.profile-pill:hover{background:rgba(255,255,255,.22)}
+.profile-pill .pdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#7be08d}
+.profile-pill .pname{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lang-toggle{background:#fff;color:var(--primary);border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:5px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+.lang-toggle:hover{background:#fff;border-color:#fff}
+.mode-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:600;letter-spacing:.5px;border:1px solid}
+.mode-pill.practice{background:var(--primary-soft);color:var(--primary-dark);border-color:var(--primary)}
+.mode-pill.exam{background:var(--exam-soft);color:#5b21b6;border-color:var(--exam)}
+.stat{margin-left:auto;color:rgba(255,255,255,.95);font-size:13px}
+.stat strong{color:#fff;font-size:17px}
+
+main{max-width:1280px;margin:22px auto;padding:0 18px 40px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+.panel h2{margin:0 0 6px;font-size:16px;font-weight:600}
+.panel .desc{color:var(--soft);font-size:13px;margin-bottom:14px}
+
+.global-prog{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--primary-soft);border:1px solid var(--primary);border-radius:8px;margin-bottom:14px;font-size:13px;flex-wrap:wrap}
+.global-prog .gp-label{color:var(--primary);font-weight:600;min-width:90px}
+.global-prog .gp-bar{flex:1;height:8px;background:#fff;border-radius:4px;overflow:hidden;box-shadow:inset 0 0 0 1px var(--line);min-width:160px}
+.global-prog .gp-fill{height:100%;background:var(--green);transition:width .35s;width:0%}
+.global-prog .gp-text{color:var(--ink);font-variant-numeric:tabular-nums}
+.global-prog .gp-reset{background:#fff;border:1px solid var(--red);color:var(--red);padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.global-prog .gp-reset:hover{background:var(--red);color:#fff}
+.global-prog .gp-mark{background:#fff;border:1px solid var(--yellow);color:#a06a00;padding:4px 10px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+.global-prog .gp-mark:hover{background:var(--yellow);color:#fff}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px}
+.ycard{background:var(--grey-soft);border:1px solid var(--line);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.ytitle{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ytitle .ycount{color:var(--soft);font-weight:400;font-size:12px}
+.ystatus{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:4px}
+.ystatus .badge-status{padding:2px 8px;border-radius:999px;font-weight:600;font-size:11px}
+.ystatus .badge-status.ip{background:var(--yellow-soft);color:#a06a00}
+.ystatus .badge-status.done{background:var(--green-soft);color:var(--green)}
+.ystatus .badge-status.exam-ip{background:var(--exam-soft);color:#5b21b6}
+.action-row{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;border:1px solid;transition:all .12s;flex:1;min-width:120px;justify-content:center}
+.chip.practice{border-color:var(--primary);background:var(--primary-soft);color:var(--primary-dark)}
+.chip.practice:hover{background:var(--primary);color:#fff;transform:translateY(-1px)}
+.chip.exam{border-color:var(--exam);background:var(--exam-soft);color:#5b21b6}
+.chip.exam:hover{background:var(--exam);color:#fff;transform:translateY(-1px)}
+.legend{font-size:12px;color:var(--soft);margin-top:10px;display:flex;gap:14px;flex-wrap:wrap;align-items:center}
+.ldot{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:5px;border:1px solid var(--line)}
+.ldot.r{background:var(--primary-soft);border-color:var(--primary)}
+.ldot.ip{background:var(--yellow-soft);border-color:var(--yellow)}
+.ldot.done{background:var(--green-soft);border-color:var(--green)}
+.ldot.exam{background:var(--exam-soft);border-color:var(--exam)}
+
+.special-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.special-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#fff;border:1px solid var(--line);border-radius:999px;font-size:13px;color:var(--ink);cursor:pointer;font-family:inherit;transition:all .12s}
+.special-btn:hover{border-color:var(--primary);color:var(--primary);transform:translateY(-1px)}
+.special-btn .badge{background:var(--red-soft);color:var(--red);font-weight:700;padding:0 8px;border-radius:999px;font-size:11px}
+.special-btn.mark .badge{background:var(--yellow-soft);color:#6b4e00}
+.special-btn.full{border-color:var(--exam);color:#5b21b6}
+.special-btn.full:hover{background:var(--exam-soft);color:var(--exam)}
+
+/* Quiz layout */
+.layout{display:grid;grid-template-columns:300px 1fr;gap:22px;max-width:1280px;margin:18px auto;padding:0 18px}
+@media (max-width:880px){.layout{grid-template-columns:1fr;padding:0 14px}.sidebar{order:2;position:static}}
+.sidebar{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:14px;height:fit-content;position:sticky;top:78px}
+.sidebar.exam{border-color:var(--exam);background:#fdfaff}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px}
+.gbtn{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--soft);font-size:13px;cursor:pointer;font-variant-numeric:tabular-nums;font-family:inherit;position:relative;padding:0}
+.gbtn:hover{border-color:var(--primary)}
+.gbtn.cur{background:var(--primary);color:#fff;border-color:var(--primary)}
+.gbtn.right{background:var(--green-soft);color:var(--green);border-color:var(--green)}
+.gbtn.wrong{background:var(--red-soft);color:var(--red);border-color:var(--red)}
+.gbtn.answered-exam{background:var(--exam-soft);color:#5b21b6;border-color:var(--exam)}
+.gbtn.cur.answered-exam{background:var(--exam);color:#fff;border-color:var(--exam)}
+.gbtn.marked::after{content:"\2605";position:absolute;top:1px;right:3px;font-size:10px;color:var(--yellow);line-height:1;text-shadow:0 0 2px #fff}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;vertical-align:middle;margin-right:4px;border:1px solid var(--line)}
+.dot.r{background:var(--green-soft);border-color:var(--green)}
+.dot.w{background:var(--red-soft);border-color:var(--red)}
+.dot.exam{background:var(--exam-soft);border-color:var(--exam)}
+.submit-exam-btn{margin-top:12px;width:100%;font-size:14px;padding:12px;font-weight:700}
+
+.btn{background:var(--primary);color:#fff;border:0;padding:9px 18px;border-radius:8px;cursor:pointer;font-size:14px;font-family:inherit;transition:all .12s}
+.btn:hover:not(:disabled){background:var(--primary-dark);transform:translateY(-1px)}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.btn.ghost:hover:not(:disabled){border-color:var(--primary);color:var(--primary);background:#fff}
+.btn.danger{background:#fff;color:var(--red);border:1px solid var(--red)}
+.btn.danger:hover:not(:disabled){background:var(--red);color:#fff}
+.btn.exam-c{background:var(--exam);color:#fff}
+.btn.exam-c:hover:not(:disabled){background:#5b21b6}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.main-col{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.card.exam-card{border-color:var(--exam);box-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 12px rgba(124,58,237,.08)}
+.qhead{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.qnum{font-size:22px;font-weight:700;color:var(--primary)}
+.qhead.exam .qnum{color:var(--exam)}
+.qmeta{color:var(--soft);font-size:13px}
+.qtype{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:600;letter-spacing:.5px;border:1px solid var(--line)}
+.qtype.single{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.qtype.multi{background:#f3e8ff;color:#7c3aed;border-color:#7c3aed}
+.qtype.tf{background:#fff7e6;color:#d97706;border-color:#d97706}
+.markbtn{margin-left:auto;background:#fff;border:1px solid var(--line);color:var(--soft);padding:6px 13px;border-radius:999px;font-size:13px;cursor:pointer;white-space:nowrap;font-family:inherit}
+.markbtn:hover{border-color:var(--yellow);color:var(--yellow)}
+.markbtn.marked{background:var(--yellow-soft);color:#6b4e00;border-color:var(--yellow);font-weight:600}
+.stem{font-size:16px;white-space:pre-wrap;word-break:break-word;margin-bottom:12px}
+.opts{display:flex;flex-direction:column;gap:8px;margin:14px 0 4px}
+.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;background:#fff;border:1px solid var(--line);border-radius:8px;cursor:pointer;transition:all .12s;text-align:left;font-size:15.5px;color:var(--ink);font-family:inherit;width:100%}
+.opt:hover:not(.locked){background:var(--primary-soft);border-color:var(--primary)}
+.opt.locked{cursor:default}
+.opt.selected{background:var(--accent-soft);border-color:var(--accent)}
+.opt .label{font-weight:700;min-width:22px}
+.opt.correct{background:var(--green-soft);border-color:var(--green);color:var(--green)}
+.opt.wrong{background:var(--red-soft);border-color:var(--red);color:var(--red)}
+.submit-row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center}
+.submit-row .submit-btn{font-size:14px;padding:10px 22px;font-weight:600}
+.submit-hint{color:var(--soft);font-size:13px}
+.exam-hint{padding:10px 14px;background:var(--exam-soft);border:1px solid var(--exam);border-radius:8px;font-size:13px;color:#5b21b6;margin-top:8px}
+.verdict{margin-top:14px;padding:12px 14px;border-radius:8px;font-size:14px;line-height:1.7}
+.verdict.right{background:var(--green-soft);color:#186b29}
+.verdict.wrong{background:var(--red-soft);color:#861818}
+.verdict h3{margin:0 0 6px;font-size:14px}
+.verdict .ans-line{font-weight:600;margin-bottom:4px}
+.nav{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.summary{padding:18px}
+.summary h2{margin:0 0 8px}
+.score{font-size:32px;font-weight:700;color:var(--primary)}
+.summary.exam .score{color:var(--exam)}
+.summary-row{display:flex;gap:18px;flex-wrap:wrap;margin:12px 0}
+.summary-row .item{font-size:13px;color:var(--soft)}
+.summary-row .item strong{color:var(--ink);font-weight:700;font-size:18px;display:block;margin-top:2px}
+.wrong-list{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+.wrong-row{padding:8px 12px;border:1px solid var(--line);border-radius:6px;display:flex;gap:10px;align-items:center;cursor:pointer;font-size:14px}
+.wrong-row:hover{background:var(--primary-soft);border-color:var(--primary)}
+.wrong-row .wno{font-weight:700;color:var(--primary);min-width:36px}
+
+.empty{padding:40px;text-align:center;color:var(--soft)}
+.footer{color:var(--soft);font-size:12px;text-align:center;margin:18px 0 28px}
+.hidden{display:none !important}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,20,30,.45);display:none;align-items:center;justify-content:center;z-index:100;padding:18px}
+.modal-bg.show{display:flex}
+.modal-card{background:#fff;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.18);max-width:580px;width:100%;padding:22px;max-height:90vh;overflow:auto}
+.modal-card h3{margin:0 0 4px;font-size:17px;font-weight:700}
+.modal-card .modal-sub{color:var(--soft);font-size:13px;margin-bottom:14px}
+.modal-card .hint{color:var(--soft);font-size:12px;line-height:1.6;margin:0 0 12px;background:var(--grey-soft);padding:10px 12px;border-radius:6px}
+.modal-card .modal-actions{display:flex;justify-content:flex-end;gap:8px}
+.modal-card label{display:block;font-size:13px;color:var(--soft);margin:8px 0 4px}
+.modal-card input[type="text"],.modal-card select,.modal-card input[type="number"]{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-size:14px;font-family:inherit;background:#fff}
+.modal-card .row-2{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+.profile-list{display:flex;flex-direction:column;gap:6px;margin:8px 0 14px}
+.profile-row{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.profile-row.active{border-color:var(--primary);background:var(--primary-soft)}
+.profile-row .pname{flex:1;font-size:14px}
+.profile-row .pdate{color:var(--soft);font-size:11px}
+.profile-row button{font-size:12px;padding:4px 10px;background:#fff;border:1px solid var(--line);border-radius:6px;cursor:pointer;color:var(--soft);font-family:inherit}
+.profile-row button:hover{border-color:var(--primary);color:var(--primary)}
+.profile-row button.danger:hover{border-color:var(--red);color:var(--red)}
+
+.exp-row{display:flex;flex-direction:column;gap:8px;margin:8px 0}
+.exp-opt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;background:var(--grey-soft);border:1px solid var(--line);border-radius:8px;cursor:pointer;font-size:14px;text-align:left;color:var(--ink);font-family:inherit;width:100%;transition:all .12s}
+.exp-opt:hover{background:var(--primary-soft);border-color:var(--primary)}
+.exp-opt:disabled{opacity:.5;cursor:not-allowed}
+.exp-opt .icon-side{display:flex;align-items:center;gap:8px}
+.exp-opt .desc{color:var(--soft);font-size:12px;font-weight:400}
+
+.src-btn,.cnt-btn,.mode-btn{transition:all .12s;font-family:inherit}
+.src-btn.active,.cnt-btn.active{
+  background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important;
+  box-shadow:0 0 0 3px rgba(120,53,15,.18),0 2px 6px rgba(120,53,15,.25);
+  transform:translateY(-1px);font-weight:600;
+}
+.mode-btn[data-mode="practice"].active{background:var(--primary)!important;color:#fff!important;border-color:var(--primary)!important;box-shadow:0 0 0 3px rgba(120,53,15,.18),0 2px 6px rgba(120,53,15,.25);transform:translateY(-1px);font-weight:600}
+.mode-btn[data-mode="exam"].active{background:var(--exam)!important;color:#fff!important;border-color:var(--exam)!important;box-shadow:0 0 0 3px rgba(124,58,237,.18),0 2px 6px rgba(124,58,237,.25);transform:translateY(-1px);font-weight:600}
+.src-btn.active::before,.cnt-btn.active::before,.mode-btn.active::before{content:"\2713 ";font-weight:700}
+.src-btn .cnt,.cnt-btn .cnt{font-size:11px;opacity:.85;margin-left:4px}
+
+.share-textarea{width:100%;min-height:120px;max-height:50vh;padding:10px 12px;border:1px solid var(--line);border-radius:6px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:1.4;background:var(--grey-soft);resize:vertical;color:var(--ink)}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 18px;border-radius:999px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transition:opacity .2s;z-index:200;pointer-events:none}
+.toast.show{opacity:1}
+
+@media (max-width:600px){
+  h1{font-size:16px}
+  main{padding:0 12px 30px}
+  .panel{padding:14px}
+  .card{padding:16px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="h-row" id="headerRow">
+    <button class="homelink hidden" id="homeBtn" data-zh="&larr; 回首頁" data-en="&larr; Home">&larr; 回首頁</button>
+    <h1 id="hdrTitle" data-zh="⛏️ 資料探勘 互動式考題" data-en="⛏️ Data Mining Interactive Quiz">⛏️ 資料探勘 互動式考題</h1>
+    <span id="hdrModePill"></span>
+    <button class="profile-pill" id="profileBtn" title="切換 / 管理使用者"><span class="pdot"></span><span class="pname" id="profileName" data-zh="預設使用者" data-en="Default user">預設使用者</span> &#9662;</button>
+    <button class="lang-toggle" id="langToggle">EN</button>
+    <div class="stat" id="stat"></div>
+  </div>
+</header>
+
+<!-- Home view -->
+<main id="homeView">
+  <div class="panel">
+    <div style="margin-bottom:14px"><a href="../index.html" style="color:var(--primary);text-decoration:none;font-size:13px;font-weight:600" data-zh="← 回 Data Mining 互動教程首頁" data-en="← Back to Data Mining Tutorial Home">← 回 Data Mining 互動教程首頁</a></div>
+    <div class="global-prog">
+      <span class="gp-label" data-zh="總體進度" data-en="Overall progress">總體進度</span>
+      <div class="gp-bar"><div class="gp-fill" id="gpFill"></div></div>
+      <span class="gp-text" id="gpText" data-zh="尚未開始作答" data-en="Not started">尚未開始作答</span>
+      <button class="gp-reset" id="gpReset" title="重置作答" data-zh="🗑️ 重置作答" data-en="🗑️ Reset answers">🗑️ 重置作答</button>
+      <button class="gp-mark" id="clearMarksBtn" title="清除標記" data-zh="🗑️ 清除標記" data-en="🗑️ Clear marks">🗑️ 清除標記</button>
+    </div>
+    <h2 data-zh="章節列表" data-en="Chapter list">章節列表</h2>
+    <div class="desc" data-lang="zh">
+      共 20 章，每章 10 題（6 單選 + 2 多選 + 2 是非）。「📝 練習模式」每題立即顯示對錯與解析；「📋 考試模式」全部答完後一次性交卷看結果。<br>
+      鍵盤：←/→ 切題；單選 1-4；是非 T/F；多選 1-4 切換；Enter 送出（練習）。
+    </div>
+    <div class="desc" data-lang="en">
+      20 chapters with 10 questions each (6 single + 2 multi + 2 T/F). Practice Mode: per-question feedback; Exam Mode: single submit at the end.<br>
+      Keyboard: ←/→ navigate; single 1-4; T/F; multi 1-4 toggles; Enter to submit (practice).
+    </div>
+    <div class="special-row">
+      <button class="special-btn full" id="fullExamBtn" data-zh="📋 全範圍模擬考 (200 題)" data-en="📋 Full Exam (200 Q)">📋 全範圍模擬考 (200 題)</button>
+      <button class="special-btn" id="randomBtn" data-zh="🎲 隨機 20 題" data-en="🎲 Random 20">🎲 隨機 20 題</button>
+      <button class="special-btn" id="reviewWrongBtn"><span data-zh="📝 錯題複習" data-en="📝 Wrong review">📝 錯題複習</span> <span class="badge" id="wrongBadge">0</span></button>
+      <button class="special-btn mark" id="reviewMarkBtn"><span data-zh="🔖 標記題複習" data-en="🔖 Marked review">🔖 標記題複習</span> <span class="badge" id="markBadge">0</span></button>
+      <button class="special-btn" id="exportHomeBtn" data-zh="📤 匯入 / 匯出" data-en="📤 Import / Export">📤 匯入 / 匯出</button>
+    </div>
+    <div class="legend" style="margin-top:14px">
+      <span><i class="ldot r"></i><span data-zh="尚未作答" data-en="Not answered">尚未作答</span></span>
+      <span><i class="ldot ip"></i><span data-zh="練習中／已完成練習" data-en="Practicing / completed">練習中／已完成練習</span></span>
+      <span><i class="ldot exam"></i><span data-zh="考試進行中" data-en="Exam in progress">考試進行中</span></span>
+    </div>
+  </div>
+  <div id="chaptersContainer"></div>
+  <div class="footer"><span data-zh="資料來源：Data Mining Interactive Tutorial · 共 " data-en="Source: Data Mining Interactive Tutorial · Total ">資料來源：Data Mining Interactive Tutorial · 共 </span><span id="totalCount"></span><span data-zh=" 題" data-en=" questions"> 題</span></div>
+</main>
+
+<!-- Quiz view -->
+<div class="layout hidden" id="quizView">
+  <aside class="sidebar" id="sidebar">
+    <div style="font-size:13px;color:var(--soft);margin-bottom:6px" id="sbTotal">— 題</div>
+    <div class="grid" id="grid"></div>
+    <div class="legend" id="sbLegend"></div>
+    <button id="submitExamBtn" class="btn exam-c submit-exam-btn hidden">📋 交卷查看結果</button>
+    <button id="resetBtn" class="btn danger" style="margin-top:12px;width:100%;font-size:13px" data-zh="重置本卷作答" data-en="Reset this quiz">重置本卷作答</button>
+    <button id="summaryBtn" class="btn ghost" style="margin-top:6px;width:100%;font-size:13px" data-zh="📊 查看本卷總結" data-en="📊 Show summary">📊 查看本卷總結</button>
+    <button id="exportQuizBtn" class="btn ghost" style="margin-top:6px;width:100%;font-size:13px" data-zh="📤 匯入／匯出本卷" data-en="📤 Import / Export quiz">📤 匯入／匯出本卷</button>
+    <button id="shuffleBtn" class="btn ghost" style="margin-top:6px;width:100%;font-size:13px" data-zh="🔀 切換順序／隨機" data-en="🔀 Toggle order / shuffle">🔀 切換順序／隨機</button>
+  </aside>
+  <main class="main-col" id="quizMain"></main>
+</div>
+
+<!-- Profile modal -->
+<div class="modal-bg" id="profileModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3 data-zh="👤 使用者管理" data-en="👤 User Management">👤 使用者管理</h3>
+    <div class="modal-sub" data-zh="同一台電腦可建立多位使用者，作答進度互不干擾。" data-en="Multiple users on the same device with independent progress.">同一台電腦可建立多位使用者，作答進度互不干擾。</div>
+    <div class="profile-list" id="profileList"></div>
+    <label data-zh="新增使用者" data-en="Add user">新增使用者</label>
+    <div class="row-2">
+      <input type="text" id="newProfileName" placeholder="輸入名字…" maxlength="30" data-zh-ph="輸入名字…" data-en-ph="Enter name…">
+      <button class="btn" id="addProfileBtn" data-zh="＋ 新增" data-en="＋ Add">＋ 新增</button>
+    </div>
+    <p class="hint" data-lang="zh">💡 進度儲存在瀏覽器 localStorage；換瀏覽器/裝置或清除快取會遺失。可使用「📤 匯入／匯出」備份。</p>
+    <p class="hint" data-lang="en">💡 Progress is saved in browser localStorage; switching browsers/devices or clearing cache will lose it. Use "📤 Import / Export" to back up.</p>
+    <div class="modal-actions">
+      <button class="btn ghost" id="closeProfileBtn" data-zh="關閉" data-en="Close">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- Random picker -->
+<div class="modal-bg" id="randomPickerModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3 id="randomPickerTitle" data-zh="🎲 隨機練習" data-en="🎲 Random practice">🎲 隨機練習</h3>
+    <div class="modal-sub" id="randomPickerSub">—</div>
+    <label data-zh="① 題目來源" data-en="① Question source">① 題目來源</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0">
+      <button class="btn ghost src-btn" data-src="all"    id="srcAll"><span data-zh="完全隨機" data-en="All random">完全隨機</span> <span class="cnt"></span></button>
+      <button class="btn ghost src-btn" data-src="wrong"  id="srcWrong"><span data-zh="錯題隨機" data-en="Wrong random">錯題隨機</span> <span class="cnt"></span></button>
+      <button class="btn ghost src-btn" data-src="marked" id="srcMarked"><span data-zh="標記隨機" data-en="Marked random">標記隨機</span> <span class="cnt"></span></button>
+    </div>
+    <div id="srcEmptyWarn" style="display:none;margin-top:6px;padding:8px 12px;background:var(--red-soft);color:var(--red);border:1px solid var(--red);border-radius:6px;font-size:12px"></div>
+    <label style="margin-top:14px" data-zh="② 抽幾題" data-en="② How many?">② 抽幾題</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px">
+      <button class="btn ghost cnt-btn" data-n="10"  id="cnt10" data-zh="10 題" data-en="10 Q">10 題</button>
+      <button class="btn ghost cnt-btn" data-n="20"  id="cnt20" data-zh="20 題" data-en="20 Q">20 題</button>
+      <button class="btn ghost cnt-btn" data-n="50"  id="cnt50" data-zh="50 題" data-en="50 Q">50 題</button>
+      <button class="btn ghost cnt-btn" data-n="all" id="cntAll" data-zh="全部" data-en="All">全部</button>
+    </div>
+    <div class="row-2" style="align-items:center">
+      <input type="number" id="randomCount" min="1" value="20">
+      <span style="font-size:13px;color:var(--soft)" data-zh="題" data-en="Q">題</span>
+    </div>
+    <label style="margin-top:14px" data-zh="③ 作答模式" data-en="③ Mode">③ 作答模式</label>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 0">
+      <button class="btn ghost mode-btn" data-mode="practice" id="rndModePractice" data-zh="📝 練習模式" data-en="📝 Practice">📝 練習模式</button>
+      <button class="btn ghost mode-btn" data-mode="exam" id="rndModeExam" data-zh="📋 考試模式" data-en="📋 Exam">📋 考試模式</button>
+    </div>
+    <p class="hint" style="margin-top:14px" data-lang="zh">💡 練習模式採「重答模式」：每題立即顯示對錯與解析，答對後該題的錯題記錄會自動清掉。<br>📋 考試模式：作答中無反饋，全部答完後一次性交卷查看結果。</p>
+    <p class="hint" style="margin-top:14px" data-lang="en">💡 Practice Mode is "retry mode": instant feedback per question; correct answers clear from the wrong-list automatically.<br>📋 Exam Mode: no feedback during answering; submit at end to see results.</p>
+    <div class="modal-actions" style="gap:8px">
+      <button class="btn ghost" id="randomCancelBtn" data-zh="取消" data-en="Cancel">取消</button>
+      <button class="btn" id="randomStartBtn" data-zh="開始作答" data-en="Start">開始作答</button>
+    </div>
+  </div>
+</div>
+
+<!-- Export / Import modal -->
+<div class="modal-bg" id="exportModal" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3 id="exportTitle" data-zh="📤 匯入 / 匯出" data-en="📤 Import / Export">📤 匯入 / 匯出</h3>
+    <div class="modal-sub" id="exportSub">—</div>
+    <label style="margin-top:0" data-zh="📤 匯出格式" data-en="📤 Export format">📤 匯出格式</label>
+    <div class="exp-row">
+      <button class="exp-opt" data-fmt="json"><span class="icon-side"><span>📦</span><span><strong>JSON</strong> <span data-zh="進度備份" data-en="progress backup">進度備份</span><br><span class="desc" data-zh="完整作答、標記、考試狀態，可在另一台裝置匯入還原" data-en="Full answers, marks, exam state — restorable on another device">完整作答、標記、考試狀態，可在另一台裝置匯入還原</span></span></span></button>
+      <button class="exp-opt" data-fmt="html_score"><span class="icon-side"><span>📄</span><span><strong data-zh="HTML 成績單" data-en="HTML Score Sheet">HTML 成績單</strong><br><span class="desc" data-zh="本卷成績、各題對錯、答題狀態，方便列印或分享" data-en="Score, per-question correctness, answer status — printable / shareable">本卷成績、各題對錯、答題狀態，方便列印或分享</span></span></span></button>
+      <button class="exp-opt" data-fmt="html_errata"><span class="icon-side"><span>📚</span><span><strong data-zh="HTML 錯題講義" data-en="HTML Errata Sheet">HTML 錯題講義</strong><br><span class="desc" data-zh="僅含錯題與解析，做為離線複習教材" data-en="Wrong questions with explanations — offline review material">僅含錯題與解析，做為離線複習教材</span></span></span></button>
+    </div>
+    <label id="importLabel" style="margin-top:14px" data-zh="📥 匯入 JSON 還原" data-en="📥 Import JSON to restore">📥 匯入 JSON 還原</label>
+    <div class="row-2" style="margin-bottom:6px">
+      <input type="file" id="importFile" accept=".json,application/json">
+      <span style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="btn" id="importThisBtn" data-zh="📥 僅匯入本範圍" data-en="📥 Import this scope">📥 僅匯入本範圍</button>
+        <button class="btn ghost" id="importAllBtn" data-zh="📥 完整還原" data-en="📥 Full restore">📥 完整還原</button>
+      </span>
+    </div>
+    <details style="margin:6px 0 10px">
+      <summary style="cursor:pointer;color:var(--accent);font-size:13px" data-zh="📋 或從剪貼簿貼上 JSON" data-en="📋 Or paste JSON from clipboard">📋 或從剪貼簿貼上 JSON</summary>
+      <textarea id="pasteImportArea" class="share-textarea" placeholder="把 JSON 內容貼進這裡…" style="margin-top:8px" data-zh-ph="把 JSON 內容貼進這裡…" data-en-ph="Paste JSON content here…"></textarea>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn" id="pasteImportThisBtn" data-zh="📥 僅匯入本範圍" data-en="📥 Import this scope">📥 僅匯入本範圍</button>
+        <button class="btn ghost" id="pasteImportAllBtn" data-zh="📥 完整還原" data-en="📥 Full restore">📥 完整還原</button>
+      </div>
+    </details>
+    <p class="hint" data-lang="zh">💡 跨裝置同步：在裝置 A 匯出 JSON、傳到裝置 B（雲端硬碟／Email／LINE 訊息），再點「📥 匯入」即可還原。</p>
+    <p class="hint" data-lang="en">💡 Cross-device sync: export JSON on device A, transfer to device B (cloud drive / email / chat), then click "📥 Import" to restore.</p>
+    <div class="modal-actions">
+      <button class="btn ghost" id="closeExportBtn" data-zh="關閉" data-en="Close">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="quiz-data.js"></script>
+<script src="quiz-engine.js"></script>
+</body>
+</html>

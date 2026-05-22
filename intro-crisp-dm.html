@@ -1,0 +1,278 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 1: Intro & CRISP-DM — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html" class="active">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 1 / 20 · MODULE A</div>
+<h1 data-zh="資料探勘導論與 CRISP-DM" data-en="Data Mining & CRISP-DM">資料探勘導論與 CRISP-DM</h1>
+<p class="subtitle" data-lang="zh">從定義、流程到 2025 年的演進——掌握資料探勘專案的全景方法論。</p>
+<p class="subtitle" data-lang="en">From definitions to process to the 2025 landscape — master the panoramic methodology of every data mining project.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="什麼是資料探勘？" data-en="What is Data Mining?">什麼是資料探勘？</h2>
+<div data-lang="zh">
+<p><strong>資料探勘 (Data Mining)</strong> 是從大量資料中挖掘出非顯而易見、潛在有用、可解釋的<strong>模式 (patterns)</strong> 與<strong>知識 (knowledge)</strong> 的過程。它座落於統計學、機器學習、資料庫與領域知識的交集，是 KDD (Knowledge Discovery in Databases) 流程中的核心步驟。</p>
+<p>在生物醫學脈絡下，資料探勘的對象橫跨 omics 矩陣、EHR 結構化欄位、影像、PubMed 文獻、臨床路徑等異質資料，常見任務包含：分類疾病 vs 健康、分群病人亞型、發現基因—疾病關聯、預測再入院風險。</p>
+</div>
+<div data-lang="en">
+<p><strong>Data Mining</strong> is the process of extracting <strong>non-obvious, potentially useful, interpretable patterns and knowledge</strong> from large datasets. It sits at the intersection of statistics, machine learning, databases, and domain expertise — and is the core step inside KDD (Knowledge Discovery in Databases).</p>
+<p>In a biomedical context, data mining targets omics matrices, structured EHR fields, images, PubMed literature, and clinical pathways. Typical tasks include disease vs healthy classification, patient subgroup clustering, gene–disease association discovery, and readmission risk prediction.</p>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>核心原則：</strong>資料探勘不是「跑模型就好」。每一個成功的專案——尤其是醫療領域——必定包含明確的業務問題、嚴謹的資料理解、與審慎的部署評估。方法論（不是演算法）才是專案成敗的關鍵。</span>
+<span data-lang="en"><strong>Core principle:</strong> Data mining is never "just run a model." Every successful project — especially in healthcare — must contain a well-framed business question, rigorous data understanding, and careful deployment evaluation. <em>Methodology</em>, not the algorithm, decides project success.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="任務分類" data-en="TASK TAXONOMY">任務分類</div>
+<h2 data-zh="一、資料探勘的六大核心任務" data-en="I. Six Core Data Mining Tasks">一、資料探勘的六大核心任務</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">🎯</div><h4 data-zh="分類 Classification" data-en="Classification">分類 Classification</h4><div data-lang="zh"><p>給定已標記資料，學習把新樣本歸入<strong>離散類別</strong>。例：判斷腫瘤良/惡性。代表方法 Logistic、Tree、SVM、NN。</p></div><div data-lang="en"><p>Learn from labeled data to assign new samples into <strong>discrete classes</strong>. e.g. benign vs malignant tumor. Methods: Logistic, Tree, SVM, NN.</p></div></div>
+<div class="card"><div class="card-icon">📈</div><h4 data-zh="迴歸 Regression" data-en="Regression">迴歸 Regression</h4><div data-lang="zh"><p>預測<strong>連續數值</strong>。例：估算病患住院天數、血糖值。代表方法線性、Ridge、隨機森林迴歸、XGBoost。</p></div><div data-lang="en"><p>Predict a <strong>continuous numeric value</strong>. e.g. length of stay, blood glucose. Methods: linear, Ridge, random forest regression, XGBoost.</p></div></div>
+<div class="card"><div class="card-icon">🧩</div><h4 data-zh="分群 Clustering" data-en="Clustering">分群 Clustering</h4><div data-lang="zh"><p>非監督學習：發現資料中的<strong>自然群組</strong>。例：病人亞型發現。代表方法 K-Means、Hierarchical、DBSCAN、GMM。</p></div><div data-lang="en"><p>Unsupervised: find <strong>natural groups</strong> in data. e.g. patient subtype discovery. Methods: K-Means, Hierarchical, DBSCAN, GMM.</p></div></div>
+<div class="card"><div class="card-icon">🛒</div><h4 data-zh="關聯規則 Association" data-en="Association Rules">關聯規則</h4><div data-lang="zh"><p>從交易/共現中找<strong>「A → B」</strong>規則。例：購物籃分析、藥物—副作用共現、症狀群組。Apriori、FP-Growth、Eclat。</p></div><div data-lang="en"><p>Find <strong>"A → B"</strong> rules from transactional/co-occurrence data. e.g. market basket, drug–adverse event co-occurrence. Apriori, FP-Growth, Eclat.</p></div></div>
+<div class="card"><div class="card-icon">🚨</div><h4 data-zh="異常偵測 Anomaly" data-en="Anomaly Detection">異常偵測 Anomaly</h4><div data-lang="zh"><p>標識<strong>偏離常態</strong>的觀測值。例：信用卡詐欺、ICU 生理異常、實驗批次效應。Isolation Forest、LOF、ECOD、Autoencoder。</p></div><div data-lang="en"><p>Identify observations that <strong>deviate from the norm</strong>. e.g. credit-card fraud, ICU physiologic anomaly, batch effects. Isolation Forest, LOF, ECOD, Autoencoder.</p></div></div>
+<div class="card"><div class="card-icon">🔗</div><h4 data-zh="序列/序列樣式 Sequence" data-en="Sequential Patterns">序列樣式 Sequence</h4><div data-lang="zh"><p>從<strong>有時間或順序</strong>的資料中挖掘共同模式。例：臨床用藥路徑、網站點擊流。GSP、SPADE、PrefixSpan。</p></div><div data-lang="en"><p>Find common patterns from <strong>time- or order-ordered</strong> data. e.g. clinical prescription pathways, clickstreams. GSP, SPADE, PrefixSpan.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="任務 vs 演算法 配對遊戲" data-en="Task vs Algorithm Matching Game">任務 vs 演算法 配對遊戲</h2>
+<div data-lang="zh"><p>點擊下方任務名稱，看看哪些是常用的對應演算法。每題反映實務中最典型的選擇。</p></div>
+<div data-lang="en"><p>Click on each task to see commonly used algorithms. Each entry reflects the most typical choice in practice.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-task="classification" data-zh="分類" data-en="Classification">分類</button>
+<button class="toggle-btn" data-task="clustering" data-zh="分群" data-en="Clustering">分群</button>
+<button class="toggle-btn" data-task="association" data-zh="關聯" data-en="Association">關聯</button>
+<button class="toggle-btn" data-task="anomaly" data-zh="異常" data-en="Anomaly">異常</button>
+<button class="toggle-btn" data-task="sequence" data-zh="序列" data-en="Sequence">序列</button>
+</div>
+<div id="taskInfo" style="background:var(--c-surface-alt);border-radius:var(--radius);padding:18px;min-height:120px;font-size:.95rem"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="CRISP-DM" data-en="CRISP-DM">CRISP-DM</div>
+<h2 data-zh="二、CRISP-DM 六階段流程" data-en="II. The Six Phases of CRISP-DM">二、CRISP-DM 六階段流程</h2>
+<div data-lang="zh">
+<p><strong>CRISP-DM (Cross-Industry Standard Process for Data Mining)</strong> 由 1996 年 SPSS、Daimler-Benz、NCR 共同提出，至 2025 年仍是業界最廣泛使用的方法論。即使後續出現 KDD、SEMMA、TDSP、bizML、CRISP-ML(Q) 等變體，多數仍保留它的六階段骨架——只是擴充了 MLOps / 模型治理 / AI 倫理等步驟。</p>
+</div>
+<div data-lang="en">
+<p><strong>CRISP-DM (Cross-Industry Standard Process for Data Mining)</strong> was proposed in 1996 by SPSS, Daimler-Benz, and NCR. As of 2025 it remains the most widely adopted methodology in industry. Even newer variants — KDD, SEMMA, TDSP, bizML, CRISP-ML(Q) — preserve its six-phase skeleton and only extend it with MLOps / model governance / AI ethics steps.</p>
+</div>
+
+<div class="workflow">
+<div class="workflow-step" data-step="1"><h4 data-zh="業務理解 Business Understanding" data-en="Business Understanding">業務理解</h4>
+<div data-lang="zh"><p>釐清目標與限制：你到底要回答什麼問題？成功標準是什麼？例：「為 2026 年 Q3 上線的 30 天再入院預測模型定義 AUROC ≥ 0.78 並可解釋。」</p></div>
+<div data-lang="en"><p>Clarify goal and constraints: what question are you answering? Success criteria? e.g. "AUROC ≥ 0.78, interpretable, deployed Q3 2026 for 30-day readmission."</p></div></div>
+<div class="workflow-step" data-step="2"><h4 data-zh="資料理解 Data Understanding" data-en="Data Understanding">資料理解</h4>
+<div data-lang="zh"><p>收集、描述、探索、驗證資料品質。常見產出：data dictionary、缺失率報表、單變量分佈圖。</p></div>
+<div data-lang="en"><p>Collect, describe, explore, and verify data quality. Common outputs: data dictionary, missingness report, univariate distribution plots.</p></div></div>
+<div class="workflow-step" data-step="3"><h4 data-zh="資料準備 Data Preparation" data-en="Data Preparation">資料準備</h4>
+<div data-lang="zh"><p>清理、整合、變形、特徵工程。實務上佔總時間 60–80%。產出：可分析的 analytic dataset。</p></div>
+<div data-lang="en"><p>Cleaning, integration, transformation, feature engineering. In practice 60–80% of total time. Output: ready-to-model analytic dataset.</p></div></div>
+<div class="workflow-step" data-step="4"><h4 data-zh="模型建構 Modeling" data-en="Modeling">模型建構</h4>
+<div data-lang="zh"><p>選擇與訓練模型、調參、做 cross-validation。注意：常需回到第 3 步補做特徵工程。</p></div>
+<div data-lang="en"><p>Select and train models, tune hyperparameters, run cross-validation. Note: you frequently loop back to Step 3 for more feature engineering.</p></div></div>
+<div class="workflow-step" data-step="5"><h4 data-zh="評估 Evaluation" data-en="Evaluation">評估</h4>
+<div data-lang="zh"><p>不只看 AUROC——還要評估<strong>業務影響</strong>、fairness、可解釋性。是否真能回答 Step 1 的問題？</p></div>
+<div data-lang="en"><p>Don't just look at AUROC — also evaluate <strong>business impact</strong>, fairness, interpretability. Does it actually answer the Step 1 question?</p></div></div>
+<div class="workflow-step" data-step="6"><h4 data-zh="部署 Deployment" data-en="Deployment">部署</h4>
+<div data-lang="zh"><p>整合到正式系統、文件化、監控漂移 (drift)、定期再訓練。這是 CRISP-DM 最常被輕忽的階段。</p></div>
+<div data-lang="en"><p>Integrate into production, document, monitor drift, schedule retraining. This is the most under-invested phase of CRISP-DM.</p></div></div>
+</div>
+
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>CRISP-DM 的特色是「循環」而非「線性」：</strong>箭頭從 Evaluation 可以回到 Business Understanding；從 Modeling 可以回到 Data Preparation。實務上一個 EHR 探勘專案往往循環 3–5 次。</span>
+<span data-lang="en"><strong>CRISP-DM is "cyclic," not linear:</strong> arrows can flow from Evaluation back to Business Understanding, and from Modeling back to Data Preparation. A real-world EHR mining project typically iterates 3–5 times.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="方法論比較" data-en="METHODOLOGY COMPARISON">方法論比較</div>
+<h2 data-zh="三、CRISP-DM vs KDD vs SEMMA vs bizML" data-en="III. CRISP-DM vs KDD vs SEMMA vs bizML">三、CRISP-DM vs KDD vs SEMMA vs bizML</h2>
+<table class="comp-table">
+<thead><tr>
+<th data-zh="方法論" data-en="Methodology">方法論</th>
+<th data-zh="提出年" data-en="Year">提出年</th>
+<th data-zh="階段數" data-en="Phases">階段數</th>
+<th data-zh="重點" data-en="Focus">重點</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>CRISP-DM</strong></td><td>1996 / 1999</td><td>6</td><td data-zh="業界跨產業通用，最廣泛使用">業界跨產業通用，最廣泛使用</td><td data-en="Cross-industry general purpose, most widely used"></td></tr>
+<tr><td><strong>KDD</strong></td><td>1996 (Fayyad)</td><td>5</td><td data-zh="學術導向，強調知識發現迴圈">學術導向，強調知識發現迴圈</td><td data-en="Academic-oriented, emphasizes the discovery cycle"></td></tr>
+<tr><td><strong>SEMMA</strong></td><td>1998 (SAS)</td><td>5</td><td data-zh="SAS Enterprise Miner 專屬流程">SAS Enterprise Miner 專屬流程</td><td data-en="SAS Enterprise Miner-specific process"></td></tr>
+<tr><td><strong>TDSP</strong></td><td>2016 (Microsoft)</td><td>5</td><td data-zh="團隊資料科學流程，含 Git 與部署">團隊資料科學流程，含 Git 與部署</td><td data-en="Team Data Science Process; adds Git, deployment"></td></tr>
+<tr><td><strong>CRISP-ML(Q)</strong></td><td>2021</td><td>6</td><td data-zh="加入品質保證 Quality Assurance 步驟">加入品質保證 Quality Assurance 步驟</td><td data-en="Adds Quality Assurance to ML lifecycle"></td></tr>
+<tr><td><strong>bizML</strong></td><td>2024 (HBR)</td><td>6</td><td data-zh="強調業務與 ML 的協作流程">強調業務與 ML 的協作流程</td><td data-en="Stresses collaboration between business and ML"></td></tr>
+</tbody></table>
+
+<div class="decision-tree">
+<h4>🌳 <span data-zh="該選哪個方法論？" data-en="Which Methodology Should I Use?">該選哪個方法論？</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>學術或概念性練習？<span class="dt-arrow">→ 是 →</span> 使用 <strong>KDD</strong>（含 Data Selection / Preprocessing / Transformation / Mining / Interpretation）。</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>實務專案、需向業務說明？<span class="dt-arrow">→ 是 →</span> 用 <strong>CRISP-DM</strong>；六階段語言業界都熟。</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>專案最終要部署 MLOps？<span class="dt-arrow">→ 是 →</span> 用 <strong>CRISP-ML(Q)</strong> 或 <strong>TDSP</strong>，補上 QA / Monitoring / Retraining 環節。</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>專案要回答業務 KPI 而非演算法精度？<span class="dt-arrow">→ 是 →</span> 採 <strong>bizML</strong>，用「業務語言」對齊團隊。</div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Academic or conceptual exercise? <span class="dt-arrow">→ Yes →</span> Use <strong>KDD</strong> (Data Selection / Preprocessing / Transformation / Mining / Interpretation).</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Real project, must explain to business? <span class="dt-arrow">→ Yes →</span> Use <strong>CRISP-DM</strong> — the six-phase vocabulary is universal in industry.</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Project ends in production MLOps? <span class="dt-arrow">→ Yes →</span> Use <strong>CRISP-ML(Q)</strong> or <strong>TDSP</strong> for QA / Monitoring / Retraining.</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Project must answer business KPI, not algorithmic accuracy? <span class="dt-arrow">→ Yes →</span> Use <strong>bizML</strong> for business-language alignment.</div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作骨架：CRISP-DM 在 R / Python" data-en="Skeleton: CRISP-DM in R / Python">實作骨架：CRISP-DM 在 R / Python</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / tidymodels</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / scikit-learn</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="comment"># 1. Business understanding → 寫成註解 / Write as comments</span>
+<span class="comment"># Goal: predict 30-day hospital readmission. Target AUROC >= 0.78</span>
+
+<span class="comment"># 2. Data understanding</span>
+<span class="func">library</span>(tidyverse); <span class="func">library</span>(tidymodels); <span class="func">library</span>(skimr)
+df &lt;- <span class="func">read_csv</span>(<span class="str">"readmission.csv"</span>)
+<span class="func">skim</span>(df)             <span class="comment"># 缺失、分佈、唯一值 / missing, distribution, uniqueness</span>
+
+<span class="comment"># 3. Data preparation — recipe-based workflow</span>
+rec &lt;- <span class="func">recipe</span>(readmit ~ ., data = df) |&gt;
+  <span class="func">step_impute_median</span>(<span class="func">all_numeric_predictors</span>()) |&gt;
+  <span class="func">step_dummy</span>(<span class="func">all_nominal_predictors</span>()) |&gt;
+  <span class="func">step_normalize</span>(<span class="func">all_numeric_predictors</span>())
+
+<span class="comment"># 4. Modeling</span>
+mod &lt;- <span class="func">logistic_reg</span>(penalty=<span class="func">tune</span>()) |&gt; <span class="func">set_engine</span>(<span class="str">"glmnet"</span>)
+wf  &lt;- <span class="func">workflow</span>() |&gt; <span class="func">add_recipe</span>(rec) |&gt; <span class="func">add_model</span>(mod)
+folds &lt;- <span class="func">vfold_cv</span>(df, v=<span class="num">10</span>, strata=readmit)
+
+<span class="comment"># 5. Evaluation</span>
+res &lt;- <span class="func">tune_grid</span>(wf, folds, metrics=<span class="func">metric_set</span>(roc_auc, pr_auc))
+<span class="func">show_best</span>(res, <span class="str">"roc_auc"</span>)
+
+<span class="comment"># 6. Deployment — package final model + monitoring hook</span>
+<span class="func">library</span>(vetiver)
+v &lt;- <span class="func">vetiver_model</span>(<span class="func">fit</span>(<span class="func">finalize_workflow</span>(wf, <span class="func">select_best</span>(res)), df),
+                  <span class="str">"readmit_model_v1"</span>)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> StratifiedKFold, GridSearchCV
+<span class="kw">from</span> sklearn.pipeline       <span class="kw">import</span> Pipeline
+<span class="kw">from</span> sklearn.compose        <span class="kw">import</span> ColumnTransformer
+<span class="kw">from</span> sklearn.preprocessing  <span class="kw">import</span> StandardScaler, OneHotEncoder
+<span class="kw">from</span> sklearn.impute         <span class="kw">import</span> SimpleImputer
+<span class="kw">from</span> sklearn.linear_model   <span class="kw">import</span> LogisticRegression
+<span class="kw">from</span> sklearn.metrics        <span class="kw">import</span> roc_auc_score
+
+<span class="comment"># 1+2 Business + Data understanding</span>
+df = pd.read_csv(<span class="str">"readmission.csv"</span>)
+y  = df.pop(<span class="str">"readmit"</span>)
+df.describe(include=<span class="str">"all"</span>); df.isna().mean()
+
+<span class="comment"># 3. Data preparation (column transformer)</span>
+num = df.select_dtypes(<span class="str">"number"</span>).columns
+cat = df.select_dtypes(<span class="str">"object"</span>).columns
+pre = ColumnTransformer([
+    (<span class="str">"num"</span>, Pipeline([(<span class="str">"imp"</span>, SimpleImputer(strategy=<span class="str">"median"</span>)),
+                       (<span class="str">"sc"</span>,  StandardScaler())]), num),
+    (<span class="str">"cat"</span>, OneHotEncoder(handle_unknown=<span class="str">"ignore"</span>), cat)
+])
+
+<span class="comment"># 4. Modeling + CV</span>
+pipe = Pipeline([(<span class="str">"pre"</span>, pre), (<span class="str">"clf"</span>, LogisticRegression(max_iter=<span class="num">2000</span>))])
+cv   = StratifiedKFold(<span class="num">10</span>, shuffle=<span class="kw">True</span>, random_state=<span class="num">42</span>)
+gs   = GridSearchCV(pipe, {<span class="str">"clf__C"</span>: [<span class="num">0.01</span>, <span class="num">0.1</span>, <span class="num">1</span>, <span class="num">10</span>]},
+                    scoring=<span class="str">"roc_auc"</span>, cv=cv, n_jobs=<span class="num">-1</span>)
+gs.fit(df, y)
+<span class="func">print</span>(gs.best_score_, gs.best_params_)
+
+<span class="comment"># 5+6 Eval + deployment skeleton</span>
+<span class="kw">import</span> joblib, mlflow
+joblib.dump(gs.best_estimator_, <span class="str">"readmit_v1.joblib"</span>)
+mlflow.log_metric(<span class="str">"auroc"</span>, gs.best_score_)</pre></div>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>提醒：</strong>在程式碼中為每個 CRISP-DM 階段加上明顯註解（如 <code># 3. Data Preparation</code>），未來自己或他人接手時可以清楚追蹤流程，這是 reproducibility 的第一步。</span>
+<span data-lang="en"><strong>Pro tip:</strong> Mark each CRISP-DM phase with an explicit comment (e.g. <code># 3. Data Preparation</code>) in your code. When you or others revisit later, the workflow is traceable — this is reproducibility step #1.</span>
+</div></div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 下列何者最能描述「資料探勘」？</p>
+<p data-lang="en">1. Which best describes "data mining"?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 用 SQL 從資料庫中查詢已知答案</span><span data-lang="en">A. Querying known answers from a database via SQL</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 訓練深度學習模型</span><span data-lang="en">B. Training a deep learning model</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 從資料中挖掘非顯而易見、潛在有用的模式與知識</span><span data-lang="en">C. Extracting non-obvious, potentially useful patterns from data</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 將原始資料儲存於資料倉儲</span><span data-lang="en">D. Storing raw data in a data warehouse</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 在 CRISP-DM 六階段中，下列何者通常佔總時間 60–80%？</p>
+<p data-lang="en">2. In CRISP-DM, which phase usually consumes 60–80% of total time?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. Business Understanding</span><span data-lang="en">A. Business Understanding</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Data Preparation</span><span data-lang="en">B. Data Preparation</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Modeling</span><span data-lang="en">C. Modeling</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Deployment</span><span data-lang="en">D. Deployment</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="3">
+<p data-lang="zh">3. 「腫瘤良/惡性」屬於哪一類任務？</p>
+<p data-lang="en">3. "Benign vs malignant tumor" belongs to which task type?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 分群 Clustering</span><span data-lang="en">A. Clustering</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 關聯 Association</span><span data-lang="en">B. Association</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 迴歸 Regression</span><span data-lang="en">C. Regression</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 分類 Classification</span><span data-lang="en">D. Classification</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav"><div class="placeholder"></div>
+<a href="data-preparation.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 2: 資料準備與前處理" data-en="Ch 2: Data Preparation &amp; Preprocessing">Ch 2: 資料準備與前處理</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+const TASK_INFO={
+ classification:{zh:'<b>分類 Classification</b><br>常用：Logistic Regression、KNN、Decision Tree、Random Forest、XGBoost、SVM、Naive Bayes、Neural Network。<br>生醫案例：腫瘤良惡性判讀、ICU mortality、疾病風險分層。',
+                 en:'<b>Classification</b><br>Common: Logistic Regression, KNN, Decision Tree, Random Forest, XGBoost, SVM, Naive Bayes, Neural Network.<br>Biomed: tumor classification, ICU mortality, disease risk stratification.'},
+ clustering:{zh:'<b>分群 Clustering</b><br>常用：K-Means、Hierarchical (Ward)、DBSCAN/HDBSCAN、GMM、Spectral、Louvain (network)。<br>生醫案例：病人亞型發現、細胞亞群識別、藥物—靶點聚類。',
+              en:'<b>Clustering</b><br>Common: K-Means, Hierarchical (Ward), DBSCAN/HDBSCAN, GMM, Spectral, Louvain (network).<br>Biomed: patient subtype discovery, cell subpopulation, drug–target clustering.'},
+ association:{zh:'<b>關聯規則 Association</b><br>常用：Apriori、FP-Growth、Eclat、ASEA (2026 ontology-driven)。<br>生醫案例：藥物—副作用共現、症狀群組、共病關係。',
+               en:'<b>Association Rules</b><br>Common: Apriori, FP-Growth, Eclat, ASEA (2026 ontology-driven).<br>Biomed: drug–adverse event co-occurrence, symptom clusters, comorbidities.'},
+ anomaly:{zh:'<b>異常偵測 Anomaly</b><br>常用：Z-score、Isolation Forest、LOF、One-Class SVM、ECOD、Autoencoder、Mahalanobis。<br>生醫案例：實驗 batch effect、影像異常、可疑診斷碼。',
+           en:'<b>Anomaly Detection</b><br>Common: Z-score, Isolation Forest, LOF, One-Class SVM, ECOD, Autoencoder, Mahalanobis.<br>Biomed: batch effects, image anomalies, suspicious diagnostic codes.'},
+ sequence:{zh:'<b>序列樣式 Sequence</b><br>常用：GSP、SPADE、PrefixSpan、CloSpan、process mining (PM4Py)。<br>生醫案例：臨床用藥路徑、ICU 警示序列、住院流程挖掘。',
+            en:'<b>Sequential Patterns</b><br>Common: GSP, SPADE, PrefixSpan, CloSpan, process mining (PM4Py).<br>Biomed: medication pathways, ICU alarm sequences, hospital workflow mining.'}
+};
+function showTask(t){const L=I18n.get();document.getElementById('taskInfo').innerHTML=TASK_INFO[t][L];}
+document.querySelectorAll('[data-task]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-task]').forEach(x=>x.classList.remove('active'));b.classList.add('active');showTask(b.dataset.task);}));
+document.addEventListener('langchange',()=>showTask(document.querySelector('[data-task].active').dataset.task));
+showTask('classification');
+
+const QF={zh:{q1_y:'資料探勘聚焦於從資料中發現非顯而易見的模式與知識。',q1_n:'C 為正確答案。',q2_y:'資料準備（清理、整合、特徵工程）通常佔最多時間。',q2_n:'B 為正確答案。',q3_y:'良/惡性是離散類別，屬於分類任務。',q3_n:'D 為正確答案。'},
+          en:{q1_y:'Data mining is about extracting non-obvious patterns and knowledge.',q1_n:'Correct answer is C.',q2_y:'Data Preparation (cleaning, integration, feature engineering) consumes the most time.',q2_n:'Correct answer is B.',q3_y:'Benign/malignant is a discrete class — a classification task.',q3_n:'Correct answer is D.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

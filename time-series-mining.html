@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 15: Time Series Mining — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html" class="active">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 15 / 20 · MODULE D</div>
+<h1 data-zh="時間序列探勘" data-en="Time Series Mining">時間序列探勘</h1>
+<p class="subtitle" data-lang="zh">心率、血糖、空汙、急診人次——所有「隨時間記錄」的資料都是時間序列。</p>
+<p class="subtitle" data-lang="en">Heart rate, glucose, air quality, ED census — anything "recorded over time" is a time series.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="時序資料的四個關鍵性質" data-en="Four Key Properties of Time Series">時序資料的四個關鍵性質</h2>
+<div data-lang="zh">
+<p>時間序列 = 依時間順序排列的觀測 X<sub>t</sub>。與一般機器學習資料的關鍵差異：(1) <strong>有順序性</strong>（不能隨機 shuffle）、(2) <strong>有自相關</strong>（X<sub>t</sub> 依賴 X<sub>t−1</sub>）、(3) <strong>有趨勢與季節性</strong>、(4) 切割必須 <strong>沿時間軸</strong>（train 在前、test 在後）。</p>
+<p>分析任務涵蓋：<strong>預測 (forecasting)</strong>、<strong>分類 (TSC)</strong>、<strong>群集 (TSC)</strong>、<strong>異常偵測</strong>、<strong>變點偵測 (change-point)</strong>、<strong>模式發掘 (motif / discord, shapelet, matrix profile)</strong>。生醫應用：ICU 早警 (HR, SpO₂)、CGM 血糖預測、ECG 分類、流行病早期偵測。</p>
+</div>
+<div data-lang="en">
+<p>A time series is a sequence X<sub>t</sub> ordered by time. Key differences from i.i.d. data: (1) <strong>order matters</strong> (no shuffling), (2) <strong>autocorrelation</strong> (X<sub>t</sub> depends on X<sub>t−1</sub>), (3) <strong>trend + seasonality</strong>, (4) splits must be <strong>chronological</strong> (train precedes test).</p>
+<p>Tasks: <strong>forecasting</strong>, <strong>classification (TSC)</strong>, <strong>clustering</strong>, <strong>anomaly</strong>, <strong>change-point detection</strong>, <strong>pattern discovery (motif/discord, shapelet, matrix profile)</strong>. Biomedical: ICU early warning (HR, SpO₂), CGM glucose prediction, ECG classification, outbreak early detection.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="基礎概念" data-en="FUNDAMENTALS">基礎概念</div>
+<h2 data-zh="一、平穩性與成分分解" data-en="I. Stationarity & Decomposition">一、平穩性與成分分解</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">📉</div><h4 data-zh="平穩性 Stationarity" data-en="Stationarity">平穩性 Stationarity</h4><div data-lang="zh"><p>均值、變異數、自相關不隨時間改變。多數模型 (ARIMA) 假設平穩；常用 <strong>ADF 檢定 (Augmented Dickey-Fuller)</strong> 判斷。</p></div><div data-lang="en"><p>Mean, variance, autocorrelation invariant over time. Many models (ARIMA) assume it; tested by <strong>ADF (Augmented Dickey-Fuller)</strong>.</p></div></div>
+<div class="card"><div class="card-icon">📈</div><h4 data-zh="趨勢 Trend" data-en="Trend">趨勢 Trend</h4><div data-lang="zh"><p>長期方向（上升、下降）。可用 <strong>差分 (differencing)</strong> 或迴歸殘差去除。</p></div><div data-lang="en"><p>Long-term direction (up/down). Remove with <strong>differencing</strong> or regression residuals.</p></div></div>
+<div class="card"><div class="card-icon">🌊</div><h4 data-zh="季節性 Seasonality" data-en="Seasonality">季節性 Seasonality</h4><div data-lang="zh"><p>固定週期（day、week、year）。STL / X-13ARIMA-SEATS 分解。</p></div><div data-lang="en"><p>Fixed-period cycles (daily, weekly, yearly). Decomposed via STL or X-13ARIMA-SEATS.</p></div></div>
+<div class="card"><div class="card-icon">🔁</div><h4 data-zh="自相關 ACF / PACF" data-en="ACF / PACF">自相關 ACF / PACF</h4><div data-lang="zh"><p>ACF：與過去時點的相關；PACF：扣掉中間時點後的偏相關。用來決定 AR、MA 階數。</p></div><div data-lang="en"><p>ACF: correlation with past lags. PACF: partial after controlling intermediates. Guides AR/MA order.</p></div></div>
+<div class="card"><div class="card-icon">🎲</div><h4 data-zh="白噪音 White noise" data-en="White noise">白噪音</h4><div data-lang="zh"><p>均值=0、變異穩定、無自相關。預測殘差應接近白噪音 → 模型已抓到結構。</p></div><div data-lang="en"><p>Zero mean, constant variance, no autocorrelation. Forecast residuals should look like white noise.</p></div></div>
+<div class="card"><div class="card-icon">⚠️</div><h4 data-zh="變點 Change-point" data-en="Change-point">變點 Change-point</h4><div data-lang="zh"><p>底層分布突然改變的時刻。PELT、Bayesian Online (BOCPD)、ruptures 套件。</p></div><div data-lang="en"><p>The moment the underlying distribution shifts. PELT, Bayesian Online (BOCPD), ruptures package.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="ARIMA(p,d,q) — 三個滑桿，看不同模型行為" data-en="ARIMA(p,d,q) — Three Sliders, See Different Behaviors">ARIMA(p,d,q) — 三個滑桿，看不同模型行為</h2>
+<div data-lang="zh"><p><strong>p</strong>=自迴歸階數 (AR)、<strong>d</strong>=差分次數、<strong>q</strong>=移動平均階數 (MA)。調整滑桿，觀察合成序列的趨勢與簡化預測。</p></div>
+<div data-lang="en"><p><strong>p</strong>=AR order, <strong>d</strong>=differencing, <strong>q</strong>=MA order. Adjust sliders to see synthetic series + a simple-forecast outcome.</p></div>
+<div class="interactive-panel">
+<div class="sim-stats"><span class="sim-stat pass" id="pSt">p: 1</span><span class="sim-stat pass" id="dSt">d: 0</span><span class="sim-stat pass" id="qSt">q: 0</span><span class="sim-stat neutral" id="msgSt">—</span></div>
+<div class="slider-group"><label>p (AR order) <span id="valP">1</span></label><input type="range" id="sliderP" min="0" max="3" step="1" value="1"></div>
+<div class="slider-group"><label>d (Differencing) <span id="valD">0</span></label><input type="range" id="sliderD" min="0" max="2" step="1" value="0"></div>
+<div class="slider-group"><label>q (MA order) <span id="valQ">0</span></label><input type="range" id="sliderQ" min="0" max="3" step="1" value="0"></div>
+<div class="chart-container"><canvas id="tsChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">藍色：歷史（80 點）；橘色虛線：簡化預測（20 點）</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">Blue: history (80 pts); Orange dashed: simple forecast (20 pts)</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="主要模型" data-en="MAIN MODELS">主要模型</div>
+<h2 data-zh="二、預測與分析模型一覽" data-en="II. Forecasting & Analysis Models">二、預測與分析模型一覽</h2>
+<table class="comp-table">
+<thead><tr><th>Model</th><th data-zh="處理對象" data-en="Handles">處理對象</th><th data-zh="特色" data-en="Strength">特色</th><th data-zh="工具" data-en="Tool">工具</th></tr></thead>
+<tbody>
+<tr><td><strong>ARIMA (p,d,q)</strong></td><td data-zh="單變量、平穩化後">單變量</td><td data-zh="經典、可解釋">經典、可解釋</td><td>forecast::auto.arima / statsmodels</td></tr>
+<tr><td><strong>SARIMA</strong></td><td data-zh="季節性週期">季節性</td><td data-zh="加入 (P,D,Q)<sub>s</sub>">+ (P,D,Q)<sub>s</sub></td><td>auto.arima(seasonal=T)</td></tr>
+<tr><td><strong>ETS / Holt-Winters</strong></td><td data-zh="趨勢+季節指數平滑">趨勢+季節</td><td data-zh="簡單、穩健">簡單穩健</td><td>forecast::ets / fable</td></tr>
+<tr><td><strong>Prophet (Meta)</strong></td><td data-zh="商業/醫療日資料">商業/日資料</td><td data-zh="趨勢+季節+假日，自動">自動、抗缺失</td><td>prophet (R/Py)</td></tr>
+<tr><td><strong>LSTM / TCN / Transformer</strong></td><td data-zh="多變量、長序列">多變量長序列</td><td data-zh="非線性、需要資料量大">非線性</td><td>PyTorch / Keras</td></tr>
+<tr><td><strong>DTW</strong></td><td data-zh="序列相似（長度不同）">變長相似</td><td data-zh="ECG / 步態">ECG/步態</td><td>dtw / dtaidistance</td></tr>
+<tr><td><strong>Shapelets</strong></td><td data-zh="可解釋分類子序列">可解釋分類</td><td data-zh="挑「最有區別性」子序列">挑「最有區別性」子序列</td><td>tslearn / sktime</td></tr>
+<tr><td><strong>Matrix Profile</strong></td><td data-zh="motif/discord 探勘">motif/discord</td><td data-zh="O(n) STAMP/STUMP，可擴展">O(n) 可擴展</td><td>stumpy</td></tr>
+<tr><td><strong>Change-point</strong></td><td data-zh="變點偵測">變點偵測</td><td data-zh="PELT / BOCPD">PELT / BOCPD</td><td>ruptures / changepoint</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="三、如何挑選時序方法？" data-en="III. How to Pick a Time-Series Method?">三、如何挑選時序方法？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="時序方法決策樹" data-en="Time-Series Method Decision Tree">時序方法決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>需要 <strong>預測未來</strong>？ <span class="dt-arrow">→ ARIMA / SARIMA / ETS / Prophet / LSTM</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>有 <strong>強季節 + 假日效應</strong>（如急診人次）？ <span class="dt-arrow">→ Prophet</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>需要 <strong>比較兩條序列</strong>（不同長度也可）？ <span class="dt-arrow">→ DTW</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>需要 <strong>分類時序</strong> 且要可解釋？ <span class="dt-arrow">→ Shapelets</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>要找 <strong>重複出現的模式 (motif) 或最異常段 (discord)</strong>？ <span class="dt-arrow">→ Matrix Profile (STUMPY)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>要找 <strong>結構性變化</strong>（中斷、政策介入）？ <span class="dt-arrow">→ Change-point (PELT, BOCPD)</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Need to <strong>forecast</strong>? <span class="dt-arrow">→ ARIMA / SARIMA / ETS / Prophet / LSTM</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Strong <strong>seasonality + holidays</strong> (e.g., ED census)? <span class="dt-arrow">→ Prophet</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Compare <strong>two series</strong> (possibly variable length)? <span class="dt-arrow">→ DTW</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Classify with <strong>interpretability</strong>? <span class="dt-arrow">→ Shapelets</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Find <strong>repeating motifs / extreme discords</strong>? <span class="dt-arrow">→ Matrix Profile (STUMPY)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>Detect <strong>structural changes</strong> (intervention)? <span class="dt-arrow">→ Change-point (PELT, BOCPD)</span></div></div>
+</div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>切割勿打亂！</strong>時序資料的 train/test 必須按時間順序：早期當訓練、晚期當測試。隨機 K-fold 等於把「未來」洩漏給模型，產生極度樂觀的指標。改用 <strong>TimeSeriesSplit</strong> 或 <strong>rolling-origin / walk-forward</strong>。</span>
+<span data-lang="en"><strong>Do not shuffle!</strong> Time-series splits must be chronological — early as train, late as test. Random K-fold leaks "future" data, yielding inflated metrics. Use <strong>TimeSeriesSplit</strong> or <strong>rolling-origin / walk-forward</strong>.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：ARIMA + Prophet + DTW + Matrix Profile" data-en="Implementation: ARIMA + Prophet + DTW + Matrix Profile">實作：ARIMA + Prophet + DTW + Matrix Profile</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / forecast + prophet + dtw</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / statsmodels + prophet + stumpy</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(forecast); <span class="func">library</span>(fable); <span class="func">library</span>(prophet); <span class="func">library</span>(dtw); <span class="func">library</span>(tseries)
+
+<span class="comment"># 1) 平穩性檢定 / Stationarity test (ADF)</span>
+adf &lt;- <span class="func">adf.test</span>(y)            <span class="comment"># p &lt; 0.05 → reject unit-root → stationary</span>
+
+<span class="comment"># 2) 自動 ARIMA 預測 / Auto-ARIMA</span>
+fit &lt;- <span class="func">auto.arima</span>(y, seasonal = TRUE, stepwise = FALSE)
+fc  &lt;- <span class="func">forecast</span>(fit, h = <span class="num">24</span>)
+<span class="func">autoplot</span>(fc)
+
+<span class="comment"># 3) Prophet (含假日、節慶)</span>
+df  &lt;- data.frame(ds = dates, y = y)
+m   &lt;- <span class="func">prophet</span>(df, yearly.seasonality = TRUE, weekly.seasonality = TRUE)
+fut &lt;- <span class="func">make_future_dataframe</span>(m, periods = <span class="num">90</span>)
+pf  &lt;- <span class="func">predict</span>(m, fut)
+
+<span class="comment"># 4) DTW 比較兩條 ECG / DTW between two ECG snippets</span>
+al &lt;- <span class="func">dtw</span>(s1, s2, keep = TRUE)
+<span class="func">plot</span>(al, type = <span class="str">"twoway"</span>)
+al$distance</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> statsmodels.tsa.arima.model <span class="kw">import</span> ARIMA
+<span class="kw">from</span> statsmodels.tsa.stattools  <span class="kw">import</span> adfuller
+<span class="kw">from</span> prophet  <span class="kw">import</span> Prophet
+<span class="kw">from</span> tslearn.metrics <span class="kw">import</span> dtw
+<span class="kw">import</span> stumpy, numpy <span class="kw">as</span> np
+
+<span class="comment"># 1) ADF stationarity</span>
+adf_stat, p, *_ = adfuller(y)        <span class="comment"># p &lt; 0.05 → stationary</span>
+
+<span class="comment"># 2) ARIMA(p,d,q) — manual</span>
+mod = ARIMA(y, order=(<span class="num">2</span>,<span class="num">1</span>,<span class="num">2</span>)).fit()
+fc  = mod.forecast(steps=<span class="num">24</span>)
+
+<span class="comment"># 3) Prophet — auto handles trend + seasonality + holidays</span>
+df = pd.DataFrame({<span class="str">"ds"</span>:dates, <span class="str">"y"</span>:y})
+m  = Prophet(yearly_seasonality=<span class="kw">True</span>, weekly_seasonality=<span class="kw">True</span>).fit(df)
+future = m.make_future_dataframe(periods=<span class="num">90</span>)
+pf  = m.predict(future)
+
+<span class="comment"># 4) DTW similarity (variable length)</span>
+d = dtw(s1, s2)
+
+<span class="comment"># 5) Matrix Profile — motif / discord discovery (STUMPY)</span>
+mp = stumpy.stump(y, m=<span class="num">50</span>)              <span class="comment"># window 50</span>
+motif_idx   = np.argmin(mp[:, <span class="num">0</span>])         <span class="comment"># most-repeating</span>
+discord_idx = np.argmax(mp[:, <span class="num">0</span>])         <span class="comment"># most-anomalous</span>
+
+<span class="comment"># 6) Change-point detection</span>
+<span class="kw">import</span> ruptures <span class="kw">as</span> rpt
+algo = rpt.Pelt(model=<span class="str">"rbf"</span>).fit(y)
+cps  = algo.predict(pen=<span class="num">5</span>)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. ARIMA(p,d,q) 中的 d 參數代表？</p>
+<p data-lang="en">1. The d parameter in ARIMA(p,d,q) represents?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 樣本日數</span><span data-lang="en">A. Number of days</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 達到平穩所需的差分次數</span><span data-lang="en">B. Number of differences needed for stationarity</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 預測步數</span><span data-lang="en">C. Forecast horizon</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 季節週期長度</span><span data-lang="en">D. Seasonal period length</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. DTW 相較 Euclidean 的主要優勢是？</p>
+<p data-lang="en">2. The main advantage of DTW over Euclidean is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 計算更快</span><span data-lang="en">A. Faster computation</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 不需要對齊</span><span data-lang="en">B. No alignment needed</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 可處理長度不同 / 速度不同 的序列</span><span data-lang="en">C. Handles series of different length / speed</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 永遠是嚴格距離度量</span><span data-lang="en">D. Always a strict metric</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. Matrix Profile (STUMPY) 主要用於偵測？</p>
+<p data-lang="en">3. Matrix Profile (STUMPY) is mainly used to detect?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 重複模式 (motif) 與最異常段 (discord)</span><span data-lang="en">A. Repeating motifs and most-anomalous discords</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 自相關函數</span><span data-lang="en">B. Autocorrelation function</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 假日效應</span><span data-lang="en">C. Holiday effects</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 共變異矩陣</span><span data-lang="en">D. Covariance matrix</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="text-mining-nlp.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 14: 文字探勘與 NLP 基礎" data-en="Ch 14: Text Mining &amp; NLP Basics">Ch 14: 文字探勘與 NLP 基礎</span></a>
+<a href="graph-network-mining.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 16: 圖與網路探勘" data-en="Ch 16: Graph &amp; Network Mining">Ch 16: 圖與網路探勘</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+function randn(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+const tsChart=new Chart(document.getElementById('tsChart'),{
+ type:'line',
+ data:{labels:Array.from({length:100},(_,i)=>i),datasets:[
+   {label:'history',data:[],borderColor:'rgba(37,99,235,.95)',backgroundColor:'rgba(37,99,235,.15)',tension:0.2,pointRadius:0,borderWidth:2},
+   {label:'forecast',data:[],borderColor:'rgba(217,119,6,.95)',borderDash:[6,4],backgroundColor:'transparent',tension:0.2,pointRadius:0,borderWidth:2}
+ ]},
+ options:{responsive:true,maintainAspectRatio:false,animation:false,
+  scales:{x:{title:{display:true,text:'t'}},y:{title:{display:true,text:'X(t)'}}},plugins:{legend:{position:'top'}}}});
+
+function genSeries(p,d,q){
+ // Simulate AR(p): X_t = sum phi_i X_{t-i} + eps + sum theta_i eps_{t-i}
+ const N=80, H=20;
+ const phi=Array.from({length:p},(_,i)=>0.6/(i+1));   // simple shrinking AR weights
+ const theta=Array.from({length:q},(_,i)=>0.4/(i+1));
+ const eps=Array.from({length:N+H},()=>randn());
+ let X=Array(N+H).fill(0);
+ for(let t=Math.max(p,q);t<N+H;t++){
+  let ar=0; for(let i=0;i<p;i++) ar+=phi[i]*X[t-i-1];
+  let ma=0; for(let j=0;j<q;j++) ma+=theta[j]*eps[t-j-1];
+  X[t]=ar+ma+eps[t];
+ }
+ // Add trend if d=0 (so we can see why differencing matters)
+ if(d===0){ for(let t=0;t<N+H;t++) X[t]+=0.05*t; }
+ if(d===2){ for(let t=0;t<N+H;t++) X[t]-=0.01*t; } // detrend roughly
+ // history = first N
+ const hist=X.slice(0,N), fore=X.slice(N);
+ return {hist,fore};
+}
+function update(){
+ const p=+document.getElementById('sliderP').value;
+ const d=+document.getElementById('sliderD').value;
+ const q=+document.getElementById('sliderQ').value;
+ document.getElementById('valP').textContent=p;
+ document.getElementById('valD').textContent=d;
+ document.getElementById('valQ').textContent=q;
+ document.getElementById('pSt').textContent='p: '+p;
+ document.getElementById('dSt').textContent='d: '+d;
+ document.getElementById('qSt').textContent='q: '+q;
+ const L=I18n.get();
+ const msgs={zh:{
+   '0,0,0':'白噪音 — 純隨機',
+   '1,0,0':'AR(1) — 簡單慣性',
+   '0,0,1':'MA(1) — 短期衝擊',
+   '1,1,1':'ARIMA(1,1,1) — 經典通用',
+   '2,1,2':'ARIMA(2,1,2) — 較強記憶'},
+   en:{
+   '0,0,0':'White noise — pure random',
+   '1,0,0':'AR(1) — simple inertia',
+   '0,0,1':'MA(1) — short-term shock',
+   '1,1,1':'ARIMA(1,1,1) — classic',
+   '2,1,2':'ARIMA(2,1,2) — stronger memory'}};
+ const key=p+','+d+','+q;
+ document.getElementById('msgSt').textContent=msgs[L][key]||(L==='zh'?'ARIMA('+key+')':'ARIMA('+key+')');
+ const {hist,fore}=genSeries(p,d,q);
+ tsChart.data.labels=[...Array(hist.length+fore.length).keys()];
+ tsChart.data.datasets[0].data=[...hist,...Array(fore.length).fill(null)];
+ tsChart.data.datasets[1].data=[...Array(hist.length).fill(null),...fore];
+ tsChart.update('none');
+}
+['sliderP','sliderD','sliderQ'].forEach(id=>document.getElementById(id).addEventListener('input',update));
+document.addEventListener('langchange',update);
+update();
+
+const QF={zh:{q1_y:'d 是差分次數，用於把非平穩序列轉平穩。',q1_n:'B 為正確答案。',q2_y:'DTW 用動態規劃對齊，可處理長度與速度差異。',q2_n:'C 為正確答案。',q3_y:'Matrix Profile 同時找重複模式 (motif) 與最異常段 (discord)。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'d is the differencing order to make a series stationary.',q1_n:'Correct answer is B.',q2_y:'DTW uses dynamic-programming alignment to handle length/speed differences.',q2_n:'Correct answer is C.',q3_y:'Matrix Profile finds motifs and discords simultaneously.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

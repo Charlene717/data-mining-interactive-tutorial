@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 3: EDA & Visualization — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html" class="active">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 3 / 20 · MODULE A</div>
+<h1 data-zh="探索性資料分析 (EDA) 與視覺化" data-en="EDA & Visualization">探索性資料分析 (EDA) 與視覺化</h1>
+<p class="subtitle" data-lang="zh">在訓練任何模型之前，先讓資料說話——這是 Tukey 1977 年留給我們的最重要遺產。</p>
+<p class="subtitle" data-lang="en">Before training any model, let the data speak — Tukey's most important legacy from 1977.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="EDA 的四個目的" data-en="Four Goals of EDA">EDA 的四個目的</h2>
+<div data-lang="zh">
+<p><strong>探索性資料分析 (Exploratory Data Analysis, EDA)</strong> 由 John Tukey 在 1977 年提出，主張資料分析的第一步應該是「看」而不是「測」。它的四個目的：① 理解資料分佈與規模 ② 找出異常值與資料品質問題 ③ 形成假設與特徵發現 ④ 為後續建模選擇合適的模型族。</p>
+<p>下圖是著名的 <em>Anscombe's Quartet</em> 範例：四組資料具有完全相同的平均值、變異數、相關係數與線性迴歸線，但分佈完全不同。光看統計量會被誤導——唯有畫圖才能揭露真相。</p>
+</div>
+<div data-lang="en">
+<p><strong>Exploratory Data Analysis (EDA)</strong>, coined by John Tukey in 1977, argues the first step of analysis should be to <em>look</em>, not to <em>test</em>. Four goals: ① understand distribution and scale ② surface outliers and quality issues ③ generate hypotheses and feature ideas ④ pre-select model families for modeling.</p>
+<p>The famous <em>Anscombe's Quartet</em> shows four datasets with identical mean, variance, correlation, and regression line — yet completely different shapes. Numbers alone mislead; only plots reveal truth.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="Anscombe's Quartet：相同統計，不同分佈" data-en="Anscombe's Quartet: Same Stats, Different Shapes">Anscombe's Quartet：相同統計，不同分佈</h2>
+<div data-lang="zh"><p>切換下方四組資料，觀察分佈如何徹底不同——但回歸線完全相同。這是 EDA 不可取代的最佳證明。</p></div>
+<div data-lang="en"><p>Switch between the four datasets — distributions differ entirely, yet regression lines are identical. The strongest case for irreplaceable EDA.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-q="1">Dataset I</button>
+<button class="toggle-btn" data-q="2">Dataset II</button>
+<button class="toggle-btn" data-q="3">Dataset III</button>
+<button class="toggle-btn" data-q="4">Dataset IV</button>
+</div>
+<div class="sim-stats"><span class="sim-stat neutral">Mean(x)=9, Mean(y)=7.5</span><span class="sim-stat neutral">Var(x)=11, Var(y)=4.12</span><span class="sim-stat neutral">r=0.816</span><span class="sim-stat neutral">y = 3 + 0.5x</span></div>
+<div class="chart-container"><canvas id="ansChart"></canvas></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="圖型選擇" data-en="CHART CHOICE">圖型選擇</div>
+<h2 data-zh="一、依資料類型選擇圖型" data-en="I. Choose Chart Type by Data Type">一、依資料類型選擇圖型</h2>
+<div class="card-grid cols-2">
+<div class="card"><h4 data-zh="🔢 數值單變量" data-en="🔢 Numeric Univariate">🔢 數值單變量</h4><div data-lang="zh"><p>Histogram (整體分佈)、Boxplot (五數摘要 + outliers)、Violin (分佈密度 + 五數)、ECDF (累積分佈)、Q-Q plot (是否近似常態)。</p></div><div data-lang="en"><p>Histogram (overall shape), Boxplot (5-number + outliers), Violin (density + 5-number), ECDF (cumulative), Q-Q plot (normality check).</p></div></div>
+<div class="card"><h4 data-zh="🏷️ 類別單變量" data-en="🏷️ Categorical Univariate">🏷️ 類別單變量</h4><div data-lang="zh"><p>Bar chart、Lollipop、Pareto chart。<strong>避免 3D 圓餅圖</strong>——人眼難以比較弧長。</p></div><div data-lang="en"><p>Bar chart, Lollipop, Pareto chart. <strong>Avoid 3D pie charts</strong> — humans cannot compare arc lengths reliably.</p></div></div>
+<div class="card"><h4 data-zh="🔗 雙變量（數值 × 數值）" data-en="🔗 Numeric × Numeric">🔗 雙變量（數值 × 數值）</h4><div data-lang="zh"><p>Scatter (大量點時用 hexbin / 2D density)、LOESS 平滑曲線、聯合分佈圖。</p></div><div data-lang="en"><p>Scatter (use hexbin / 2D density for many points), LOESS smoother, joint distribution plot.</p></div></div>
+<div class="card"><h4 data-zh="🎭 雙變量（類別 × 數值）" data-en="🎭 Categorical × Numeric">🎭 雙變量（類別 × 數值）</h4><div data-lang="zh"><p>Grouped boxplot / violin、Strip + jitter、Ridgeline plot；對小樣本顯示原始點。</p></div><div data-lang="en"><p>Grouped boxplot/violin, strip + jitter, ridgeline plot; always show raw points for small N.</p></div></div>
+<div class="card"><h4 data-zh="🌐 多變量" data-en="🌐 Multivariate">🌐 多變量</h4><div data-lang="zh"><p>Pairplot (scatter matrix)、Correlation heatmap (色階 viridis)、Parallel coordinates、PCA biplot、UMAP/t-SNE。</p></div><div data-lang="en"><p>Pairplot (scatter matrix), correlation heatmap (use viridis), parallel coordinates, PCA biplot, UMAP/t-SNE.</p></div></div>
+<div class="card"><h4 data-zh="⏱️ 時序" data-en="⏱️ Time Series">⏱️ 時序</h4><div data-lang="zh"><p>Line + trend、Calendar heatmap、Seasonal decomposition (STL)、Spaghetti plot (多個體)。</p></div><div data-lang="en"><p>Line + trend, calendar heatmap, seasonal decomposition (STL), spaghetti plot (multi-subject).</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="二、視覺化設計的 7 大原則 (Tufte / Wilkinson)" data-en="II. 7 Design Principles (Tufte / Wilkinson)">二、視覺化設計的 7 大原則 (Tufte / Wilkinson)</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="圖表選擇決策樹" data-en="Chart Choice Decision Tree">圖表選擇決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>你要呈現「比較」？ <span class="dt-arrow">→ 是 →</span> 橫向 bar chart（避免 3D 圓餅）。</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>你要呈現「分佈」？ <span class="dt-arrow">→ 是 →</span> 小樣本 strip + violin；大樣本 histogram / density。</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>你要呈現「關係」？ <span class="dt-arrow">→ 是 →</span> 數值-數值用 scatter；分類-數值用 grouped box；分類-分類用 mosaic / heatmap。</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>你要呈現「組成」？ <span class="dt-arrow">→ 是 →</span> Stacked bar、treemap、sunburst；避免 3D。</div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>你要呈現「演化」？ <span class="dt-arrow">→ 是 →</span> 時序：line + ribbon (CI)；多個體：spaghetti + median bold。</div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Show "comparison"? <span class="dt-arrow">→ Yes →</span> Horizontal bar chart (avoid 3D pies).</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Show "distribution"? <span class="dt-arrow">→ Yes →</span> Small N: strip + violin; Large N: histogram / density.</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Show "relationship"? <span class="dt-arrow">→ Yes →</span> Num-num: scatter; cat-num: grouped box; cat-cat: mosaic / heatmap.</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Show "composition"? <span class="dt-arrow">→ Yes →</span> Stacked bar, treemap, sunburst; avoid 3D.</div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Show "evolution"? <span class="dt-arrow">→ Yes →</span> Time: line + CI ribbon; multi-subject: spaghetti + bold median.</div></div>
+</div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>色彩規則：</strong>(1) 連續尺度用 <strong>viridis / cividis</strong>（色盲友善）；(2) 發散尺度用 <strong>RdBu</strong>；(3) 類別最多 7 色；(4) 紅綠對比避免（綠色色盲約 5%）。</span>
+<span data-lang="en"><strong>Color rules:</strong> (1) Sequential — use <strong>viridis / cividis</strong> (CVD-safe); (2) Diverging — use <strong>RdBu</strong>; (3) Max 7 categorical colors; (4) Avoid red-green contrast (~5% red-green CVD).</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：自動 EDA 報告" data-en="Implementation: Automated EDA Reports">實作：自動 EDA 報告</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / DataExplorer + ggplot2</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / ydata-profiling + Seaborn</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(DataExplorer); <span class="func">library</span>(ggplot2); <span class="func">library</span>(GGally)
+<span class="comment"># 一鍵 EDA 報告 / One-shot EDA report</span>
+<span class="func">create_report</span>(df, y = <span class="str">"target"</span>, output_file = <span class="str">"eda.html"</span>)
+
+<span class="comment"># 個別圖型 / Targeted plots</span>
+<span class="func">plot_missing</span>(df)               <span class="comment"># 缺失地圖 / missingness map</span>
+<span class="func">plot_histogram</span>(df)             <span class="comment"># 所有數值變數 histogram</span>
+<span class="func">plot_correlation</span>(df, type=<span class="str">"c"</span>) <span class="comment"># 相關 heatmap (Spearman 較穩)</span>
+
+<span class="comment"># 雙變量探索 / Bivariate exploration</span>
+<span class="func">ggpairs</span>(df, columns = <span class="num">1</span>:<span class="num">6</span>, aes(color = target))
+
+<span class="comment"># 自訂 ggplot 範例 — Tufte 風格 / Custom ggplot — Tufte style</span>
+<span class="func">ggplot</span>(df, <span class="func">aes</span>(age, glucose, color = sex)) +
+  <span class="func">geom_point</span>(alpha = .<span class="num">3</span>) +
+  <span class="func">geom_smooth</span>(method = <span class="str">"loess"</span>) +
+  <span class="func">scale_color_viridis_d</span>() +
+  <span class="func">theme_minimal</span>(base_size = <span class="num">13</span>) +
+  <span class="func">labs</span>(title = <span class="str">"Age vs Glucose"</span>, x = <span class="str">"Age (yrs)"</span>, y = <span class="str">"Fasting glucose (mg/dL)"</span>)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">import</span> pandas <span class="kw">as</span> pd, seaborn <span class="kw">as</span> sns, matplotlib.pyplot <span class="kw">as</span> plt
+<span class="kw">from</span> ydata_profiling <span class="kw">import</span> ProfileReport
+
+<span class="comment"># 一鍵 EDA 報告 / One-shot EDA report</span>
+ProfileReport(df, title=<span class="str">"EDA"</span>, explorative=<span class="kw">True</span>).to_file(<span class="str">"eda.html"</span>)
+
+<span class="comment"># 缺失矩陣 / Missingness matrix</span>
+<span class="kw">import</span> missingno <span class="kw">as</span> msno
+msno.matrix(df); plt.show()
+
+<span class="comment"># Correlation heatmap (viridis)</span>
+sns.heatmap(df.corr(method=<span class="str">"spearman"</span>), cmap=<span class="str">"viridis"</span>, center=<span class="num">0</span>,
+            annot=<span class="kw">True</span>, fmt=<span class="str">".2f"</span>); plt.show()
+
+<span class="comment"># Pairplot (含類別著色) / Pairplot (hued)</span>
+sns.pairplot(df, hue=<span class="str">"target"</span>, corner=<span class="kw">True</span>, palette=<span class="str">"viridis"</span>); plt.show()
+
+<span class="comment"># Tufte 風格 scatter</span>
+fig, ax = plt.subplots()
+sns.scatterplot(data=df, x=<span class="str">"age"</span>, y=<span class="str">"glucose"</span>, hue=<span class="str">"sex"</span>, alpha=.<span class="num">3</span>, ax=ax)
+sns.regplot(data=df, x=<span class="str">"age"</span>, y=<span class="str">"glucose"</span>, scatter=<span class="kw">False</span>, lowess=<span class="kw">True</span>, ax=ax)
+sns.despine()</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. Anscombe's Quartet 證明了什麼？</p>
+<p data-lang="en">1. What does Anscombe's Quartet prove?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 線性迴歸總是有效</span><span data-lang="en">A. Linear regression is always valid</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 相同的統計量可以對應完全不同的分佈，必須畫圖</span><span data-lang="en">B. Identical statistics can correspond to completely different shapes — visualization is essential</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Pearson 比 Spearman 更穩健</span><span data-lang="en">C. Pearson is more robust than Spearman</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 四組資料一定有相同的趨勢</span><span data-lang="en">D. Four datasets must share the same trend</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. 要呈現連續色階且色盲友善，應選？</p>
+<p data-lang="en">2. To show a sequential colormap that is colorblind-safe, choose?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. Rainbow (jet)</span><span data-lang="en">A. Rainbow (jet)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Red-Green divergent</span><span data-lang="en">B. Red-Green divergent</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Viridis 或 Cividis</span><span data-lang="en">C. Viridis or Cividis</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 灰階反向</span><span data-lang="en">D. Reverse grayscale</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="3">
+<p data-lang="zh">3. 在 100 萬個樣本點的二維散佈中，最適合的圖型是？</p>
+<p data-lang="en">3. With 1M points in a 2D scatter, the best chart type is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 仍用 scatter，每個點透明 0.001</span><span data-lang="en">A. Plain scatter with alpha 0.001</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 隨機抽 100 點繪製</span><span data-lang="en">B. Randomly sample 100 points</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 3D scatter</span><span data-lang="en">C. 3D scatter</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Hexbin 或 2D density</span><span data-lang="en">D. Hexbin or 2D density</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="data-preparation.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 2: 資料準備與前處理" data-en="Ch 2: Data Preparation &amp; Preprocessing">Ch 2: 資料準備與前處理</span></a>
+<a href="similarity-distance.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 4: 相似度與距離度量" data-en="Ch 4: Similarity &amp; Distance Metrics">Ch 4: 相似度與距離度量</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+const ANSC={1:[[10,8.04],[8,6.95],[13,7.58],[9,8.81],[11,8.33],[14,9.96],[6,7.24],[4,4.26],[12,10.84],[7,4.82],[5,5.68]],
+            2:[[10,9.14],[8,8.14],[13,8.74],[9,8.77],[11,9.26],[14,8.10],[6,6.13],[4,3.10],[12,9.13],[7,7.26],[5,4.74]],
+            3:[[10,7.46],[8,6.77],[13,12.74],[9,7.11],[11,7.81],[14,8.84],[6,6.08],[4,5.39],[12,8.15],[7,6.42],[5,5.73]],
+            4:[[8,6.58],[8,5.76],[8,7.71],[8,8.84],[8,8.47],[8,7.04],[8,5.25],[19,12.50],[8,5.56],[8,7.91],[8,6.89]]};
+const ansChart=new Chart(document.getElementById('ansChart'),{type:'scatter',data:{datasets:[
+ {label:'points',data:ANSC[1].map(p=>({x:p[0],y:p[1]})),backgroundColor:'rgba(217,119,6,.7)',pointRadius:6},
+ {label:'y = 3 + 0.5x',data:[{x:3,y:4.5},{x:20,y:13}],type:'line',borderColor:'rgba(120,53,15,.8)',backgroundColor:'transparent',borderWidth:2,pointRadius:0}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:21},y:{min:2,max:14}}}});
+document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-q]').forEach(x=>x.classList.remove('active'));b.classList.add('active');ansChart.data.datasets[0].data=ANSC[+b.dataset.q].map(p=>({x:p[0],y:p[1]}));ansChart.update('none');}));
+
+const QF={zh:{q1_y:'相同統計可對應完全不同分佈——必須畫圖。',q1_n:'B 為正確答案。',q2_y:'Viridis/Cividis 是色盲友善的連續色階首選。',q2_n:'C 為正確答案。',q3_y:'大數據點用 hexbin 或 2D 密度，避免覆蓋。',q3_n:'D 為正確答案。'},
+          en:{q1_y:'Identical stats can match very different shapes — always visualize.',q1_n:'Correct answer is B.',q2_y:'Viridis/Cividis are the go-to CVD-safe sequential palettes.',q2_n:'Correct answer is C.',q3_y:'For large N use hexbin or 2D density to avoid overplotting.',q3_n:'Correct answer is D.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

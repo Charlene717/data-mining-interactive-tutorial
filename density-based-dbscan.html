@@ -1,0 +1,290 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 10: DBSCAN, OPTICS, HDBSCAN, GMM, Spectral — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html" class="active">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 10 / 20 · MODULE C</div>
+<h1 data-zh="密度型與機率型分群" data-en="Density-Based and Probabilistic Clustering">密度型與機率型分群</h1>
+<p class="subtitle" data-lang="zh">當群非球狀、密度不均、有雜訊，K-Means 就失效。本章介紹 DBSCAN、OPTICS、HDBSCAN、Mean-Shift、GMM、Spectral——形狀無偏見的分群家族。</p>
+<p class="subtitle" data-lang="en">When clusters are non-spherical, vary in density, or contain noise, K-Means breaks down. This chapter covers DBSCAN, OPTICS, HDBSCAN, Mean-Shift, GMM, and Spectral — the shape-agnostic clustering family.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="為什麼需要密度型分群？" data-en="Why Density-Based Clustering?">為什麼需要密度型分群？</h2>
+<div data-lang="zh">
+<p>K-Means 三大限制：(1) 必須事先指定 k，(2) 假設群為球狀，(3) 把每個點都強制指派到群（包含 outlier）。在許多生物醫學情境裡，群數未知、形狀為彎月或環、且含明顯離群——這時 <strong>密度型 (density-based)</strong> 方法閃耀登場。</p>
+<p>密度型方法的核心觀念：群 = 高密度區域的連通元件，noise = 低密度區域的孤立點。代表算法為 1996 年 KDD 上提出的 DBSCAN，至今仍是 sklearn / R 的標準工具。</p>
+</div>
+<div data-lang="en">
+<p>K-Means has three big limits: (1) k must be set, (2) clusters assumed spherical, (3) every point is forced into a cluster (including outliers). In many biomedical settings clusters are crescent- or ring-shaped, k is unknown, and there are real outliers — this is where <strong>density-based</strong> methods shine.</p>
+<p>Core idea: clusters are connected components of high density, while noise sits in low-density regions. The flagship algorithm is DBSCAN (KDD 1996), still the standard in sklearn / R.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="DBSCAN" data-en="DBSCAN">DBSCAN</div>
+<h2 data-zh="一、DBSCAN 三類點 + 兩個參數" data-en="I. DBSCAN — Three Point Types, Two Parameters">一、DBSCAN：三類點與兩個參數</h2>
+<div class="card-grid cols-3">
+<div class="card"><h4 data-zh="Core 核心點" data-en="Core Point">Core 核心點</h4>
+<p data-lang="zh">在半徑 <em>ε</em> 內至少有 <em>minPts</em> 個鄰居。是群的「種子」。</p>
+<p data-lang="en">Has at least <em>minPts</em> neighbors within radius <em>ε</em>. The cluster seed.</p></div>
+<div class="card"><h4 data-zh="Border 邊界點" data-en="Border Point">Border 邊界點</h4>
+<p data-lang="zh">鄰居數 &lt; minPts，但落在某 core 的 ε 內。被吸入該群但不再擴張。</p>
+<p data-lang="en">Has &lt; minPts neighbors, but lies within ε of some core. Absorbed but does not extend further.</p></div>
+<div class="card"><h4 data-zh="Noise 雜訊點" data-en="Noise Point">Noise 雜訊點</h4>
+<p data-lang="zh">既不是 core 也不在任何 core 的 ε 鄰域內。標記為 -1（不屬於任何群）。</p>
+<p data-lang="en">Neither core nor within any core's ε. Labelled -1 (no cluster).</p></div>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>選 ε 的經驗法則：</strong>畫 k-distance plot（k = minPts，遞減排序），找肘部。<strong>選 minPts：</strong>通常取 2×維度（如 2D 用 minPts=4）。</span>
+<span data-lang="en"><strong>Choosing ε:</strong> plot the k-distance graph (k = minPts, sorted descending), find the knee. <strong>minPts:</strong> rule of thumb is 2 × dim (4 for 2D).</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="調整 ε 與 minPts 觀察 core / border / noise" data-en="Tweak ε and minPts to See Core / Border / Noise">調整 ε 與 minPts</h2>
+<div data-lang="zh"><p>下方為兩個彎月加上散落雜訊。試著放大 ε、降低 minPts——你會看到雜訊被吸入、群數變化。</p></div>
+<div data-lang="en"><p>Two crescents with scattered noise. Increase ε or lower minPts — noise gets absorbed, cluster count changes.</p></div>
+<div class="interactive-panel">
+<div class="slider-row">
+<label>ε = <span id="epsVal">0.50</span></label>
+<input type="range" id="epsSlider" min="0.15" max="1.5" value="0.5" step="0.05">
+</div>
+<div class="slider-row">
+<label>minPts = <span id="mpVal">4</span></label>
+<input type="range" id="mpSlider" min="2" max="15" value="4" step="1">
+</div>
+<div class="chart-container"><canvas id="dbChart"></canvas></div>
+<div id="dbStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="家族比較" data-en="FAMILY">家族比較</div>
+<h2 data-zh="二、密度型 / 機率型分群家族" data-en="II. The Density / Probabilistic Family">二、密度型 / 機率型分群家族</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="演算法" data-en="Algorithm">演算法</th><th data-zh="關鍵概念" data-en="Key Idea">關鍵概念</th><th data-zh="優勢" data-en="Strength">優勢</th></tr></thead>
+<tbody>
+<tr><td><strong>DBSCAN</strong></td><td>ε, minPts</td><td><span data-lang="zh">無需 k；可偵測雜訊；任意形狀</span><span data-lang="en">No k; detects noise; arbitrary shape</span></td></tr>
+<tr><td><strong>OPTICS</strong></td><td data-zh="reachability plot">reachability plot</td><td data-en="reachability plot"><span data-lang="zh">不需固定 ε，可擷取多層次群</span><span data-lang="en">No fixed ε; multi-level clusters</span></td></tr>
+<tr><td><strong>HDBSCAN</strong></td><td data-zh="mutual reachability + condensed tree">condensed tree</td><td data-en="mutual reachability + condensed tree"><span data-lang="zh">處理變化密度；提供成員資格機率</span><span data-lang="en">Handles varying density; soft membership</span></td></tr>
+<tr><td><strong>Mean-Shift</strong></td><td data-zh="爬山找密度峰">爬山找密度峰</td><td data-en="Hill-climb to density modes"><span data-lang="zh">無需 k；自動找模式</span><span data-lang="en">No k; finds modes automatically</span></td></tr>
+<tr><td><strong>GMM (EM)</strong></td><td data-zh="k 個高斯的混合">k 個高斯的混合</td><td data-en="Mixture of k Gaussians"><span data-lang="zh">軟分群；BIC 選 k；橢圓形群</span><span data-lang="en">Soft assignment; BIC for k; elliptical</span></td></tr>
+<tr><td><strong>Spectral</strong></td><td data-zh="圖 Laplacian 的 eigenvectors">圖 Laplacian</td><td data-en="Eigen-decomp of graph Laplacian"><span data-lang="zh">非凸群；流形結構</span><span data-lang="en">Non-convex clusters; manifold-aware</span></td></tr>
+</tbody></table>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>HDBSCAN 改進 DBSCAN 的關鍵：</strong>引入 <em>mutual reachability distance</em> 與 <em>condensed cluster tree</em>，使其能處理「密度不均」的群——例如同時存在 1000 個與 30 個成員的群，DBSCAN 必須妥協單一 ε，HDBSCAN 不必。</span>
+<span data-lang="en"><strong>HDBSCAN improves DBSCAN by:</strong> using <em>mutual reachability distance</em> and a <em>condensed cluster tree</em>, letting it handle varying-density clusters — e.g. one with 1000 members and another with 30 — without a single global ε.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="GMM 與 EM" data-en="GMM & EM">GMM 與 EM</div>
+<h2 data-zh="三、Gaussian Mixture Model 與軟分群" data-en="III. Gaussian Mixture Model and Soft Clustering">三、GMM 與軟分群</h2>
+<div data-lang="zh">
+<p>GMM 假設資料來自 k 個多元高斯的混合：p(x)=Σ π_k · 𝒩(x | μ_k, Σ_k)。以 <strong>EM 演算法</strong>交替更新：(E-step) 算每點屬於每群的機率 (responsibility)；(M-step) 用 responsibility-weighted 更新 π, μ, Σ。</p>
+<p>k 的選擇用 <strong>BIC</strong>（越小越好，內建懲罰複雜度）。共變異形式有 full（橢圓任意角度）、diagonal（橢圓但軸對齊）、spherical（圓形——退化為 K-Means）、tied（共用 Σ）。</p>
+</div>
+<div data-lang="en">
+<p>GMM models data as a mixture of k Gaussians: p(x) = Σ π_k · 𝒩(x | μ_k, Σ_k). The <strong>EM algorithm</strong> alternates: (E-step) compute each point's responsibility for each component; (M-step) update π, μ, Σ using those weights.</p>
+<p>Pick k by <strong>BIC</strong> (lower is better, penalizes complexity). Covariance types: full (any-angle ellipses), diagonal (axis-aligned ellipses), spherical (circles — reduces to K-Means), tied (shared Σ).</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="四、密度型 / 機率型方法選擇" data-en="IV. Choosing a Density / Probabilistic Method">四、方法選擇決策樹</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="密度型分群決策樹" data-en="Density-Based Decision Tree">密度型分群決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>群形狀奇怪、有雜訊、密度均勻？ <span class="dt-arrow">→ DBSCAN</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>群密度差異大（有稀疏 + 緊密混合）？ <span class="dt-arrow">→ HDBSCAN</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>想看多解析度結構或不確定 ε？ <span class="dt-arrow">→ OPTICS</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>群為橢圓且需「軟分群機率」？ <span class="dt-arrow">→ GMM (full / diagonal Σ)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>群為非凸流形（環、彎月、瑞士卷）？ <span class="dt-arrow">→ Spectral Clustering</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>不知道 k 也不想調 ε，只想自動找密度峰？ <span class="dt-arrow">→ Mean-Shift（小資料）</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Irregular shape, noise, uniform density? <span class="dt-arrow">→ DBSCAN</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Varying density (sparse + tight mixed)? <span class="dt-arrow">→ HDBSCAN</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Want multi-resolution view / ε unclear? <span class="dt-arrow">→ OPTICS</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Elliptical clusters and want soft probabilities? <span class="dt-arrow">→ GMM (full / diagonal Σ)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Non-convex manifolds (rings, crescents, swiss roll)? <span class="dt-arrow">→ Spectral Clustering</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>No k, no ε tuning, just find density modes? <span class="dt-arrow">→ Mean-Shift (small N)</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：DBSCAN、HDBSCAN、GMM、Spectral" data-en="Implementation: DBSCAN, HDBSCAN, GMM, Spectral">實作</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / dbscan + mclust + kernlab</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn + hdbscan</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(dbscan); <span class="func">library</span>(mclust); <span class="func">library</span>(kernlab)
+X &lt;- <span class="func">scale</span>(iris[, <span class="num">1</span>:<span class="num">4</span>])
+
+<span class="comment"># 1) DBSCAN — 先看 k-distance plot 決定 eps</span>
+dbscan::<span class="func">kNNdistplot</span>(X, k = <span class="num">4</span>); abline(h = <span class="num">0.5</span>, lty = <span class="num">2</span>)
+db &lt;- dbscan::<span class="func">dbscan</span>(X, eps = <span class="num">0.5</span>, minPts = <span class="num">4</span>)
+table(db$cluster)   <span class="comment"># 0 = noise / 0 = noise</span>
+
+<span class="comment"># 2) OPTICS — 不需固定 eps / no fixed eps</span>
+op &lt;- dbscan::<span class="func">optics</span>(X, minPts = <span class="num">4</span>)
+plot(op)            <span class="comment"># reachability plot</span>
+
+<span class="comment"># 3) HDBSCAN — 處理密度變化 / varying density</span>
+hdb &lt;- dbscan::<span class="func">hdbscan</span>(X, minPts = <span class="num">5</span>)
+
+<span class="comment"># 4) GMM with BIC 自動選 k / GMM with BIC auto-k</span>
+gmm &lt;- mclust::<span class="func">Mclust</span>(X, G = <span class="num">1</span>:<span class="num">9</span>)
+gmm$G; gmm$BIC
+
+<span class="comment"># 5) Spectral Clustering</span>
+sc &lt;- kernlab::<span class="func">specc</span>(X, centers = <span class="num">3</span>)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.cluster <span class="kw">import</span> DBSCAN, OPTICS, SpectralClustering, MeanShift
+<span class="kw">from</span> sklearn.mixture <span class="kw">import</span> GaussianMixture
+<span class="kw">from</span> sklearn.neighbors <span class="kw">import</span> NearestNeighbors
+<span class="kw">import</span> hdbscan, numpy <span class="kw">as</span> np
+
+<span class="comment"># 1) DBSCAN — k-distance heuristic for eps</span>
+nn = <span class="func">NearestNeighbors</span>(n_neighbors=<span class="num">4</span>).fit(X)
+d, _ = nn.kneighbors(X); d = np.sort(d[:, -<span class="num">1</span>])
+<span class="comment"># 肘部就是建議 eps / knee gives suggested eps</span>
+db = <span class="func">DBSCAN</span>(eps=<span class="num">0.5</span>, min_samples=<span class="num">4</span>).fit(X)
+print(np.unique(db.labels_, return_counts=<span class="kw">True</span>))    <span class="comment"># -1 = noise</span>
+
+<span class="comment"># 2) OPTICS</span>
+op = <span class="func">OPTICS</span>(min_samples=<span class="num">5</span>, xi=<span class="num">0.05</span>).fit(X)
+
+<span class="comment"># 3) HDBSCAN — 推薦現代標準 / modern default</span>
+hdb = hdbscan.<span class="func">HDBSCAN</span>(min_cluster_size=<span class="num">15</span>, min_samples=<span class="num">5</span>).fit(X)
+hdb.probabilities_   <span class="comment"># 軟成員機率 / soft membership probability</span>
+
+<span class="comment"># 4) GMM + BIC 自動選 k</span>
+bics = []
+<span class="kw">for</span> k <span class="kw">in</span> range(<span class="num">1</span>, <span class="num">10</span>):
+    m = <span class="func">GaussianMixture</span>(n_components=k, covariance_type=<span class="str">"full"</span>).fit(X)
+    bics.append((k, m.bic(X)))
+best_k = min(bics, key=<span class="kw">lambda</span> kb: kb[<span class="num">1</span>])[<span class="num">0</span>]
+
+<span class="comment"># 5) Spectral Clustering for non-convex shapes / 非凸群</span>
+sc = <span class="func">SpectralClustering</span>(n_clusters=<span class="num">3</span>, affinity=<span class="str">"nearest_neighbors"</span>).fit(X)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 相較於 K-Means，DBSCAN 的關鍵優勢之一是？</p>
+<p data-lang="en">1. A key advantage of DBSCAN over K-Means is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 處理速度永遠更快</span><span data-lang="en">A. Always faster</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 提供軟成員機率</span><span data-lang="en">B. Provides soft probabilities</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 不需事先指定 k，且可標記雜訊</span><span data-lang="en">C. No k needed; can label noise</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 對所有資料形狀都最好</span><span data-lang="en">D. Best for any data shape</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">2. HDBSCAN 主要改善 DBSCAN 的哪一缺點？</p>
+<p data-lang="en">2. HDBSCAN mainly improves DBSCAN by addressing?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 全域單一 ε 無法處理密度不均的群</span><span data-lang="en">A. A global single ε can't handle varying density</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. DBSCAN 不能用 Manhattan 距離</span><span data-lang="en">B. DBSCAN can't use Manhattan distance</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. DBSCAN 不能畫圖</span><span data-lang="en">C. DBSCAN can't be plotted</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. DBSCAN 不支援高維</span><span data-lang="en">D. DBSCAN can't handle high-D</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="3">
+<p data-lang="zh">3. 對角共變異 (diagonal Σ) 的 GMM，最近似於下列哪一方法？</p>
+<p data-lang="en">3. A GMM with diagonal covariance closely resembles which method?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. DBSCAN</span><span data-lang="en">A. DBSCAN</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Spectral Clustering</span><span data-lang="en">B. Spectral Clustering</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Hierarchical / Ward</span><span data-lang="en">C. Hierarchical / Ward</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Naive Bayes 的分群版（特徵獨立的高斯）</span><span data-lang="en">D. A clustering analog of Naive Bayes (independent Gaussians)</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="clustering-kmeans-hierarchical.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 9: K-Means 與階層式分群" data-en="Ch 9: K-Means &amp; Hierarchical Clustering">Ch 9: K-Means 與階層式分群</span></a>
+<a href="association-rules-apriori.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 11: 關聯規則探勘：Apriori 與 FP-Growth" data-en="Ch 11: Association Rule Mining: Apriori &amp; FP-Growth">Ch 11: 關聯規則探勘：Apriori 與 FP-Growth</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Toy data: two crescents + noise
+function rng(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+const r=rng(13);
+const pts=[];
+for(let i=0;i<60;i++){const t=Math.PI*r();pts.push({x:2*Math.cos(t)+0.15*(r()-0.5),y:Math.sin(t)+0.15*(r()-0.5)});}
+for(let i=0;i<60;i++){const t=Math.PI*r();pts.push({x:2-2*Math.cos(t)+0.15*(r()-0.5),y:-Math.sin(t)+0.5+0.15*(r()-0.5)});}
+for(let i=0;i<25;i++) pts.push({x:-2+6*r(),y:-2+4*r()});  // noise
+
+function dbscan(P,eps,minPts){
+ const n=P.length,labels=new Array(n).fill(undefined),visited=new Array(n).fill(false);
+ function neigh(i){const out=[];for(let j=0;j<n;j++){const d=Math.hypot(P[i].x-P[j].x,P[i].y-P[j].y);if(d<=eps)out.push(j);}return out;}
+ let C=-1;
+ for(let i=0;i<n;i++){
+  if(visited[i])continue;visited[i]=true;
+  const N=neigh(i);
+  if(N.length<minPts){labels[i]=-1;continue;}
+  C++;labels[i]=C;
+  const queue=N.filter(j=>j!==i);
+  while(queue.length){
+   const j=queue.shift();
+   if(!visited[j]){visited[j]=true;const N2=neigh(j);if(N2.length>=minPts)N2.forEach(k=>{if(!queue.includes(k))queue.push(k);});}
+   if(labels[j]===undefined||labels[j]===-1)labels[j]=C;
+  }
+ }
+ // tag core/border
+ const cores=new Set();for(let i=0;i<n;i++){if(neigh(i).length>=minPts)cores.add(i);}
+ return{labels,cores};
+}
+
+const dbChart=new Chart(document.getElementById('dbChart'),{type:'scatter',data:{datasets:[]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:-2.5,max:4.5},y:{min:-2,max:2.5}},plugins:{legend:{position:'top'}}}});
+
+const palette=['#2563eb','#dc2626','#16a34a','#d97706','#9333ea','#0891b2','#db2777'];
+function refresh(){
+ const eps=+document.getElementById('epsSlider').value,mp=+document.getElementById('mpSlider').value;
+ document.getElementById('epsVal').textContent=eps.toFixed(2);
+ document.getElementById('mpVal').textContent=mp;
+ const{labels,cores}=dbscan(pts,eps,mp);
+ const k=Math.max(0,...labels.filter(l=>l>=0))+1;
+ const ds=[];
+ for(let c=0;c<k;c++){
+  ds.push({label:'C'+(c+1)+' core',data:pts.filter((_,i)=>labels[i]===c&&cores.has(i)).map(p=>({x:p.x,y:p.y})),backgroundColor:palette[c%palette.length],pointRadius:7});
+  ds.push({label:'C'+(c+1)+' border',data:pts.filter((_,i)=>labels[i]===c&&!cores.has(i)).map(p=>({x:p.x,y:p.y})),backgroundColor:palette[c%palette.length],pointStyle:'triangle',pointRadius:6});
+ }
+ ds.push({label:'Noise',data:pts.filter((_,i)=>labels[i]===-1).map(p=>({x:p.x,y:p.y})),backgroundColor:'#999',pointStyle:'crossRot',pointRadius:6});
+ dbChart.data.datasets=ds;dbChart.update('none');
+ const noise=labels.filter(l=>l===-1).length;
+ const L=I18n.get();
+ document.getElementById('dbStats').innerHTML=
+  `<span class="sim-stat neutral">${L==='zh'?'群數':'Clusters'}: ${k}</span>`+
+  `<span class="sim-stat ${noise>0?'pass':'neutral'}">${L==='zh'?'雜訊':'Noise'}: ${noise}</span>`+
+  `<span class="sim-stat neutral">core: ${cores.size}</span>`+
+  `<span class="sim-stat neutral">ε=${eps.toFixed(2)} · minPts=${mp}</span>`;
+}
+['epsSlider','mpSlider'].forEach(id=>document.getElementById(id).addEventListener('input',refresh));
+document.addEventListener('langchange',refresh);
+refresh();
+
+const QF={zh:{q1_y:'DBSCAN 不需 k，且能標記雜訊。',q1_n:'C 為正確答案。',q2_y:'HDBSCAN 透過 condensed tree 處理密度不均。',q2_n:'A 為正確答案。',q3_y:'對角 Σ 表示特徵獨立，正如分群版的 Naive Bayes。',q3_n:'D 為正確答案。'},
+          en:{q1_y:'DBSCAN needs no k and can label noise.',q1_n:'Correct answer is C.',q2_y:'HDBSCAN handles varying density via the condensed tree.',q2_n:'Correct answer is A.',q3_y:'Diagonal Σ assumes feature independence — like a clustering Naive Bayes.',q3_n:'Correct answer is D.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 7: Naive Bayes & SVM — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html" class="active">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 7 / 20 · MODULE B</div>
+<h1 data-zh="樸素貝氏與支持向量機" data-en="Naive Bayes & Support Vector Machines">樸素貝氏與支持向量機</h1>
+<p class="subtitle" data-lang="zh">兩個經典分類器的對照：NB 用機率公式做出「天真但有效」的判斷；SVM 用幾何邊界找最大間隔——並透過 kernel trick 把線性世界擴展到任意維度。</p>
+<p class="subtitle" data-lang="en">Two classics in contrast: NB makes "naively effective" decisions via probability; SVM finds maximum-margin boundaries — and extends the linear world to any dimension via the kernel trick.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="貝氏定理" data-en="BAYES">貝氏定理</div>
+<h2 data-zh="一、Naive Bayes 的核心" data-en="I. The Heart of Naive Bayes">一、Naive Bayes 的核心</h2>
+<div data-lang="zh">
+<p>貝氏定理：P(y | x) ∝ P(x | y) · P(y)。要計算後驗，需要聯合機率 P(x₁,…,x<sub>p</sub> | y)——在高維下完全不可估。Naive Bayes 的「樸素 (naive)」假設是：<strong>給定類別 y 後，特徵彼此條件獨立</strong>。於是聯合機率拆成 ΠP(x<sub>j</sub> | y)，參數量從指數降到線性。</p>
+<p>即使這假設常常不成立，NB 仍在許多文本/垃圾郵件/醫學初篩任務上表現驚人——因為分類只需要「機率排序正確」而非「機率值正確」。</p>
+</div>
+<div data-lang="en">
+<p>Bayes' rule: P(y | x) ∝ P(x | y) · P(y). The joint P(x₁,…,x<sub>p</sub> | y) is impossible to estimate in high dimensions. The "naive" assumption is: <strong>features are conditionally independent given y</strong>. The joint then factors as ΠP(x<sub>j</sub> | y) — parameter count drops from exponential to linear.</p>
+<p>Even when this assumption is wrong, NB performs remarkably well on text / spam / clinical triage — because classification only needs the <em>ranking</em> to be right, not the calibrated probabilities.</p>
+</div>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">📊</div><h4>Gaussian NB</h4><div data-lang="zh"><p>P(x|y) 假設為高斯：用每類別均值/變異數估參。連續特徵首選。</p></div><div data-lang="en"><p>P(x|y) is Gaussian — uses per-class mean/variance. Default for continuous features.</p></div></div>
+<div class="card"><div class="card-icon">📰</div><h4>Multinomial NB</h4><div data-lang="zh"><p>計數型 (詞頻、N-gram、bag-of-words)；文本分類經典。</p></div><div data-lang="en"><p>Count-based (term freq, N-grams, bag-of-words); the classic for text classification.</p></div></div>
+<div class="card"><div class="card-icon">🔘</div><h4>Bernoulli NB</h4><div data-lang="zh"><p>二元特徵 (詞是否出現、symptoms 0/1)；短文本好用。</p></div><div data-lang="en"><p>Binary features (word present? symptom 0/1); good for short text.</p></div></div>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>Laplace smoothing：</strong>未在訓練中出現的詞會讓某個 P(x|y)=0，整條機率歸零。加 α=1 平滑可避免。</span>
+<span data-lang="en"><strong>Laplace smoothing:</strong> Unseen words make P(x|y)=0, zeroing the whole product. Add-α (α=1) smoothing avoids this.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="獨立假設對 NB 預測的影響" data-en="Independence Assumption Effect on NB Prediction">獨立假設對預測的影響</h2>
+<div data-lang="zh"><p>玩具情境：兩個高度相關的特徵 (如 BMI 和體脂率) 同時出現。NB 把它們當獨立 → 重複計算證據，後驗機率被推得過高。切換獨立假設 (on/off) 看後驗機率變化。</p></div>
+<div data-lang="en"><p>Toy scenario: two highly correlated features (e.g., BMI and body-fat) co-occur. NB treats them as independent → double-counts evidence and inflates the posterior. Toggle the independence assumption to compare.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-indep="on" data-zh="獨立假設：開（NB 預設）" data-en="Independence: ON (NB default)">獨立假設：開（NB 預設）</button>
+<button class="toggle-btn" data-indep="off" data-zh="獨立假設：關（考慮相關性）" data-en="Independence: OFF (correlation-aware)">獨立假設：關（考慮相關性）</button>
+</div>
+<div class="chart-container"><canvas id="nbChart"></canvas></div>
+<div id="nbStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="SVM" data-en="SVM">SVM</div>
+<h2 data-zh="二、Support Vector Machine" data-en="II. Support Vector Machine">二、Support Vector Machine</h2>
+<div data-lang="zh">
+<p>SVM 不問「哪條直線能分開」，而問「哪條直線離兩類最遠」——它找<strong>最大間隔 (max margin)</strong> 的超平面，只有最靠近邊界的少數樣本（<em>support vectors</em>）決定模型。</p>
+<p><strong>Soft margin (C)：</strong>真實資料常無法完美分割。C 控制「允許多少分錯」——C 大 → 不容忍誤分（窄間隔、易過擬合）；C 小 → 容忍誤分（寬間隔、較穩健）。</p>
+<p><strong>Kernel trick：</strong>把資料隱式投影到高維空間，使在原空間線性不可分的問題在新空間線性可分——而<strong>不需真的計算高維坐標</strong>，只需算核函數 K(x, x′)。RBF、Polynomial、Sigmoid 是最常用的三種核。</p>
+</div>
+<div data-lang="en">
+<p>SVM does not ask "which line separates the classes?" but "which separator is farthest from both classes?" — it finds the <strong>maximum-margin hyperplane</strong>. Only the points closest to the boundary (<em>support vectors</em>) define the model.</p>
+<p><strong>Soft margin (C):</strong> Real data is rarely perfectly separable. C controls how many misclassifications you tolerate. Large C → low tolerance (narrow margin, overfit risk); small C → high tolerance (wider margin, more robust).</p>
+<p><strong>Kernel trick:</strong> Implicitly project data into a higher-dimensional space where the problem becomes linearly separable — without ever computing those high-D coordinates. We only need K(x, x′). RBF, Polynomial, and Sigmoid are the three most common kernels.</p>
+</div>
+<table class="comp-table">
+<thead><tr><th>Kernel</th><th>K(x,x′)</th><th data-zh="特性" data-en="Use">特性</th></tr></thead>
+<tbody>
+<tr><td><strong>Linear</strong></td><td>x·x′</td><td data-zh="高維稀疏資料（文本 TF-IDF）首選">文本首選</td></tr>
+<tr><td><strong>RBF (Gaussian)</strong></td><td>exp(−γ‖x−x′‖²)</td><td data-zh="泛用、非線性、需調 γ 與 C">最常用</td></tr>
+<tr><td><strong>Polynomial</strong></td><td>(γx·x′+r)<sup>d</sup></td><td data-zh="處理特徵交互、影像處理">特徵交互</td></tr>
+<tr><td><strong>Sigmoid</strong></td><td>tanh(γx·x′+r)</td><td data-zh="近似神經網路、實務較少用">較少用</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="三、NB vs SVM：怎麼選？" data-en="III. NB vs SVM: How to Choose?">三、NB vs SVM：怎麼選？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="NB / SVM 選擇決策樹" data-en="NB / SVM Choice Decision Tree">NB / SVM 選擇決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>資料是<strong>文本 / 詞頻 / 高維稀疏</strong>？ <span class="dt-arrow">→ Multinomial NB 或 Linear SVM</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>樣本量<strong>小 (&lt;1000)</strong> 且需要快速 baseline？ <span class="dt-arrow">→ Naive Bayes</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>特徵間<strong>高度相關</strong>（基因表現）？ <span class="dt-arrow">→ 避開 NB；改用 SVM/Logistic/RF</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>決策邊界明顯<strong>非線性</strong>且樣本中等 (1k–50k)？ <span class="dt-arrow">→ SVM (RBF kernel)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>樣本超大 (&gt;100k)？ <span class="dt-arrow">→ SVM 太慢，改用 Linear SVM / SGDClassifier / LightGBM</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Text / TF-IDF / high-D sparse data? <span class="dt-arrow">→ Multinomial NB or Linear SVM</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Small sample (&lt;1000), need fast baseline? <span class="dt-arrow">→ Naive Bayes</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Highly correlated features (gene expression)? <span class="dt-arrow">→ Avoid NB; use SVM / Logistic / RF</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Nonlinear boundary, medium data (1k–50k)? <span class="dt-arrow">→ SVM with RBF kernel</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Very large sample (&gt;100k)? <span class="dt-arrow">→ SVM too slow; use Linear SVM / SGDClassifier / LightGBM</span></div></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>SVM 必須 scaling：</strong>RBF kernel 依賴歐式距離，未 scaling 會被大量級特徵主導。先 StandardScaler 再 fit。</span>
+<span data-lang="en"><strong>SVM requires scaling:</strong> RBF kernel relies on Euclidean distance — large-scale features dominate without scaling. StandardScaler first.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：NB + SVM" data-en="Implementation: NB + SVM">實作：NB + SVM</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / e1071 + naivebayes</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(e1071); <span class="func">library</span>(naivebayes); <span class="func">library</span>(caret)
+
+<span class="comment"># 1. Naive Bayes（連續特徵 → Gaussian NB） / Gaussian NB</span>
+nb_g &lt;- naivebayes::<span class="func">gaussian_naive_bayes</span>(<span class="func">as.matrix</span>(iris[,<span class="num">1</span>:<span class="num">4</span>]), iris$Species)
+
+<span class="comment"># 2. Multinomial NB（計數型，文本） / Multinomial NB</span>
+<span class="comment"># dtm 是 document-term matrix（tm/text2vec）</span>
+nb_m &lt;- naivebayes::<span class="func">multinomial_naive_bayes</span>(dtm, labels, laplace=<span class="num">1</span>)
+
+<span class="comment"># 3. SVM with RBF kernel / 徑向基核</span>
+svm_rbf &lt;- e1071::<span class="func">svm</span>(Species ~ ., data=iris, kernel=<span class="str">"radial"</span>,
+                     cost=<span class="num">1</span>, gamma=<span class="num">0.25</span>, scale=<span class="kw">TRUE</span>)
+
+<span class="comment"># 4. SVM 超參數搜尋 / hyperparameter tuning</span>
+tune_res &lt;- e1071::<span class="func">tune.svm</span>(Species ~ ., data=iris, kernel=<span class="str">"radial"</span>,
+                            cost=<span class="num">10</span>^(<span class="func">seq</span>(-<span class="num">2</span>,<span class="num">2</span>)),
+                            gamma=<span class="num">10</span>^(<span class="func">seq</span>(-<span class="num">3</span>,<span class="num">1</span>)))
+<span class="func">summary</span>(tune_res)$best.parameters</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.naive_bayes <span class="kw">import</span> GaussianNB, MultinomialNB, BernoulliNB
+<span class="kw">from</span> sklearn.svm <span class="kw">import</span> SVC, LinearSVC
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler
+<span class="kw">from</span> sklearn.pipeline <span class="kw">import</span> Pipeline
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> GridSearchCV
+<span class="kw">from</span> sklearn.feature_extraction.text <span class="kw">import</span> TfidfVectorizer
+
+<span class="comment"># 1. Gaussian NB（連續） / continuous</span>
+gnb = GaussianNB(var_smoothing=<span class="num">1e-9</span>); gnb.fit(X_tr, y_tr)
+
+<span class="comment"># 2. Multinomial NB（文本） / text</span>
+text_pipe = Pipeline([(<span class="str">"tfidf"</span>, TfidfVectorizer(ngram_range=(<span class="num">1</span>,<span class="num">2</span>))),
+                      (<span class="str">"nb"</span>, MultinomialNB(alpha=<span class="num">1.0</span>))])
+
+<span class="comment"># 3. Bernoulli NB（二元特徵） / binary features</span>
+bnb = BernoulliNB(alpha=<span class="num">1.0</span>, binarize=<span class="num">0.0</span>)
+
+<span class="comment"># 4. SVM with RBF kernel (must scale!) / RBF SVM 需 scaling</span>
+svm_pipe = Pipeline([(<span class="str">"sc"</span>, StandardScaler()),
+                     (<span class="str">"svc"</span>, SVC(kernel=<span class="str">"rbf"</span>, C=<span class="num">1.0</span>, gamma=<span class="str">"scale"</span>, probability=<span class="kw">True</span>))])
+svm_pipe.fit(X_tr, y_tr)
+
+<span class="comment"># 5. Grid search on C, gamma / 網格搜尋</span>
+gs = GridSearchCV(svm_pipe, {<span class="str">"svc__C"</span>: [<span class="num">.1</span>,<span class="num">1</span>,<span class="num">10</span>,<span class="num">100</span>],
+                              <span class="str">"svc__gamma"</span>: [<span class="num">.001</span>,<span class="num">.01</span>,<span class="num">.1</span>,<span class="num">1</span>]}, cv=<span class="num">5</span>)
+gs.fit(X_tr, y_tr); <span class="func">print</span>(gs.best_params_)
+
+<span class="comment"># 6. Linear SVM (大樣本) / large-scale linear</span>
+lsvc = LinearSVC(C=<span class="num">1.0</span>, dual=<span class="str">"auto"</span>, class_weight=<span class="str">"balanced"</span>, max_iter=<span class="num">5000</span>)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. Naive Bayes 中的「Naive (樸素)」是指什麼假設？</p>
+<p data-lang="en">1. The "naive" in Naive Bayes refers to which assumption?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 所有特徵都呈高斯分布</span><span data-lang="en">A. All features are Gaussian</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 給定類別後，特徵彼此條件獨立</span><span data-lang="en">B. Features are conditionally independent given the class</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 所有類別先驗機率相等</span><span data-lang="en">C. All class priors are equal</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 決策邊界一定是線性</span><span data-lang="en">D. Decision boundary is linear</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. SVM 中 kernel trick 的核心優勢是？</p>
+<p data-lang="en">2. The core benefit of the SVM kernel trick is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 消除過擬合</span><span data-lang="en">A. Eliminates overfitting</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 加快訓練速度</span><span data-lang="en">B. Faster training</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 在高維特徵空間做分類但不需真的計算高維座標</span><span data-lang="en">C. Classify in high-D feature space without explicitly computing high-D coordinates</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 自動標準化特徵</span><span data-lang="en">D. Auto-standardizes features</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. SVM 中 C 參數控制什麼？</p>
+<p data-lang="en">3. The C parameter in SVM controls what?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 對誤分類的懲罰強度（C 大→嚴懲、窄間隔；C 小→寬間隔）</span><span data-lang="en">A. Penalty for misclassification (large C → narrow margin; small C → wide margin)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 樹的深度</span><span data-lang="en">B. Tree depth</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 學習率</span><span data-lang="en">C. Learning rate</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 鄰居數量</span><span data-lang="en">D. Number of neighbors</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="decision-trees-rf.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 6: 決策樹、隨機森林與梯度提升" data-en="Ch 6: Decision Trees, Random Forests &amp; Gradient Boosting">Ch 6: 決策樹、隨機森林與梯度提升</span></a>
+<a href="model-evaluation.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 8: 模型評估與調參" data-en="Ch 8: Model Evaluation &amp; Hyperparameter Tuning">Ch 8: 模型評估與調參</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Toy scenario: two correlated features (BMI, body-fat) → strong evidence for class "positive"
+// We simulate posterior P(y=1 | x1, x2) for a query at the high end of both features.
+// Likelihoods per single feature (truthful single-feature posterior ~0.78 each).
+// NB independence ON: multiplies both → double counts → very high posterior.
+// OFF (correlation aware): treats them as essentially one piece of evidence.
+const prior = 0.30;
+const lik1_pos = 0.78, lik1_neg = 0.22;
+const lik2_pos = 0.78, lik2_neg = 0.22;
+
+function posterior(indep){
+  if(indep){
+    // P(y=1|x) ∝ P(x1|y=1) P(x2|y=1) P(y=1)
+    const num = lik1_pos*lik2_pos*prior;
+    const den = num + lik1_neg*lik2_neg*(1-prior);
+    return num/den;
+  } else {
+    // assume x2 ≈ x1 (perfect correlation): use only single likelihood
+    const num = lik1_pos*prior;
+    const den = num + lik1_neg*(1-prior);
+    return num/den;
+  }
+}
+
+const nbChart=new Chart(document.getElementById('nbChart'),{type:'bar',data:{labels:['P(y=Negative | x)','P(y=Positive | x)'],datasets:[
+ {label:'Posterior',data:[0,0],backgroundColor:['#94a3b8','#dc2626'],borderColor:['#475569','#7f1d1d'],borderWidth:1}
+]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:600},scales:{y:{min:0,max:1,title:{display:true,text:'Posterior probability'}}},plugins:{legend:{display:false}}}});
+
+function updateNB(indep){
+  const p = posterior(indep);
+  nbChart.data.datasets[0].data=[1-p, p];
+  nbChart.update();
+  const L=I18n.get();
+  const trueP = posterior(false);
+  const inflate = (p - trueP) * 100;
+  const lab = L==='zh' ? '陽性後驗' : 'P(positive | x)';
+  const trueLab = L==='zh' ? '相關性校正後' : 'correlation-aware';
+  const inflLab = L==='zh' ? '獨立假設過度膨脹' : 'inflated by independence';
+  const cls = indep ? (Math.abs(inflate)>5?'warn':'neutral') : 'pass';
+  document.getElementById('nbStats').innerHTML=
+    `<span class="sim-stat ${cls}">${lab}: ${p.toFixed(3)}</span>`+
+    `<span class="sim-stat pass">${trueLab}: ${trueP.toFixed(3)}</span>`+
+    (indep ? `<span class="sim-stat warn">${inflLab}: +${inflate.toFixed(1)}%</span>` : '');
+}
+document.querySelectorAll('[data-indep]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-indep]').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateNB(b.dataset.indep==='on');}));
+document.addEventListener('langchange',()=>updateNB(document.querySelector('[data-indep].active').dataset.indep==='on'));
+updateNB(true);
+
+const QF={zh:{q1_y:'NB 假設特徵在類別 y 下條件獨立。',q1_n:'B 為正確答案。',q2_y:'Kernel trick：用 K(x,x′) 替代真實高維映射。',q2_n:'C 為正確答案。',q3_y:'C 控制誤分類懲罰，大 C → 窄間隔。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'NB assumes conditional independence of features given y.',q1_n:'Correct answer is B.',q2_y:'Kernel trick: K(x,x′) replaces explicit high-D mapping.',q2_n:'Correct answer is C.',q3_y:'C controls misclassification penalty; large C → narrow margin.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

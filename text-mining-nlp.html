@@ -1,0 +1,275 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 14: Text Mining & NLP — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html" class="active">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 14 / 20 · MODULE D</div>
+<h1 data-zh="文字探勘與 NLP 基礎" data-en="Text Mining & NLP Basics">文字探勘與 NLP 基礎</h1>
+<p class="subtitle" data-lang="zh">從詞袋到 BERT——病歷文字、藥品仿單、PubMed 摘要藏著結構化資料無法表達的訊息。</p>
+<p class="subtitle" data-lang="en">From bag-of-words to BERT — clinical notes, drug labels, and PubMed abstracts carry signals no tabular schema can hold.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="為什麼要做文字探勘？" data-en="Why Text Mining?">為什麼要做文字探勘？</h2>
+<div data-lang="zh">
+<p>醫療資料約 <strong>80% 為非結構化文字</strong>：病歷記錄、影像報告、出院摘要、藥品仿單、文獻。要將這些轉成可學習向量，需經過 (1) <strong>前處理</strong>（tokenize → 停用字 → stem/lemma）、(2) <strong>表徵</strong>（BoW → TF-IDF → 詞向量 → 句向量）、(3) <strong>建模</strong>（分類、主題、摘要、命名實體 NER）。</p>
+<p>2018 BERT 之後，NLP 由「特徵工程」進入「預訓練 + 微調」時代。在生醫領域有專門的領域預訓練模型：<strong>BioBERT</strong> (2019, PubMed/PMC)、<strong>PubMedBERT</strong> (2020, 全 PubMed scratch)、<strong>SciBERT</strong> (科學文獻)、<strong>BlueBERT</strong> (PubMed+MIMIC-III)，常於 BC5CDR、NCBI-disease、ChemProt 等 benchmark 拿到 SOTA。</p>
+</div>
+<div data-lang="en">
+<p>About <strong>80% of medical data is unstructured text</strong>: clinical notes, radiology reports, discharge summaries, drug labels, literature. Turning text into learnable vectors needs (1) <strong>preprocessing</strong> (tokenize → stopwords → stem/lemma), (2) <strong>representation</strong> (BoW → TF-IDF → word/sentence vectors), (3) <strong>modeling</strong> (classification, topics, summarization, NER).</p>
+<p>After BERT (2018), NLP shifted from "feature engineering" to "pretrain + fine-tune". Biomedical domain-pretrained models include <strong>BioBERT</strong> (2019, PubMed/PMC), <strong>PubMedBERT</strong> (2020, scratch on PubMed), <strong>SciBERT</strong> (sci. literature), <strong>BlueBERT</strong> (PubMed+MIMIC-III) — often SOTA on BC5CDR, NCBI-disease, ChemProt.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="前處理" data-en="PREPROCESSING">前處理</div>
+<h2 data-zh="一、五大前處理步驟" data-en="I. Five Preprocessing Steps">一、五大前處理步驟</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">✂️</div><h4 data-zh="① Tokenization" data-en="① Tokenization">① Tokenization</h4><div data-lang="zh"><p>切詞。英文以空白為主；中文/醫學詞需 jieba / ckiptagger / scispaCy。新一代用 BPE / WordPiece (子詞)。</p></div><div data-lang="en"><p>Splitting. English by whitespace; Chinese/medical needs jieba / ckiptagger / scispaCy. Modern models use BPE / WordPiece (sub-word).</p></div></div>
+<div class="card"><div class="card-icon">🚫</div><h4 data-zh="② Stopwords" data-en="② Stopwords">② Stopwords</h4><div data-lang="zh"><p>移除高頻無意義字（the, a, 是, 的）。但醫學情境下保留否定詞 "no", "not"！</p></div><div data-lang="en"><p>Remove high-frequency low-info words (the, a). But in medical text, keep negations like "no", "not"!</p></div></div>
+<div class="card"><div class="card-icon">🌱</div><h4 data-zh="③ Stemming" data-en="③ Stemming">③ Stemming</h4><div data-lang="zh"><p>規則切尾 (Porter, Snowball)：running → run。快但粗糙：「universal → univers」。</p></div><div data-lang="en"><p>Rule-based suffix stripping (Porter, Snowball): running → run. Fast but crude: "universal → univers".</p></div></div>
+<div class="card"><div class="card-icon">📖</div><h4 data-zh="④ Lemmatization" data-en="④ Lemmatization">④ Lemmatization</h4><div data-lang="zh"><p>查詞典還原原形：was → be。準但慢；spaCy / WordNetLemmatizer 是常見實作。</p></div><div data-lang="en"><p>Dictionary-based root recovery: was → be. Slower but accurate; spaCy / WordNetLemmatizer are common.</p></div></div>
+<div class="card"><div class="card-icon">🔢</div><h4 data-zh="⑤ Vectorization" data-en="⑤ Vectorization">⑤ Vectorization</h4><div data-lang="zh"><p>BoW (count)、TF-IDF、n-gram、Word2Vec、GloVe、FastText、BERT embedding。</p></div><div data-lang="en"><p>BoW (count), TF-IDF, n-gram, Word2Vec, GloVe, FastText, BERT embedding.</p></div></div>
+<div class="card"><div class="card-icon">🏷️</div><h4 data-zh="⑥ POS / NER" data-en="⑥ POS / NER">⑥ POS / NER</h4><div data-lang="zh"><p>詞性標註 + 命名實體（疾病、藥品、基因）。scispaCy + UMLS linker 為生醫 NER 主流。</p></div><div data-lang="en"><p>POS tagging + named entities (disease, drug, gene). scispaCy + UMLS linker is the biomed NER standard.</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="Raw Count vs TF-IDF：誰才是有資訊量的詞？" data-en="Raw Count vs TF-IDF: Who is the Informative Word?">Raw Count vs TF-IDF：誰才是有資訊量的詞？</h2>
+<div data-lang="zh"><p>切換「原始詞頻」與「TF-IDF」，觀察迷你語料 (3 篇文件) 中最頂的詞如何改變。TF-IDF 會 <strong>降低</strong>「the / patient / 的」這類在所有文件都出現的詞。</p></div>
+<div data-lang="en"><p>Toggle between "Raw count" and "TF-IDF" — see how the top terms in a 3-doc mini corpus change. TF-IDF <strong>down-weights</strong> ubiquitous words like "the / patient".</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-mode="count" data-zh="原始詞頻" data-en="Raw count">原始詞頻</button>
+<button class="toggle-btn" data-mode="tfidf">TF-IDF</button>
+</div>
+<div class="chart-container"><canvas id="tfChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">語料：3 篇病歷類文件，共 ~30 詞；顯示前 8 名最具代表性的詞</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">Corpus: 3 clinical-style docs, ~30 words; showing top 8 representative terms</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="表徵法比較" data-en="REPRESENTATIONS">表徵法比較</div>
+<h2 data-zh="二、向量化方法對比" data-en="II. Vectorization Methods">二、向量化方法對比</h2>
+<table class="comp-table">
+<thead><tr><th>Method</th><th data-zh="原理" data-en="Principle">原理</th><th data-zh="語意" data-en="Semantics">語意</th><th data-zh="維度" data-en="Dim">維度</th><th data-zh="代表工具" data-en="Tool">工具</th></tr></thead>
+<tbody>
+<tr><td><strong>BoW (count)</strong></td><td data-zh="詞頻計數">詞頻計數</td><td data-zh="無">無</td><td data-zh="|vocab|">|vocab|</td><td>CountVectorizer / tm</td></tr>
+<tr><td><strong>TF-IDF</strong></td><td data-zh="詞頻 × 逆文件頻率">詞頻 × log(N/df)</td><td data-zh="弱">弱</td><td data-zh="|vocab|">|vocab|</td><td>TfidfVectorizer / tidytext</td></tr>
+<tr><td><strong>Word2Vec</strong></td><td data-zh="CBOW / Skip-gram 預測上下文">CBOW / Skip-gram</td><td data-zh="分布語意">分布語意</td><td>~300</td><td>gensim / text2vec</td></tr>
+<tr><td><strong>GloVe</strong></td><td data-zh="全域共現矩陣分解">global co-occurrence</td><td data-zh="分布語意">分布語意</td><td>~300</td><td>Stanford GloVe</td></tr>
+<tr><td><strong>FastText</strong></td><td data-zh="字元級 n-gram 子詞">char n-gram subword</td><td data-zh="處理 OOV">OOV-robust</td><td>~300</td><td>Facebook fastText</td></tr>
+<tr><td><strong>BERT / BioBERT</strong></td><td data-zh="Transformer 雙向上下文">bidirectional Transformer</td><td data-zh="情境語意">contextual</td><td>768</td><td>Hugging Face transformers</td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>TF-IDF 直覺：</strong>TF = 詞在當文件出現次數；IDF = log(N / 含該詞的文件數)。在所有文件都出現的詞（the, 病人）IDF≈0 → 整體權重低。在少數文件高頻出現的詞 → 高權重。</span>
+<span data-lang="en"><strong>TF-IDF intuition:</strong> TF = term count in this doc; IDF = log(N / docs containing term). Words in every document (the, patient) have IDF ≈ 0 → low weight. Words frequent in few documents → high weight.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="主題模型" data-en="TOPIC MODELS">主題模型</div>
+<h2 data-zh="三、LDA 主題模型" data-en="III. LDA Topic Modeling">三、LDA 主題模型</h2>
+<div data-lang="zh">
+<p><strong>Latent Dirichlet Allocation (LDA, Blei 2003)</strong> 假設：每篇文件是「主題的混合」，每個主題是「字詞的混合」，兩者皆服從 <strong>Dirichlet 先驗</strong>。產出兩個矩陣：document-topic θ 與 topic-word φ，可同時用於降維、視覺化、主題追蹤。</p>
+<p>變體：<strong>HDP</strong>（自動決定 K）、<strong>BTM</strong>（Biterm，短文）、<strong>CTM / BERTopic</strong>（用 BERT embedding + UMAP + HDBSCAN，2022 後常用於 PubMed/COVID 文獻洞察）。</p>
+</div>
+<div data-lang="en">
+<p><strong>Latent Dirichlet Allocation (LDA, Blei 2003)</strong> assumes each document is a mixture of topics and each topic is a mixture of words, with <strong>Dirichlet priors</strong>. It yields two matrices: document-topic θ and topic-word φ — used for dim-reduction, visualization, topic tracking.</p>
+<p>Variants: <strong>HDP</strong> (auto-K), <strong>BTM</strong> (short text), <strong>CTM / BERTopic</strong> (BERT embedding + UMAP + HDBSCAN, popular for PubMed/COVID literature mining post-2022).</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="四、如何選擇文字表徵？" data-en="IV. How to Pick a Text Representation?">四、如何選擇文字表徵？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="文字表徵決策樹" data-en="Text Representation Decision Tree">文字表徵決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>需要 <strong>可解釋</strong>（哪些詞重要）？ <span class="dt-arrow">→ TF-IDF + LASSO/RF</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>大型語料、要學 <strong>詞語意</strong>？ <span class="dt-arrow">→ Word2Vec / GloVe / FastText</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>有很多 <strong>新詞 / OOV</strong>？ <span class="dt-arrow">→ FastText (subword)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>需要 <strong>情境</strong>（"bank"=銀行或河岸）？ <span class="dt-arrow">→ BERT / RoBERTa</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>生醫文本</strong>（PubMed, 病歷）？ <span class="dt-arrow">→ BioBERT / PubMedBERT / SciBERT</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>想找 <strong>潛在主題</strong>？ <span class="dt-arrow">→ LDA / BERTopic</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Need <strong>interpretability</strong>? <span class="dt-arrow">→ TF-IDF + LASSO/RF</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Large corpus, want <strong>word semantics</strong>? <span class="dt-arrow">→ Word2Vec / GloVe / FastText</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Many <strong>new words / OOV</strong>? <span class="dt-arrow">→ FastText (subword)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Need <strong>contextual</strong> meaning? <span class="dt-arrow">→ BERT / RoBERTa</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>Biomedical text</strong> (PubMed, notes)? <span class="dt-arrow">→ BioBERT / PubMedBERT / SciBERT</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>Want <strong>latent topics</strong>? <span class="dt-arrow">→ LDA / BERTopic</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：TF-IDF → Word2Vec → LDA → BioBERT" data-en="Implementation: TF-IDF → Word2Vec → LDA → BioBERT">實作：TF-IDF → Word2Vec → LDA → BioBERT</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / tm + tidytext + text2vec</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn + gensim + transformers</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(tm); <span class="func">library</span>(tidytext); <span class="func">library</span>(text2vec); <span class="func">library</span>(topicmodels)
+
+<span class="comment"># 1) TF-IDF（tidytext）</span>
+docs &lt;- <span class="func">tibble</span>(id = <span class="num">1</span>:<span class="num">3</span>, text = c(<span class="str">"patient with sepsis fever"</span>,
+                                  <span class="str">"diabetes glucose insulin patient"</span>,
+                                  <span class="str">"sepsis shock icu admission"</span>))
+tf_idf &lt;- docs |&gt;
+  <span class="func">unnest_tokens</span>(word, text) |&gt;
+  <span class="func">count</span>(id, word) |&gt;
+  <span class="func">bind_tf_idf</span>(word, id, n)
+
+<span class="comment"># 2) Word2Vec（text2vec, GloVe-style）</span>
+it    &lt;- <span class="func">itoken</span>(tolower(docs$text), tokenizer = word_tokenizer)
+vocab &lt;- <span class="func">create_vocabulary</span>(it)
+v_pr  &lt;- <span class="func">prune_vocabulary</span>(vocab, term_count_min = <span class="num">2</span>)
+tcm   &lt;- <span class="func">create_tcm</span>(it, <span class="func">vocab_vectorizer</span>(v_pr), skip_grams_window = <span class="num">5</span>)
+glove &lt;- GlobalVectors$<span class="func">new</span>(rank = <span class="num">50</span>, x_max = <span class="num">10</span>)
+wv    &lt;- glove$<span class="func">fit_transform</span>(tcm, n_iter = <span class="num">10</span>)
+
+<span class="comment"># 3) LDA 主題模型</span>
+dtm &lt;- <span class="func">cast_dtm</span>(<span class="func">count</span>(<span class="func">unnest_tokens</span>(docs, word, text), id, word), id, word, n)
+lda &lt;- topicmodels::<span class="func">LDA</span>(dtm, k = <span class="num">2</span>, control = <span class="func">list</span>(seed = <span class="num">42</span>))
+<span class="func">tidy</span>(lda, matrix = <span class="str">"beta"</span>)         <span class="comment"># topic-word</span></pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.feature_extraction.text <span class="kw">import</span> TfidfVectorizer, CountVectorizer
+<span class="kw">from</span> gensim.models <span class="kw">import</span> Word2Vec, LdaModel
+<span class="kw">from</span> gensim.corpora <span class="kw">import</span> Dictionary
+<span class="kw">from</span> transformers   <span class="kw">import</span> AutoTokenizer, AutoModel
+<span class="kw">import</span> torch
+
+docs = [<span class="str">"patient with sepsis fever"</span>,
+        <span class="str">"diabetes glucose insulin patient"</span>,
+        <span class="str">"sepsis shock icu admission"</span>]
+
+<span class="comment"># 1) TF-IDF</span>
+tfidf = TfidfVectorizer(stop_words=<span class="str">"english"</span>, ngram_range=(<span class="num">1</span>,<span class="num">2</span>))
+X = tfidf.fit_transform(docs)        <span class="comment"># sparse matrix</span>
+
+<span class="comment"># 2) Word2Vec（Skip-gram, sg=1; CBOW, sg=0）</span>
+sents = [d.split() <span class="kw">for</span> d <span class="kw">in</span> docs]
+w2v = Word2Vec(sents, vector_size=<span class="num">100</span>, window=<span class="num">5</span>,
+               min_count=<span class="num">1</span>, sg=<span class="num">1</span>, epochs=<span class="num">50</span>)
+vec_sepsis = w2v.wv[<span class="str">"sepsis"</span>]
+
+<span class="comment"># 3) LDA</span>
+dct  = Dictionary(sents)
+bow  = [dct.doc2bow(s) <span class="kw">for</span> s <span class="kw">in</span> sents]
+lda  = LdaModel(corpus=bow, id2word=dct, num_topics=<span class="num">2</span>, passes=<span class="num">10</span>)
+<span class="kw">print</span>(lda.show_topics())
+
+<span class="comment"># 4) BioBERT 句向量（biomedical）</span>
+tok = AutoTokenizer.from_pretrained(<span class="str">"dmis-lab/biobert-v1.1"</span>)
+mod = AutoModel.from_pretrained(<span class="str">"dmis-lab/biobert-v1.1"</span>)
+inp = tok(docs, padding=<span class="kw">True</span>, return_tensors=<span class="str">"pt"</span>)
+<span class="kw">with</span> torch.no_grad():
+    emb = mod(**inp).last_hidden_state.mean(dim=<span class="num">1</span>)   <span class="comment"># [N,768]</span></pre></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>領域偏移：</strong>用 BERT (general) 處理 PubMed 表現往往遜於 BioBERT/PubMedBERT。在病歷 (clinical) 還需用 ClinicalBERT 或 Bio_ClinicalBERT (Alsentzer 2019)。「英文 ≠ 醫學英文」。</span>
+<span data-lang="en"><strong>Domain shift:</strong> BERT (general) on PubMed often loses to BioBERT/PubMedBERT. For clinical notes you also need ClinicalBERT or Bio_ClinicalBERT (Alsentzer 2019). "English ≠ medical English".</span>
+</div></div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. TF-IDF 會 <em>降低權重</em> 的詞是？</p>
+<p data-lang="en">1. TF-IDF <em>down-weights</em> which kind of word?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 在某一文件高頻的詞</span><span data-lang="en">A. Words frequent in one document</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 在訓練集很少出現的詞</span><span data-lang="en">B. Rare words in the corpus</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 在所有文件都出現的詞（如 the, 的）</span><span data-lang="en">C. Words appearing in every document (the, of)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 長度超過 5 個字元的詞</span><span data-lang="en">D. Words longer than 5 characters</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. LDA 主題模型的核心假設是？</p>
+<p data-lang="en">2. The core assumption of LDA topic modeling is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 文件由單一主題組成</span><span data-lang="en">A. Each document has exactly one topic</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 文件是「主題的混合」，主題是「字詞的混合」，皆服從 Dirichlet 先驗</span><span data-lang="en">B. Documents are mixtures of topics; topics are mixtures of words; both follow Dirichlet priors</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 主題數 K 永遠等於 10</span><span data-lang="en">C. K is always 10</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 必須先做 BERT embedding</span><span data-lang="en">D. Requires BERT embedding first</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. BioBERT 與原始 BERT 的主要差異？</p>
+<p data-lang="en">3. The main difference between BioBERT and the original BERT?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. BioBERT 在 PubMed/PMC 文獻上持續預訓練，學會生醫詞彙</span><span data-lang="en">A. BioBERT is continued-pretrained on PubMed/PMC, learning biomedical vocabulary</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. BioBERT 採用完全不同的 Transformer 架構</span><span data-lang="en">B. BioBERT uses a totally different Transformer architecture</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. BioBERT 不需要 tokenization</span><span data-lang="en">C. BioBERT skips tokenization</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. BioBERT 比 BERT 小 100 倍</span><span data-lang="en">D. BioBERT is 100× smaller than BERT</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="anomaly-detection.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 13: 異常偵測 Anomaly Detection" data-en="Ch 13: Anomaly Detection">Ch 13: 異常偵測 Anomaly Detection</span></a>
+<a href="time-series-mining.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 15: 時間序列探勘" data-en="Ch 15: Time Series Mining">Ch 15: 時間序列探勘</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Mini corpus — 3 docs (clinical-style). Counts per term per doc.
+const terms=['patient','sepsis','fever','diabetes','glucose','insulin','shock','icu'];
+// rows = doc, cols = term
+const counts=[
+ [3,2,2,0,0,0,0,0],  // d1 sepsis-ish
+ [4,0,0,3,3,2,0,0],  // d2 diabetes
+ [2,3,0,0,0,0,2,2]   // d3 sepsis+shock
+];
+const N=counts.length;
+// total count per term
+const total=terms.map((_,j)=>counts.reduce((s,r)=>s+r[j],0));
+// docs containing each term
+const df=terms.map((_,j)=>counts.reduce((s,r)=>s+(r[j]>0?1:0),0));
+// idf = log(N/df); use natural log
+const idf=df.map(d=>Math.log((N+1)/(d+1))+1);
+// tfidf per term: sum over docs of (count * idf) -> "global tfidf weight"
+const tfidf=terms.map((_,j)=>counts.reduce((s,r)=>s+r[j],0)*idf[j]);
+
+const tfChart=new Chart(document.getElementById('tfChart'),{
+ type:'bar',
+ data:{labels:terms,datasets:[{label:'weight',data:total,
+   backgroundColor:'rgba(37,99,235,.6)',borderColor:'rgba(37,99,235,.9)',borderWidth:1}]},
+ options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,
+  scales:{x:{title:{display:true,text:'weight'}}},plugins:{legend:{display:false}}}});
+
+let mode='count';
+function update(){
+ const data = mode==='count'?total:tfidf;
+ // sort terms by data descending and keep top 8 (already 8)
+ const sorted = terms.map((t,i)=>({t,v:data[i]})).sort((a,b)=>b.v-a.v);
+ tfChart.data.labels = sorted.map(s=>s.t);
+ tfChart.data.datasets[0].data = sorted.map(s=>s.v.toFixed(2));
+ tfChart.data.datasets[0].backgroundColor = mode==='count'?'rgba(37,99,235,.6)':'rgba(217,119,6,.6)';
+ tfChart.data.datasets[0].borderColor    = mode==='count'?'rgba(37,99,235,.9)':'rgba(180,83,9,.9)';
+ const L=I18n.get();
+ tfChart.data.datasets[0].label = mode==='count'?(L==='zh'?'原始詞頻':'Raw count'):(L==='zh'?'TF-IDF 權重':'TF-IDF weight');
+ tfChart.update('none');
+}
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-mode]').forEach(x=>x.classList.remove('active'));b.classList.add('active');mode=b.dataset.mode;update();}));
+document.addEventListener('langchange',update);
+update();
+
+const QF={zh:{q1_y:'高文件頻率 → 低 IDF → TF-IDF 整體權重小。',q1_n:'C 為正確答案。',q2_y:'LDA 假設文件是主題混合、主題是字詞混合，皆服從 Dirichlet。',q2_n:'B 為正確答案。',q3_y:'BioBERT 在 PubMed/PMC 上持續預訓練，沿用 BERT 架構。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'High document frequency → low IDF → small TF-IDF.',q1_n:'Correct answer is C.',q2_y:'LDA assumes docs are mixtures of topics and topics are mixtures of words, both with Dirichlet priors.',q2_n:'Correct answer is B.',q3_y:'BioBERT is continued-pretrained on PubMed/PMC; same BERT architecture.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

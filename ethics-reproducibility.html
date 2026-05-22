@@ -1,0 +1,248 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 20: Ethics & Reproducibility — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html" class="active">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 20 / 20 · MODULE E</div>
+<h1 data-zh="倫理、公平性與再現性" data-en="Ethics, Fairness & Reproducibility">倫理、公平性與再現性</h1>
+<p class="subtitle" data-lang="zh">在生醫資料探勘中，「合法、公平、可解釋、可再現」缺一不可——尤其在 EU AI Act 2026 上路後。</p>
+<p class="subtitle" data-lang="en">In biomedical data mining, "legal, fair, explainable, reproducible" are non-negotiable — especially after the EU AI Act takes effect in 2026.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="四個支柱：法遵 / 公平 / 可解釋 / 再現" data-en="Four Pillars: Compliance / Fairness / Explainability / Reproducibility">四個支柱：法遵 / 公平 / 可解釋 / 再現</h2>
+<div data-lang="zh">
+<p>一個合格的生醫資料探勘專案，至少要同時滿足四件事：(1) 法律合規（<strong>HIPAA</strong>、<strong>GDPR</strong>、<strong>EU AI Act</strong>、本地 IRB）；(2) <strong>公平性</strong>（不對受保護族群造成系統性差別）；(3) <strong>可解釋</strong>（醫療決策必須可被質問）；(4) <strong>可再現</strong>（同樣資料 + 同樣程式 → 同樣結果）。</p>
+<p><strong>2026/8/2 起 EU AI Act 對 GPAI 模型生效；2027/8/2 對「高風險」AI（含多數醫療診斷模型）全面適用。</strong> FDA 的 SaMD / PCCP（Predetermined Change Control Plan，2024 final）也已成為部署 AI 醫材的必經流程。</p>
+</div>
+<div data-lang="en">
+<p>A defensible biomedical mining project satisfies four constraints simultaneously: (1) legal compliance (<strong>HIPAA</strong>, <strong>GDPR</strong>, <strong>EU AI Act</strong>, local IRB); (2) <strong>fairness</strong> (no systematic disparate impact on protected groups); (3) <strong>explainability</strong> (clinical decisions must be auditable); (4) <strong>reproducibility</strong> (same data + same code → same result).</p>
+<p><strong>EU AI Act: 2026-08-02 enforcement for GPAI; 2027-08-02 for "high-risk" AI (which covers most clinical diagnostic models).</strong> FDA SaMD / PCCP (Predetermined Change Control Plan, finalized 2024) is now mandatory for AI/ML-enabled medical devices.</p>
+</div>
+<div class="callout danger"><span class="callout-icon">🚨</span><div>
+<span data-lang="zh"><strong>Sweeney 1997：</strong>在美國，僅以 (5-digit ZIP, 生日, 性別) 三項，就能<strong>唯一識別 87% 的人口</strong>。看似匿名的資料其實高度可再識別。</span>
+<span data-lang="en"><strong>Sweeney 1997:</strong> in the US, the triple (5-digit ZIP, DOB, sex) <strong>uniquely identifies 87% of the population</strong>. "Anonymized" data is often highly re-identifiable.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="法規" data-en="REGULATION">法規</div>
+<h2 data-zh="一、HIPAA、GDPR、EU AI Act 速覽" data-en="I. HIPAA, GDPR, EU AI Act at a Glance">一、HIPAA、GDPR、EU AI Act 速覽</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="法規" data-en="Law">法規</th><th data-zh="範圍" data-en="Scope">範圍</th><th data-zh="核心條款" data-en="Core Provision">核心條款</th></tr></thead>
+<tbody>
+<tr><td><strong>HIPAA Privacy Rule</strong></td><td data-zh="美國 PHI">US PHI</td><td data-zh="Safe Harbor（移除 18 項識別碼）或 Expert Determination">Safe Harbor (remove 18 identifiers) or Expert Determination</td></tr>
+<tr><td><strong>HIPAA Security Rule</strong></td><td data-zh="ePHI 技術保護">ePHI technical safeguards</td><td data-zh="存取控制、加密、稽核紀錄">Access control, encryption, audit logs</td></tr>
+<tr><td><strong>GDPR Art. 9</strong></td><td data-zh="歐盟特殊類別資料">EU special-category data</td><td data-zh="健康資料原則上禁止處理，除非取得明確同意或符合例外">Health data prohibited unless explicit consent or exception</td></tr>
+<tr><td><strong>GDPR Art. 22</strong></td><td data-zh="自動化決策">Automated decision-making</td><td data-zh="當事人有要求人為審查的權利">Right to human review</td></tr>
+<tr><td><strong>EU AI Act 2024/1689</strong></td><td data-zh="高風險 + GPAI">High-risk + GPAI</td><td data-zh="2026/8/2 GPAI、2027/8/2 高風險強制上路">2026-08-02 GPAI; 2027-08-02 high-risk</td></tr>
+<tr><td><strong>FDA SaMD / PCCP (2024)</strong></td><td data-zh="美國 AI/ML 醫材">US AI/ML SaMD</td><td data-zh="預先核可的模型更新計畫">Pre-approved change control plan</td></tr>
+</tbody></table>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>差分隱私 (Differential Privacy)：</strong>對查詢結果加入<strong>校正過的雜訊</strong>（通常 Laplace 或 Gaussian），讓「加入或移除單一個人」對結果分布只有 ε 級別的影響；ε 越小，隱私越強、效用越低。</span>
+<span data-lang="en"><strong>Differential privacy:</strong> adds <strong>calibrated noise</strong> (usually Laplace / Gaussian) to query outputs so that adding/removing a single person changes the result distribution by at most ε. Smaller ε = stronger privacy, lower utility.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="公平性 vs 準確率的取捨" data-en="Fairness vs Accuracy Trade-off">公平性 vs 準確率的取捨</h2>
+<div data-lang="zh"><p>調整<strong>公平性約束強度 λ_f</strong>，觀察整體準確率與 <em>disparate impact</em> (DI = P(Ŷ=1|A=unprivileged) / P(Ŷ=1|A=privileged)) 的變化。法律與業界常以 <strong>DI ∈ [0.8, 1.25]</strong> ("four-fifths rule") 作為門檻。</p></div>
+<div data-lang="en"><p>Adjust the <strong>fairness-constraint strength λ_f</strong> and watch overall accuracy vs <em>disparate impact</em> (DI = P(Ŷ=1|A=unprivileged) / P(Ŷ=1|A=privileged)). The "four-fifths rule" treats <strong>DI ∈ [0.8, 1.25]</strong> as the legal threshold.</p></div>
+<div class="interactive-panel">
+<div class="sim-stats"><span class="sim-stat pass" id="fairAcc">Accuracy: —</span><span class="sim-stat fail" id="fairDI">Disparate Impact: —</span><span class="sim-stat neutral" id="fairLam">λ_f: —</span></div>
+<div class="slider-group"><label><span data-zh="公平性約束強度 λ_f" data-en="Fairness strength λ_f">公平性約束強度 λ_f</span> <span id="valLamF">0.5</span></label><input type="range" id="sliderLamF" min="0" max="1" value="0.5" step="0.02"></div>
+<div class="chart-container"><canvas id="fairChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">綠帶 = 4/5 法則的合規區間 (DI 0.8–1.25)</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">Green band = four-fifths-rule compliance zone (DI 0.8–1.25)</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="公平性指標" data-en="FAIRNESS METRICS">公平性指標</div>
+<h2 data-zh="二、四個常見公平性指標" data-en="II. Four Common Fairness Metrics">二、四個常見公平性指標</h2>
+<div class="card-grid cols-2">
+<div class="card"><div class="card-icon">⚖️</div><h4>Demographic Parity</h4><div data-lang="zh"><p>P(Ŷ=1|A=0) = P(Ŷ=1|A=1)。各族群的「被預測為陽性」比例相同；忽略真實 base rate。</p></div><div data-lang="en"><p>P(Ŷ=1|A=0) = P(Ŷ=1|A=1). Equal positive-prediction rates across groups; ignores true base rate.</p></div></div>
+<div class="card"><div class="card-icon">🎯</div><h4>Equalized Odds</h4><div data-lang="zh"><p>各族群的 TPR 與 FPR 都要相等；考慮真實標籤。</p></div><div data-lang="en"><p>Equal TPR and FPR across groups; conditioned on the true label.</p></div></div>
+<div class="card"><div class="card-icon">🪜</div><h4>Equal Opportunity</h4><div data-lang="zh"><p>只要求 TPR 相等（對真實陽性者公平），是 Equalized Odds 的弱化版。</p></div><div data-lang="en"><p>Only TPR equal across groups (fair to true positives); weakened Equalized Odds.</p></div></div>
+<div class="card"><div class="card-icon">📐</div><h4>Disparate Impact</h4><div data-lang="zh"><p>比值形式：DI = P(Ŷ=1|A=u)/P(Ŷ=1|A=p)，4/5 規則 ⇒ 0.8 ≤ DI ≤ 1.25。</p></div><div data-lang="en"><p>Ratio form: DI = P(Ŷ=1|A=u)/P(Ŷ=1|A=p); four-fifths rule ⇒ 0.8 ≤ DI ≤ 1.25.</p></div></div>
+</div>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="部署前的倫理 / 再現性檢查決策樹" data-en="Pre-deployment Ethics & Reproducibility Checklist">🌳 部署前的倫理 / 再現性檢查決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>是否含<strong>個資 / PHI</strong>？ <span class="dt-arrow">→ 走 IRB + DUA + Safe Harbor / Expert Determination + 差分隱私</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>是否會做<strong>個人化決策</strong>？ <span class="dt-arrow">→ 提供 SHAP/LIME 解釋 + GDPR Art. 22 人為審查</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>是否與<strong>受保護族群</strong>有關？ <span class="dt-arrow">→ 必跑 Demographic Parity / Equalized Odds / DI ≥ 0.8</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>是<strong>高風險 AI</strong>（EU AI Act 附錄 III）？ <span class="dt-arrow">→ 風險管理系統 + 技術文件 + 上市後監測</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>是否能<strong>逐字再現</strong>？ <span class="dt-arrow">→ Git + Docker + Snakemake/Nextflow + DVC + mlflow + Model Card</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Contains <strong>PII / PHI</strong>? <span class="dt-arrow">→ IRB + DUA + Safe Harbor / Expert Determination + Differential Privacy</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Drives <strong>individual decisions</strong>? <span class="dt-arrow">→ Provide SHAP/LIME + GDPR Art. 22 human review</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Affects <strong>protected groups</strong>? <span class="dt-arrow">→ Compute Demographic Parity / Equalized Odds / DI ≥ 0.8</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div><strong>High-risk AI</strong> (EU AI Act Annex III)? <span class="dt-arrow">→ Risk-management system + technical docs + post-market monitoring</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>Bit-for-bit reproducible</strong>? <span class="dt-arrow">→ Git + Docker + Snakemake/Nextflow + DVC + mlflow + Model Card</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="FAIR & 再現性" data-en="FAIR & REPRODUCIBILITY">FAIR & 再現性</div>
+<h2 data-zh="三、FAIR 資料原則與再現性堆疊" data-en="III. FAIR Data Principles & Reproducibility Stack">三、FAIR 資料原則與再現性堆疊</h2>
+<table class="comp-table">
+<thead><tr><th>FAIR</th><th data-zh="意義" data-en="Meaning">意義</th><th data-zh="實踐" data-en="Practice">實踐</th></tr></thead>
+<tbody>
+<tr><td><strong>F</strong>indable</td><td data-zh="可被機器發現">Machine-findable</td><td data-zh="DOI、PURL、metadata 標準（DataCite, Schema.org）">DOI, PURL, metadata standards (DataCite, Schema.org)</td></tr>
+<tr><td><strong>A</strong>ccessible</td><td data-zh="標準協定可取得（含認證機制）">Open standard protocols (with auth)</td><td>HTTP(S), OAuth, S3</td></tr>
+<tr><td><strong>I</strong>nteroperable</td><td data-zh="使用共通的語法 / 語意">Common syntax + semantics</td><td>OMOP CDM, FHIR, OBO ontologies, JSON-LD</td></tr>
+<tr><td><strong>R</strong>eusable</td><td data-zh="清晰授權 + 出處 + 領域標準">Clear license + provenance + standards</td><td>Creative Commons, PROV-O, MIAME / MIxS</td></tr>
+</tbody></table>
+<div data-lang="zh"><p>再現性工具堆疊建議：版本控制 <code>git</code> + 容器 <code>docker / singularity</code> + 工作流 <code>snakemake / nextflow</code> + 套件鎖定 <code>renv / pip-tools / uv</code> + 實驗追蹤 <code>mlflow / wandb</code> + 資料版本 <code>dvc / lakeFS</code> + 文件 <strong>Model Card</strong> (Mitchell 2019) + <strong>Datasheets for Datasets</strong> (Gebru 2021)。</p></div>
+<div data-lang="en"><p>Recommended reproducibility stack: version control <code>git</code> + containers <code>docker / singularity</code> + workflow <code>snakemake / nextflow</code> + package lockfile <code>renv / pip-tools / uv</code> + experiment tracking <code>mlflow / wandb</code> + data versioning <code>dvc / lakeFS</code> + documentation: <strong>Model Card</strong> (Mitchell 2019) + <strong>Datasheets for Datasets</strong> (Gebru 2021).</p></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：公平性指標 + SHAP + 流程鎖定" data-en="Implementation: Fairness + SHAP + Workflow Pinning">實作：公平性指標 + SHAP + 流程鎖定</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r20')">R / fairness + DALEX + iml + renv</button><button class="code-tab-btn" onclick="switchTab(this,'py20')">Python / aif360 + fairlearn + shap + mlflow + dvc</button></div>
+<div class="code-tab-content active" id="r20"><pre><span class="func">library</span>(fairness); <span class="func">library</span>(DALEX); <span class="func">library</span>(iml); <span class="func">library</span>(renv)
+
+<span class="comment"># --- 公平性指標 ---</span>
+fairness::<span class="func">dem_parity</span>(data = df, outcome = <span class="str">"y_pred"</span>, group = <span class="str">"sex"</span>, base = <span class="str">"M"</span>)
+fairness::<span class="func">equal_odds</span>(data = df, outcome = <span class="str">"y_pred"</span>, outcome_base = <span class="str">"0"</span>,
+                     group = <span class="str">"sex"</span>, probs = <span class="str">"y_prob"</span>, base = <span class="str">"M"</span>)
+
+<span class="comment"># --- 全域 / 局部解釋 (DALEX + iml) ---</span>
+exp  &lt;- DALEX::<span class="func">explain</span>(model = rf, data = X, y = y)
+pdp  &lt;- DALEX::<span class="func">model_profile</span>(exp, variables = <span class="str">"age"</span>)
+shap &lt;- iml::<span class="func">Shapley</span>$<span class="func">new</span>(iml::<span class="func">Predictor</span>$<span class="func">new</span>(rf, data = X), x.interest = X[<span class="num">1</span>, ])
+
+<span class="comment"># --- renv 鎖定再現性 ---</span>
+renv::<span class="func">init</span>(); renv::<span class="func">snapshot</span>()
+<span class="comment"># 把 renv.lock 與 .Rprofile commit 進 git</span></pre></div>
+<div class="code-tab-content" id="py20"><pre><span class="kw">from</span> aif360.datasets <span class="kw">import</span> BinaryLabelDataset
+<span class="kw">from</span> aif360.metrics <span class="kw">import</span> BinaryLabelDatasetMetric, ClassificationMetric
+<span class="kw">from</span> fairlearn.reductions <span class="kw">import</span> ExponentiatedGradient, DemographicParity
+<span class="kw">import</span> shap, mlflow
+
+<span class="comment"># --- fairlearn: 加入公平性約束的訓練 ---</span>
+mit = ExponentiatedGradient(LogisticRegression(),
+                            constraints=DemographicParity()).fit(X, y, sensitive_features=df[<span class="str">"sex"</span>])
+
+<span class="comment"># --- aif360: 量化 DI / Equalized Odds ---</span>
+bld  = BinaryLabelDataset(df=df, label_names=[<span class="str">"y"</span>], protected_attribute_names=[<span class="str">"sex"</span>])
+cm   = ClassificationMetric(bld, bld_pred, privileged_groups=[{<span class="str">"sex"</span>:<span class="num">1</span>}], unprivileged_groups=[{<span class="str">"sex"</span>:<span class="num">0</span>}])
+<span class="func">print</span>(<span class="str">"DI ="</span>, cm.disparate_impact(), <span class="str">"EOdds diff ="</span>, cm.equalized_odds_difference())
+
+<span class="comment"># --- SHAP 全域 + 局部解釋 ---</span>
+expl = shap.TreeExplainer(rf); sv = expl.shap_values(X_test)
+shap.summary_plot(sv, X_test)
+
+<span class="comment"># --- mlflow + DVC 鎖定再現性 ---</span>
+<span class="kw">with</span> mlflow.start_run():
+    mlflow.log_params({<span class="str">"alpha"</span>:0.1}); mlflow.log_metric(<span class="str">"auc"</span>, 0.83)
+    mlflow.sklearn.log_model(rf, <span class="str">"model"</span>)
+<span class="comment"># shell: dvc add data/raw.csv && git commit dvc files + Dockerfile + Snakefile</span></pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. 差分隱私 (Differential Privacy) 的核心機制是？</p>
+<p data-lang="en">1. The core mechanism of Differential Privacy is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 把資料用 AES-256 加密</span><span data-lang="en">A. Encrypt the data with AES-256</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 在查詢結果加入校正過的雜訊，使單一個人加入/移除難以察覺</span><span data-lang="en">B. Adds calibrated noise to outputs so adding/removing one person is undetectable</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 隨機打亂列順序</span><span data-lang="en">C. Shuffles row order randomly</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 把所有姓名換成 hash</span><span data-lang="en">D. Hashes the name field</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. Demographic Parity 與 Equalized Odds 最關鍵的不同？</p>
+<p data-lang="en">2. The key distinction between Demographic Parity and Equalized Odds?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 一個是公平性、另一個是準確率</span><span data-lang="en">A. One is fairness, the other is accuracy</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Equalized Odds 只看陽性預測比例</span><span data-lang="en">B. Equalized Odds only looks at positive-prediction rate</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Demographic Parity 不條件於真實標籤；Equalized Odds 要求各組 TPR 與 FPR 都相等</span><span data-lang="en">C. Demographic Parity is unconditional; Equalized Odds requires equal TPR and FPR per group (conditional on true label)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 兩者數學完全等價</span><span data-lang="en">D. They are mathematically equivalent</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">3. FAIR 資料原則中的 "I" 代表？</p>
+<p data-lang="en">3. The "I" in FAIR data principles stands for?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. Independent</span><span data-lang="en">A. Independent</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Informative</span><span data-lang="en">B. Informative</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Interoperable（共通語法 / 語意）</span><span data-lang="en">C. Interoperable (common syntax / semantics)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Immutable</span><span data-lang="en">D. Immutable</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="pubmed-literature-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 19: PubMed 與文獻探勘" data-en="Ch 19: PubMed &amp; Literature Mining">Ch 19: PubMed 與文獻探勘</span></a>
+<a href="references/index.html"><span class="nav-dir" data-zh="參考資料 →" data-en="References →">參考資料 →</span><span class="nav-title" data-zh="參考資料" data-en="References">參考資料</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// --- Fairness vs Accuracy trade-off ---
+// model: as λ_f ↑, DI moves from ~0.55 toward 1.0, but accuracy drops from 0.88 toward 0.74
+const lams = Array.from({length:51},(_,i)=>i/50);
+function accFor(L){ return 0.88 - 0.14*L*L - 0.02*L; }
+function diFor (L){ return 0.55 + (1.00 - 0.55)*(1-Math.exp(-3*L)); }
+
+const accSeries = lams.map(L => ({x:L, y:accFor(L)}));
+const diSeries  = lams.map(L => ({x:L, y:diFor(L)}));
+
+const fairChart = new Chart(document.getElementById('fairChart'),{
+  type:'line',
+  data:{datasets:[
+    {label:'Accuracy',           data:accSeries, parsing:false, borderColor:'#2563eb', backgroundColor:'rgba(37,99,235,.10)', tension:.15, pointRadius:0, yAxisID:'y',  borderWidth:2.5},
+    {label:'Disparate Impact',   data:diSeries,  parsing:false, borderColor:'#dc2626', backgroundColor:'rgba(220,38,38,.10)', tension:.15, pointRadius:0, yAxisID:'y2', borderWidth:2.5},
+    {label:'DI = 0.8 (4/5 rule)',data:lams.map(L=>({x:L,y:0.8})), parsing:false, borderColor:'#16a34a', borderDash:[6,4], pointRadius:0, yAxisID:'y2', borderWidth:1.5},
+    {label:'Current λ_f',        data:[{x:0.5,y:0},{x:0.5,y:1}],  parsing:false, borderColor:'#0f172a', borderDash:[2,3], pointRadius:0, yAxisID:'y',  borderWidth:1.5}
+  ]},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+    scales:{x:{type:'linear',min:0,max:1,title:{display:true,text:'λ_f (fairness strength)'}},
+            y:{min:0.6,max:1,position:'left',title:{display:true,text:'Accuracy'}},
+            y2:{min:0,max:1.2,position:'right',title:{display:true,text:'Disparate Impact'},grid:{drawOnChartArea:false}}},
+    plugins:{legend:{position:'top'}}}
+});
+
+function updFair(){
+  const L = +document.getElementById('sliderLamF').value;
+  document.getElementById('valLamF').textContent = L.toFixed(2);
+  const a = accFor(L), d = diFor(L);
+  document.getElementById('fairAcc').textContent = (I18n.get()==='zh'?'準確率: ':'Accuracy: ')+a.toFixed(3);
+  const okDI = d>=0.8 && d<=1.25;
+  document.getElementById('fairDI').textContent  = (I18n.get()==='zh'?'DI: ':'DI: ')+d.toFixed(3)+(okDI?' ✅':' ⚠');
+  document.getElementById('fairDI').className    = 'sim-stat '+(okDI?'pass':'fail');
+  document.getElementById('fairLam').textContent = 'λ_f = '+L.toFixed(2);
+  // move vertical marker
+  fairChart.data.datasets[3].data = [{x:L,y:0.6},{x:L,y:1.0}];
+  fairChart.update('none');
+}
+document.getElementById('sliderLamF').addEventListener('input', updFair);
+document.addEventListener('langchange', updFair);
+updFair();
+
+const QF={zh:{q1_y:'差分隱私加入校正過的雜訊；ε 越小隱私越強。',q1_n:'B 為正確答案。',q2_y:'DP 不條件於 y_true；Equalized Odds 要求 TPR/FPR 都對齊。',q2_n:'C 為正確答案。',q3_y:'I = Interoperable：使用共通語法與語意（如 FHIR / OMOP / OBO）。',q3_n:'C 為正確答案。'},
+          en:{q1_y:'DP adds calibrated noise; smaller ε = stronger privacy.',q1_n:'Correct answer is B.',q2_y:'DP is unconditional; Equalized Odds aligns TPR/FPR conditioned on y_true.',q2_n:'Correct answer is C.',q3_y:'I = Interoperable — common syntax / semantics (FHIR / OMOP / OBO).',q3_n:'Correct answer is C.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

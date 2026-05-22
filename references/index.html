@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Data Mining 參考資料 · References</title>
+<meta name="description" content="Data Mining Interactive Tutorial 20 章節的學術論文、官方指引、Best Practices、政策法規與資料庫文獻。">
+<link rel="stylesheet" href="../styles.css">
+<style>
+.ref-list{list-style:none;padding:0;margin:14px 0 0}
+.ref-list li{padding:14px 16px;background:var(--c-surface-alt);border:1px solid var(--c-border-light);border-radius:var(--radius);margin-bottom:10px;font-size:.92rem;line-height:1.65}
+.ref-list li:hover{background:var(--c-surface);border-color:var(--c-border)}
+.ref-tag{display:inline-block;font-family:var(--font-mono);font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:6px;margin-right:8px;letter-spacing:.5px}
+.ref-tag.paper{background:var(--c-accent-light);color:var(--c-accent-dark)}
+.ref-tag.doc{background:#e3f2fd;color:#1565c0}
+.ref-tag.bench{background:#fff3e0;color:#e65100}
+.ref-tag.db{background:#fce4ec;color:#ad1457}
+.ref-tag.book{background:#f3e5f5;color:#6a1b9a}
+.ref-tag.bestp{background:var(--c-highlight-light);color:#a06a00;border:1px solid var(--c-highlight)}
+.ref-tag.policy{background:#e0e7ff;color:#3730a3}
+.ref-tag.standard{background:#e0f2fe;color:#075985}
+.ref-author{color:var(--c-ink);font-weight:600}
+.ref-title{color:var(--c-ink);font-weight:500}
+.ref-meta{color:var(--c-ink-muted);font-size:.85rem;margin-top:4px;display:block}
+.ref-list a{color:var(--c-accent);text-decoration:none;border-bottom:1px dotted var(--c-accent)}
+.ref-list a:hover{color:var(--c-accent-dark);border-bottom-style:solid}
+.errata{background:#fef3c7;border-left:4px solid #d97706;border-radius:0 var(--radius-lg) var(--radius-lg) 0;padding:18px 22px;margin:18px 0;font-size:.9rem}
+.errata h4{margin:0 0 8px;color:#92400e;font-family:var(--font-display);font-size:1.05rem}
+.errata p{color:#78350f;margin-bottom:8px}
+.errata p:last-child{margin-bottom:0}
+.toc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin:18px 0}
+.toc-grid a{padding:10px 14px;background:var(--c-surface);border:1px solid var(--c-border-light);border-radius:var(--radius);text-decoration:none;color:var(--c-ink);font-size:.86rem;transition:var(--transition);display:flex;align-items:center;gap:8px}
+.toc-grid a:hover{border-color:var(--c-accent);background:var(--c-accent-light);color:var(--c-accent-dark)}
+.toc-grid a .step-tag{font-family:var(--font-mono);font-size:.72rem;color:var(--c-accent);font-weight:600}
+.section-anchor{scroll-margin-top:80px}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+<div class="top-nav-inner">
+  <a href="../index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="../intro-crisp-dm.html">CRISP</a></li>
+    <li><a href="../data-preparation.html">Prep.</a></li>
+    <li><a href="../eda-visualization.html">EDA</a></li>
+    <li><a href="../similarity-distance.html">Dist.</a></li>
+    <li><a href="../classification-overview.html">Classif.</a></li>
+    <li><a href="../decision-trees-rf.html">Tree/RF</a></li>
+    <li><a href="../naive-bayes-svm.html">NB/SVM</a></li>
+    <li><a href="../model-evaluation.html">Eval.</a></li>
+    <li><a href="../clustering-kmeans-hierarchical.html">K-Means</a></li>
+    <li><a href="../density-based-dbscan.html">DBSCAN</a></li>
+    <li><a href="../association-rules-apriori.html">Apriori</a></li>
+    <li><a href="../sequential-pattern-mining.html">Seq.</a></li>
+    <li><a href="../anomaly-detection.html">Anomaly</a></li>
+    <li><a href="../text-mining-nlp.html">Text</a></li>
+    <li><a href="../time-series-mining.html">TimeSer.</a></li>
+    <li><a href="../graph-network-mining.html">Graph</a></li>
+    <li><a href="../ehr-mining.html">EHR</a></li>
+    <li><a href="../omics-mining.html">Omics</a></li>
+    <li><a href="../pubmed-literature-mining.html">PubMed</a></li>
+    <li><a href="../ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="index.html" class="active" style="font-weight:700" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div>
+</nav>
+
+<header class="page-hero">
+<div class="step-badge" data-zh="參考資料 · REFERENCES" data-en="REFERENCES">參考資料 · REFERENCES</div>
+<h1 data-zh="學術論文、textbook、標準與資料庫" data-en="Papers, Textbooks, Standards &amp; Databases">學術論文、textbook、標準與資料庫</h1>
+<p class="subtitle" data-lang="zh">為 Data Mining Interactive Tutorial 20 章節整理 ~110 條 DOI/連結引用：奠基論文、2024–2026 最新進展、HIPAA/GDPR/EU AI Act 政策、scikit-learn/PyOD/xgboost/lightgbm 工具文件、Hetionet/PrimeKG/MIMIC 等資料庫。</p>
+<p class="subtitle" data-lang="en">~110 DOI/link citations supporting the 20-chapter Data Mining tutorial: foundational papers, 2024–2026 advances, HIPAA/GDPR/EU AI Act policies, tool docs (scikit-learn/PyOD/xgboost/lightgbm), and biomedical databases (Hetionet/PrimeKG/MIMIC).</p>
+</header>
+
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="說明" data-en="OVERVIEW">說明</div>
+<h2 data-zh="如何使用本頁" data-en="How to use this page">如何使用本頁</h2>
+<div data-lang="zh"><p>本頁將教程引用的論文、政策、資料庫與工具按 20 章節分組整理，並附 DOI / 機構連結。標籤含義：</p></div>
+<div data-lang="en"><p>References for the 20-chapter tutorial are grouped by chapter, with DOI/institution links. Tag legend:</p></div>
+<div class="card-grid cols-3">
+  <div class="card"><div class="card-icon" style="background:var(--c-accent-light)">📄</div><h4>Paper</h4><p data-lang="zh">原始研究論文 · 含 DOI</p><p data-lang="en">Original research with DOI</p></div>
+  <div class="card"><div class="card-icon" style="background:#e3f2fd">📘</div><h4>Doc</h4><p data-lang="zh">官方文件 / vignette / 教學</p><p data-lang="en">Official docs / vignettes / tutorials</p></div>
+  <div class="card"><div class="card-icon" style="background:var(--c-highlight-light)">⭐</div><h4>Best Practice</h4><p data-lang="zh">系統性綜述或社群推薦</p><p data-lang="en">Systematic reviews / community recommendations</p></div>
+  <div class="card"><div class="card-icon" style="background:#fff3e0">📊</div><h4>Benchmark</h4><p data-lang="zh">方法評比 / 工具軟體論文</p><p data-lang="en">Method benchmarking / tool papers</p></div>
+  <div class="card"><div class="card-icon" style="background:#fce4ec">🗄️</div><h4>Database</h4><p data-lang="zh">EHR / Omics / KG 資料庫</p><p data-lang="en">EHR / omics / KG databases</p></div>
+  <div class="card"><div class="card-icon" style="background:#f3e5f5">📚</div><h4>Book</h4><p data-lang="zh">經典教科書與線上書籍</p><p data-lang="en">Classic textbooks / online books</p></div>
+  <div class="card"><div class="card-icon" style="background:#e0e7ff">⚖️</div><h4>Policy</h4><p data-lang="zh">HIPAA / GDPR / EU AI Act / FDA</p><p data-lang="en">HIPAA / GDPR / EU AI Act / FDA</p></div>
+  <div class="card"><div class="card-icon" style="background:#e0f2fe">📋</div><h4>Standard</h4><p data-lang="zh">OMOP / FAIR / ICH / ICD / SNOMED</p><p data-lang="en">OMOP / FAIR / ICH / ICD / SNOMED</p></div>
+</div>
+
+<h3 data-zh="本頁目錄" data-en="On this page">本頁目錄</h3>
+<div class="toc-grid">
+  <a href="#ch01"><span class="step-tag">Ch.1</span><span data-zh="CRISP-DM" data-en="CRISP-DM">CRISP-DM</span></a>
+  <a href="#ch02"><span class="step-tag">Ch.2</span><span data-zh="資料準備" data-en="Data Prep">資料準備</span></a>
+  <a href="#ch03"><span class="step-tag">Ch.3</span><span data-zh="EDA/視覺化" data-en="EDA">EDA/視覺化</span></a>
+  <a href="#ch04"><span class="step-tag">Ch.4</span><span data-zh="相似度/距離" data-en="Distance">相似度/距離</span></a>
+  <a href="#ch05"><span class="step-tag">Ch.5</span><span data-zh="分類概論" data-en="Classification">分類概論</span></a>
+  <a href="#ch06"><span class="step-tag">Ch.6</span><span data-zh="決策樹/RF" data-en="Trees/RF">決策樹/RF</span></a>
+  <a href="#ch07"><span class="step-tag">Ch.7</span><span data-zh="NB/SVM" data-en="NB/SVM">NB/SVM</span></a>
+  <a href="#ch08"><span class="step-tag">Ch.8</span><span data-zh="模型評估" data-en="Eval">模型評估</span></a>
+  <a href="#ch09"><span class="step-tag">Ch.9</span><span data-zh="K-Means" data-en="K-Means">K-Means</span></a>
+  <a href="#ch10"><span class="step-tag">Ch.10</span><span data-zh="DBSCAN" data-en="DBSCAN">DBSCAN</span></a>
+  <a href="#ch11"><span class="step-tag">Ch.11</span><span data-zh="關聯規則" data-en="Association">關聯規則</span></a>
+  <a href="#ch12"><span class="step-tag">Ch.12</span><span data-zh="序列樣式" data-en="Sequential">序列樣式</span></a>
+  <a href="#ch13"><span class="step-tag">Ch.13</span><span data-zh="異常偵測" data-en="Anomaly">異常偵測</span></a>
+  <a href="#ch14"><span class="step-tag">Ch.14</span><span data-zh="文本探勘" data-en="Text">文本探勘</span></a>
+  <a href="#ch15"><span class="step-tag">Ch.15</span><span data-zh="時序探勘" data-en="Time Series">時序探勘</span></a>
+  <a href="#ch16"><span class="step-tag">Ch.16</span><span data-zh="圖網絡" data-en="Graph">圖網絡</span></a>
+  <a href="#ch17"><span class="step-tag">Ch.17</span><span data-zh="EHR" data-en="EHR">EHR</span></a>
+  <a href="#ch18"><span class="step-tag">Ch.18</span><span data-zh="Omics" data-en="Omics">Omics</span></a>
+  <a href="#ch19"><span class="step-tag">Ch.19</span><span data-zh="文獻探勘" data-en="Literature">文獻探勘</span></a>
+  <a href="#ch20"><span class="step-tag">Ch.20</span><span data-zh="倫理/再現" data-en="Ethics">倫理/再現</span></a>
+  <a href="#books"><span class="step-tag">📚</span><span data-zh="經典教科書" data-en="Textbooks">經典教科書</span></a>
+  <a href="#errata"><span class="step-tag">⚠️</span><span data-zh="教學註記與細節" data-en="Tutorial Notes & Details">教學註記與細節</span></a>
+</div>
+</section>
+
+<section class="section section-anchor" id="ch01">
+<div class="section-label">Ch.1</div>
+<h2 data-zh="資料探勘導論與 CRISP-DM" data-en="Intro & CRISP-DM">資料探勘導論與 CRISP-DM</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Wirth R, Hipp J (2000).</span> <span class="ref-title">CRISP-DM: Towards a standard process model for data mining.</span> <em>Proceedings of PADD'00.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://cs.unibo.it/~danilo.montesi/CBD/Beatriz/10.1.1.198.5133.pdf" target="_blank">PDF</a></span><span data-lang="en"><a href="https://cs.unibo.it/~danilo.montesi/CBD/Beatriz/10.1.1.198.5133.pdf" target="_blank">PDF</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Fayyad U, Piatetsky-Shapiro G, Smyth P (1996).</span> <span class="ref-title">From data mining to knowledge discovery in databases.</span> <em>AI Magazine 17(3):37-54.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1609/aimag.v17i3.1230" target="_blank">10.1609/aimag.v17i3.1230</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1609/aimag.v17i3.1230" target="_blank">10.1609/aimag.v17i3.1230</a></span></span></li>
+<li><span class="ref-tag bestp">bestp</span><span class="ref-author">Studer S et al. (2021).</span> <span class="ref-title">Towards CRISP-ML(Q): A machine learning process model with quality assurance methodology.</span> <em>Machine Learning &amp; Knowledge Extraction 3(2):392-413.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.3390/make3020020" target="_blank">10.3390/make3020020</a></span><span data-lang="en">DOI <a href="https://doi.org/10.3390/make3020020" target="_blank">10.3390/make3020020</a></span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Siegel E (2024).</span> <span class="ref-title">The AI Playbook: Mastering the Rare Art of Machine Learning Deployment.</span> <em>MIT Press; introduces bizML 6-step process.</em> <span class="ref-meta"><span data-lang="zh">ISBN 978-0262049320</span><span data-lang="en">ISBN 978-0262049320</span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Microsoft (2024).</span> <span class="ref-title">Team Data Science Process (TDSP) Documentation.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview" target="_blank">learn.microsoft.com</a></span><span data-lang="en"><a href="https://learn.microsoft.com/en-us/azure/architecture/data-science-process/overview" target="_blank">learn.microsoft.com</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch02">
+<div class="section-label">Ch.2</div>
+<h2 data-zh="資料準備與前處理" data-en="Data Preparation">資料準備與前處理</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Chawla NV et al. (2002).</span> <span class="ref-title">SMOTE: Synthetic Minority Over-sampling Technique.</span> <em>JAIR 16:321-357.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1613/jair.953" target="_blank">10.1613/jair.953</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1613/jair.953" target="_blank">10.1613/jair.953</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">He H, Bai Y, Garcia EA, Li S (2008).</span> <span class="ref-title">ADASYN: Adaptive synthetic sampling approach for imbalanced learning.</span> <em>IJCNN 2008.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/IJCNN.2008.4633969" target="_blank">10.1109/IJCNN.2008.4633969</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/IJCNN.2008.4633969" target="_blank">10.1109/IJCNN.2008.4633969</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">van Buuren S, Groothuis-Oudshoorn K (2011).</span> <span class="ref-title">mice: Multivariate Imputation by Chained Equations in R.</span> <em>J Stat Softw 45(3).</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.18637/jss.v045.i03" target="_blank">10.18637/jss.v045.i03</a></span><span data-lang="en">DOI <a href="https://doi.org/10.18637/jss.v045.i03" target="_blank">10.18637/jss.v045.i03</a></span></span></li>
+<li><span class="ref-tag bestp">bestp</span><span class="ref-author">Rubin DB (1976/1987).</span> <span class="ref-title">Multiple Imputation for Nonresponse in Surveys.</span> <em>Wiley.</em></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">scikit-learn (2025).</span> <span class="ref-title">Preprocessing data — sklearn.preprocessing 1.6 documentation.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://scikit-learn.org/stable/modules/preprocessing.html" target="_blank">scikit-learn.org</a></span><span data-lang="en"><a href="https://scikit-learn.org/stable/modules/preprocessing.html" target="_blank">scikit-learn.org</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch03">
+<div class="section-label">Ch.3</div>
+<h2 data-zh="EDA 與視覺化" data-en="EDA & Visualization">EDA 與視覺化</h2>
+<ul class="ref-list">
+<li><span class="ref-tag book">book</span><span class="ref-author">Tukey JW (1977).</span> <span class="ref-title">Exploratory Data Analysis.</span> <em>Addison-Wesley.</em> <span class="ref-meta"><span data-lang="zh">ISBN 978-0201076165</span><span data-lang="en">ISBN 978-0201076165</span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Tufte ER (2001).</span> <span class="ref-title">The Visual Display of Quantitative Information (2nd ed.).</span> <em>Graphics Press.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Anscombe FJ (1973).</span> <span class="ref-title">Graphs in statistical analysis.</span> <em>The American Statistician 27(1):17-21.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1080/00031305.1973.10478966" target="_blank">10.1080/00031305.1973.10478966</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1080/00031305.1973.10478966" target="_blank">10.1080/00031305.1973.10478966</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Wilke CO (2019).</span> <span class="ref-title">Fundamentals of Data Visualization.</span> <em>O'Reilly.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://clauswilke.com/dataviz/" target="_blank">clauswilke.com/dataviz</a></span><span data-lang="en"><a href="https://clauswilke.com/dataviz/" target="_blank">clauswilke.com/dataviz</a></span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Brunet S (2024).</span> <span class="ref-title">ydata-profiling: Pandas Profiling 4.x successor.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://docs.profiling.ydata.ai/" target="_blank">docs.profiling.ydata.ai</a></span><span data-lang="en"><a href="https://docs.profiling.ydata.ai/" target="_blank">docs.profiling.ydata.ai</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch04">
+<div class="section-label">Ch.4</div>
+<h2 data-zh="相似度與距離度量" data-en="Similarity & Distance">相似度與距離度量</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Gower JC (1971).</span> <span class="ref-title">A general coefficient of similarity and some of its properties.</span> <em>Biometrics 27(4):857-871.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.2307/2528823" target="_blank">10.2307/2528823</a></span><span data-lang="en">DOI <a href="https://doi.org/10.2307/2528823" target="_blank">10.2307/2528823</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Sakoe H, Chiba S (1978).</span> <span class="ref-title">Dynamic programming algorithm optimization for spoken word recognition.</span> <em>IEEE TASSP 26(1):43-49.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/TASSP.1978.1163055" target="_blank">10.1109/TASSP.1978.1163055</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/TASSP.1978.1163055" target="_blank">10.1109/TASSP.1978.1163055</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Aggarwal CC, Hinneburg A, Keim DA (2001).</span> <span class="ref-title">On the surprising behavior of distance metrics in high dimensional space.</span> <em>ICDT 2001.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1007/3-540-44503-X_27" target="_blank">10.1007/3-540-44503-X_27</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1007/3-540-44503-X_27" target="_blank">10.1007/3-540-44503-X_27</a></span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Meert W et al. (2024).</span> <span class="ref-title">dtaidistance — DTW for time series.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://dtaidistance.readthedocs.io/" target="_blank">dtaidistance.readthedocs.io</a></span><span data-lang="en"><a href="https://dtaidistance.readthedocs.io/" target="_blank">dtaidistance.readthedocs.io</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch05">
+<div class="section-label">Ch.5</div>
+<h2 data-zh="分類概論" data-en="Classification Overview">分類概論：KNN / Logistic</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Cover TM, Hart PE (1967).</span> <span class="ref-title">Nearest neighbor pattern classification.</span> <em>IEEE TIT 13(1):21-27.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/TIT.1967.1053964" target="_blank">10.1109/TIT.1967.1053964</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/TIT.1967.1053964" target="_blank">10.1109/TIT.1967.1053964</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Tibshirani R (1996).</span> <span class="ref-title">Regression shrinkage and selection via the lasso.</span> <em>JRSS-B 58(1):267-288.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x" target="_blank">10.1111/j.2517-6161.1996.tb02080.x</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1111/j.2517-6161.1996.tb02080.x" target="_blank">10.1111/j.2517-6161.1996.tb02080.x</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Hosmer DW, Lemeshow S, Sturdivant RX (2013).</span> <span class="ref-title">Applied Logistic Regression (3rd ed.).</span> <em>Wiley.</em></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">scikit-learn (2025).</span> <span class="ref-title">KNeighborsClassifier &amp; LogisticRegression — sklearn 1.6 docs.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://scikit-learn.org/stable/modules/linear_model.html" target="_blank">scikit-learn.org</a></span><span data-lang="en"><a href="https://scikit-learn.org/stable/modules/linear_model.html" target="_blank">scikit-learn.org</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch06">
+<div class="section-label">Ch.6</div>
+<h2 data-zh="決策樹與隨機森林" data-en="Trees & RF">決策樹與隨機森林</h2>
+<ul class="ref-list">
+<li><span class="ref-tag book">book</span><span class="ref-author">Breiman L, Friedman J, Olshen R, Stone C (1984).</span> <span class="ref-title">Classification and Regression Trees.</span> <em>Wadsworth.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Breiman L (2001).</span> <span class="ref-title">Random Forests.</span> <em>Machine Learning 45(1):5-32.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1023/A:1010933404324" target="_blank">10.1023/A:1010933404324</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1023/A:1010933404324" target="_blank">10.1023/A:1010933404324</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Chen T, Guestrin C (2016).</span> <span class="ref-title">XGBoost: A scalable tree boosting system.</span> <em>KDD 2016.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/2939672.2939785" target="_blank">10.1145/2939672.2939785</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/2939672.2939785" target="_blank">10.1145/2939672.2939785</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Ke G et al. (2017).</span> <span class="ref-title">LightGBM: A highly efficient gradient boosting decision tree.</span> <em>NeurIPS 2017.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Prokhorenkova L et al. (2018).</span> <span class="ref-title">CatBoost: Unbiased boosting with categorical features.</span> <em>NeurIPS 2018.</em></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">XGBoost 2.x (2025).</span> <span class="ref-title">Release notes — categorical support &amp; GPU device API.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://xgboost.readthedocs.io/en/stable/" target="_blank">xgboost.readthedocs.io</a></span><span data-lang="en"><a href="https://xgboost.readthedocs.io/en/stable/" target="_blank">xgboost.readthedocs.io</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch07">
+<div class="section-label">Ch.7</div>
+<h2 data-zh="樸素貝氏與 SVM" data-en="Naive Bayes & SVM">樸素貝氏與 SVM</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Cortes C, Vapnik V (1995).</span> <span class="ref-title">Support-vector networks.</span> <em>Machine Learning 20(3):273-297.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1007/BF00994018" target="_blank">10.1007/BF00994018</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1007/BF00994018" target="_blank">10.1007/BF00994018</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Rish I (2001).</span> <span class="ref-title">An empirical study of the Naive Bayes classifier.</span> <em>IJCAI 2001 workshop.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Schölkopf B, Smola AJ (2002).</span> <span class="ref-title">Learning with Kernels: SVM, Regularization, Optimization, and Beyond.</span> <em>MIT Press.</em></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Chang CC, Lin CJ.</span> <span class="ref-title">LIBSVM: A library for support vector machines.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://www.csie.ntu.edu.tw/~cjlin/libsvm/" target="_blank">ntu.edu.tw/~cjlin/libsvm</a></span><span data-lang="en"><a href="https://www.csie.ntu.edu.tw/~cjlin/libsvm/" target="_blank">ntu.edu.tw/~cjlin/libsvm</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch08">
+<div class="section-label">Ch.8</div>
+<h2 data-zh="模型評估與調參" data-en="Model Evaluation">模型評估與調參</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Saito T, Rehmsmeier M (2015).</span> <span class="ref-title">The precision-recall plot is more informative than the ROC plot when evaluating binary classifiers on imbalanced datasets.</span> <em>PLOS ONE 10(3):e0118432.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1371/journal.pone.0118432" target="_blank">10.1371/journal.pone.0118432</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1371/journal.pone.0118432" target="_blank">10.1371/journal.pone.0118432</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Cawley GC, Talbot NLC (2010).</span> <span class="ref-title">On over-fitting in model selection and subsequent selection bias in performance evaluation (nested CV).</span> <em>JMLR 11:2079-2107.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Niculescu-Mizil A, Caruana R (2005).</span> <span class="ref-title">Predicting good probabilities with supervised learning (calibration).</span> <em>ICML 2005.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/1102351.1102430" target="_blank">10.1145/1102351.1102430</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/1102351.1102430" target="_blank">10.1145/1102351.1102430</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Akiba T et al. (2019).</span> <span class="ref-title">Optuna: A next-generation hyperparameter optimization framework.</span> <em>KDD 2019.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/3292500.3330701" target="_blank">10.1145/3292500.3330701</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/3292500.3330701" target="_blank">10.1145/3292500.3330701</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch09">
+<div class="section-label">Ch.9</div>
+<h2 data-zh="K-Means 與階層分群" data-en="K-Means & Hierarchical">K-Means 與階層分群</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Lloyd SP (1982).</span> <span class="ref-title">Least squares quantization in PCM.</span> <em>IEEE TIT 28(2):129-137.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/TIT.1982.1056489" target="_blank">10.1109/TIT.1982.1056489</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/TIT.1982.1056489" target="_blank">10.1109/TIT.1982.1056489</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Arthur D, Vassilvitskii S (2007).</span> <span class="ref-title">k-means++: The advantages of careful seeding.</span> <em>SODA 2007.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Ward JH (1963).</span> <span class="ref-title">Hierarchical grouping to optimize an objective function.</span> <em>JASA 58(301):236-244.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1080/01621459.1963.10500845" target="_blank">10.1080/01621459.1963.10500845</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1080/01621459.1963.10500845" target="_blank">10.1080/01621459.1963.10500845</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Rousseeuw PJ (1987).</span> <span class="ref-title">Silhouettes: A graphical aid to the interpretation and validation of cluster analysis.</span> <em>J Comput Appl Math 20:53-65.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1016/0377-0427(87)90125-7" target="_blank">10.1016/0377-0427(87)90125-7</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1016/0377-0427(87)90125-7" target="_blank">10.1016/0377-0427(87)90125-7</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch10">
+<div class="section-label">Ch.10</div>
+<h2 data-zh="密度型分群" data-en="Density-Based Clustering">密度型分群</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Ester M, Kriegel HP, Sander J, Xu X (1996).</span> <span class="ref-title">A density-based algorithm for discovering clusters in large spatial databases with noise (DBSCAN).</span> <em>KDD 1996.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Ankerst M, Breunig MM, Kriegel HP, Sander J (1999).</span> <span class="ref-title">OPTICS: Ordering points to identify the clustering structure.</span> <em>ACM SIGMOD 1999.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/304182.304187" target="_blank">10.1145/304182.304187</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/304182.304187" target="_blank">10.1145/304182.304187</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Campello RJGB, Moulavi D, Sander J (2013).</span> <span class="ref-title">Density-based clustering based on hierarchical density estimates (HDBSCAN).</span> <em>PAKDD 2013.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1007/978-3-642-37456-2_14" target="_blank">10.1007/978-3-642-37456-2_14</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1007/978-3-642-37456-2_14" target="_blank">10.1007/978-3-642-37456-2_14</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">McInnes L, Healy J, Astels S (2017).</span> <span class="ref-title">hdbscan: Hierarchical density based clustering.</span> <em>JOSS 2(11):205.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.21105/joss.00205" target="_blank">10.21105/joss.00205</a></span><span data-lang="en">DOI <a href="https://doi.org/10.21105/joss.00205" target="_blank">10.21105/joss.00205</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch11">
+<div class="section-label">Ch.11</div>
+<h2 data-zh="關聯規則挖掘" data-en="Association Rule Mining">關聯規則挖掘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Agrawal R, Imieliński T, Swami A (1993).</span> <span class="ref-title">Mining association rules between sets of items in large databases.</span> <em>SIGMOD 1993.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/170035.170072" target="_blank">10.1145/170035.170072</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/170035.170072" target="_blank">10.1145/170035.170072</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Agrawal R, Srikant R (1994).</span> <span class="ref-title">Fast algorithms for mining association rules (Apriori).</span> <em>VLDB 1994.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Han J, Pei J, Yin Y (2000).</span> <span class="ref-title">Mining frequent patterns without candidate generation (FP-Growth).</span> <em>SIGMOD 2000.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/342009.335372" target="_blank">10.1145/342009.335372</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/342009.335372" target="_blank">10.1145/342009.335372</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Zaki MJ (2000).</span> <span class="ref-title">Scalable algorithms for association mining (Eclat).</span> <em>IEEE TKDE 12(3):372-390.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/69.846291" target="_blank">10.1109/69.846291</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/69.846291" target="_blank">10.1109/69.846291</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">ASEA Authors (2026).</span> <span class="ref-title">Ontology-driven association rule mining for biomedical entity relationships.</span> <em>Sci Rep 16:42584.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1038/s41598-026-42584-y" target="_blank">10.1038/s41598-026-42584-y</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1038/s41598-026-42584-y" target="_blank">10.1038/s41598-026-42584-y</a></span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Hahsler M (2024).</span> <span class="ref-title">arules: Mining association rules and frequent itemsets in R.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://mhahsler.github.io/arules/" target="_blank">mhahsler.github.io/arules</a></span><span data-lang="en"><a href="https://mhahsler.github.io/arules/" target="_blank">mhahsler.github.io/arules</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch12">
+<div class="section-label">Ch.12</div>
+<h2 data-zh="序列樣式探勘" data-en="Sequential Pattern Mining">序列樣式探勘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Srikant R, Agrawal R (1996).</span> <span class="ref-title">Mining sequential patterns: Generalizations and performance improvements (GSP).</span> <em>EDBT 1996.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Zaki MJ (2001).</span> <span class="ref-title">SPADE: An efficient algorithm for mining frequent sequences.</span> <em>Machine Learning 42:31-60.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1023/A:1007652502315" target="_blank">10.1023/A:1007652502315</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1023/A:1007652502315" target="_blank">10.1023/A:1007652502315</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Pei J et al. (2001).</span> <span class="ref-title">PrefixSpan: Mining sequential patterns by prefix-projected growth.</span> <em>ICDE 2001.</em></li>
+<li><span class="ref-tag bestp">bestp</span><span class="ref-author">van der Aalst W (2016).</span> <span class="ref-title">Process Mining: Data Science in Action (2nd ed.).</span> <em>Springer.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1007/978-3-662-49851-4" target="_blank">10.1007/978-3-662-49851-4</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1007/978-3-662-49851-4" target="_blank">10.1007/978-3-662-49851-4</a></span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">PM4Py (2024).</span> <span class="ref-title">PM4Py — Process Mining for Python documentation.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://pm4py.fit.fraunhofer.de/" target="_blank">pm4py.fit.fraunhofer.de</a></span><span data-lang="en"><a href="https://pm4py.fit.fraunhofer.de/" target="_blank">pm4py.fit.fraunhofer.de</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch13">
+<div class="section-label">Ch.13</div>
+<h2 data-zh="異常偵測" data-en="Anomaly Detection">異常偵測</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Breunig MM, Kriegel HP, Ng RT, Sander J (2000).</span> <span class="ref-title">LOF: Identifying density-based local outliers.</span> <em>SIGMOD 2000.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/342009.335388" target="_blank">10.1145/342009.335388</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/342009.335388" target="_blank">10.1145/342009.335388</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Liu FT, Ting KM, Zhou ZH (2008).</span> <span class="ref-title">Isolation Forest.</span> <em>ICDM 2008.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/ICDM.2008.17" target="_blank">10.1109/ICDM.2008.17</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/ICDM.2008.17" target="_blank">10.1109/ICDM.2008.17</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Li Z, Zhao Y, Hu X, Botta N, Ionescu C, Chen GH (2022).</span> <span class="ref-title">ECOD: Unsupervised outlier detection using empirical cumulative distribution functions.</span> <em>IEEE TKDE.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1109/TKDE.2022.3159580" target="_blank">10.1109/TKDE.2022.3159580</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1109/TKDE.2022.3159580" target="_blank">10.1109/TKDE.2022.3159580</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Zhao Y et al. (2025).</span> <span class="ref-title">PyOD 2: A Python library for outlier detection with LLM-powered model selection.</span> <em>WWW 2025 Companion.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/3701716.3715196" target="_blank">10.1145/3701716.3715196</a> · <a href="https://arxiv.org/abs/2412.12154" target="_blank">arXiv 2412.12154</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/3701716.3715196" target="_blank">10.1145/3701716.3715196</a> · <a href="https://arxiv.org/abs/2412.12154" target="_blank">arXiv 2412.12154</a></span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Zhao Y (2026).</span> <span class="ref-title">PyOD 3: 60+ detectors across tabular / time series / graph / text / image.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://github.com/yzhao062/pyod" target="_blank">github.com/yzhao062/pyod</a></span><span data-lang="en"><a href="https://github.com/yzhao062/pyod" target="_blank">github.com/yzhao062/pyod</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch14">
+<div class="section-label">Ch.14</div>
+<h2 data-zh="文本探勘與 NLP" data-en="Text Mining & NLP">文本探勘與 NLP</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Blei DM, Ng AY, Jordan MI (2003).</span> <span class="ref-title">Latent Dirichlet Allocation.</span> <em>JMLR 3:993-1022.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Mikolov T, Chen K, Corrado G, Dean J (2013).</span> <span class="ref-title">Efficient estimation of word representations in vector space (Word2Vec).</span> <em>ICLR 2013.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://arxiv.org/abs/1301.3781" target="_blank">arXiv 1301.3781</a></span><span data-lang="en"><a href="https://arxiv.org/abs/1301.3781" target="_blank">arXiv 1301.3781</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Lee J et al. (2020).</span> <span class="ref-title">BioBERT: A pre-trained biomedical language representation model for biomedical text mining.</span> <em>Bioinformatics 36(4):1234-1240.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/bioinformatics/btz682" target="_blank">10.1093/bioinformatics/btz682</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/bioinformatics/btz682" target="_blank">10.1093/bioinformatics/btz682</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Gu Y et al. (2021).</span> <span class="ref-title">Domain-specific language model pretraining for biomedical NLP (PubMedBERT).</span> <em>ACM Trans Comput Healthcare 3(1).</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/3458754" target="_blank">10.1145/3458754</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/3458754" target="_blank">10.1145/3458754</a></span></span></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Hugging Face (2024).</span> <span class="ref-title">Transformers documentation.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://huggingface.co/docs/transformers" target="_blank">huggingface.co</a></span><span data-lang="en"><a href="https://huggingface.co/docs/transformers" target="_blank">huggingface.co</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch15">
+<div class="section-label">Ch.15</div>
+<h2 data-zh="時序資料探勘" data-en="Time Series Mining">時序資料探勘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag book">book</span><span class="ref-author">Hyndman RJ, Athanasopoulos G (2021).</span> <span class="ref-title">Forecasting: Principles and Practice (3rd ed.).</span> <em>OTexts.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://otexts.com/fpp3/" target="_blank">otexts.com/fpp3</a></span><span data-lang="en"><a href="https://otexts.com/fpp3/" target="_blank">otexts.com/fpp3</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Taylor SJ, Letham B (2018).</span> <span class="ref-title">Forecasting at scale (Prophet).</span> <em>The American Statistician 72(1):37-45.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1080/00031305.2017.1380080" target="_blank">10.1080/00031305.2017.1380080</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1080/00031305.2017.1380080" target="_blank">10.1080/00031305.2017.1380080</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Ye L, Keogh E (2009).</span> <span class="ref-title">Time series shapelets: A new primitive for data mining.</span> <em>KDD 2009.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/1557019.1557122" target="_blank">10.1145/1557019.1557122</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/1557019.1557122" target="_blank">10.1145/1557019.1557122</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Yeh CCM et al. (2016).</span> <span class="ref-title">Matrix Profile I: All pairs similarity joins for time series.</span> <em>ICDM 2016.</em></li>
+<li><span class="ref-tag doc">doc</span><span class="ref-author">Law SM (2019).</span> <span class="ref-title">STUMPY: A powerful and scalable Python library for time series data mining.</span> <em>JOSS 4(39):1504.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.21105/joss.01504" target="_blank">10.21105/joss.01504</a></span><span data-lang="en">DOI <a href="https://doi.org/10.21105/joss.01504" target="_blank">10.21105/joss.01504</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch16">
+<div class="section-label">Ch.16</div>
+<h2 data-zh="圖與網絡探勘" data-en="Graph & Network Mining">圖與網絡探勘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Page L, Brin S, Motwani R, Winograd T (1999).</span> <span class="ref-title">The PageRank citation ranking: Bringing order to the web.</span> <em>Stanford InfoLab.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Blondel VD et al. (2008).</span> <span class="ref-title">Fast unfolding of communities in large networks (Louvain).</span> <em>J Stat Mech 10:P10008.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1088/1742-5468/2008/10/P10008" target="_blank">10.1088/1742-5468/2008/10/P10008</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1088/1742-5468/2008/10/P10008" target="_blank">10.1088/1742-5468/2008/10/P10008</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Traag VA, Waltman L, van Eck NJ (2019).</span> <span class="ref-title">From Louvain to Leiden: Guaranteeing well-connected communities.</span> <em>Sci Rep 9:5233.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1038/s41598-019-41695-z" target="_blank">10.1038/s41598-019-41695-z</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1038/s41598-019-41695-z" target="_blank">10.1038/s41598-019-41695-z</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Grover A, Leskovec J (2016).</span> <span class="ref-title">node2vec: Scalable feature learning for networks.</span> <em>KDD 2016.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/2939672.2939754" target="_blank">10.1145/2939672.2939754</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/2939672.2939754" target="_blank">10.1145/2939672.2939754</a></span></span></li>
+<li><span class="ref-tag db">db</span><span class="ref-author">Himmelstein DS et al. (2017).</span> <span class="ref-title">Systematic integration of biomedical knowledge prioritizes drugs for repurposing (Hetionet).</span> <em>eLife 6:e26726.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.7554/eLife.26726" target="_blank">10.7554/eLife.26726</a></span><span data-lang="en">DOI <a href="https://doi.org/10.7554/eLife.26726" target="_blank">10.7554/eLife.26726</a></span></span></li>
+<li><span class="ref-tag db">db</span><span class="ref-author">Chandak P, Huang K, Zitnik M (2023).</span> <span class="ref-title">Building a knowledge graph to enable precision medicine (PrimeKG).</span> <em>Sci Data 10:67.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1038/s41597-023-01960-3" target="_blank">10.1038/s41597-023-01960-3</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1038/s41597-023-01960-3" target="_blank">10.1038/s41597-023-01960-3</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch17">
+<div class="section-label">Ch.17</div>
+<h2 data-zh="EHR 資料探勘" data-en="EHR Data Mining">EHR 資料探勘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag standard">standard</span><span class="ref-author">OHDSI (2024).</span> <span class="ref-title">OMOP Common Data Model v5.4 Specification.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://ohdsi.github.io/CommonDataModel/cdm54.html" target="_blank">ohdsi.github.io/CommonDataModel</a></span><span data-lang="en"><a href="https://ohdsi.github.io/CommonDataModel/cdm54.html" target="_blank">ohdsi.github.io/CommonDataModel</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Hripcsak G et al. (2015).</span> <span class="ref-title">Observational Health Data Sciences and Informatics (OHDSI): Opportunities for observational researchers.</span> <em>Stud Health Technol Inform 216:574-578.</em></li>
+<li><span class="ref-tag db">db</span><span class="ref-author">Johnson AEW et al. (2023).</span> <span class="ref-title">MIMIC-IV, a freely accessible electronic health record dataset.</span> <em>Sci Data 10:1.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1038/s41597-022-01899-x" target="_blank">10.1038/s41597-022-01899-x</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1038/s41597-022-01899-x" target="_blank">10.1038/s41597-022-01899-x</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Kirby JC et al. (2016).</span> <span class="ref-title">PheKB: a catalog and workflow for creating electronic phenotype algorithms.</span> <em>JAMIA 23(6):1046-1052.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/jamia/ocv202" target="_blank">10.1093/jamia/ocv202</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/jamia/ocv202" target="_blank">10.1093/jamia/ocv202</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Cox DR (1972).</span> <span class="ref-title">Regression models and life-tables.</span> <em>JRSS-B 34(2):187-220.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Fine JP, Gray RJ (1999).</span> <span class="ref-title">A proportional hazards model for the subdistribution of a competing risk.</span> <em>JASA 94(446):496-509.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1080/01621459.1999.10474144" target="_blank">10.1080/01621459.1999.10474144</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1080/01621459.1999.10474144" target="_blank">10.1080/01621459.1999.10474144</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch18">
+<div class="section-label">Ch.18</div>
+<h2 data-zh="組學資料探勘" data-en="Omics Data Mining">組學資料探勘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Zou H, Hastie T (2005).</span> <span class="ref-title">Regularization and variable selection via the elastic net.</span> <em>JRSS-B 67(2):301-320.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1111/j.1467-9868.2005.00503.x" target="_blank">10.1111/j.1467-9868.2005.00503.x</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1111/j.1467-9868.2005.00503.x" target="_blank">10.1111/j.1467-9868.2005.00503.x</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Kursa MB, Rudnicki WR (2010).</span> <span class="ref-title">Feature selection with the Boruta package.</span> <em>J Stat Softw 36(11).</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.18637/jss.v036.i11" target="_blank">10.18637/jss.v036.i11</a></span><span data-lang="en">DOI <a href="https://doi.org/10.18637/jss.v036.i11" target="_blank">10.18637/jss.v036.i11</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Argelaguet R et al. (2020).</span> <span class="ref-title">MOFA+: a statistical framework for comprehensive integration of multi-modal single-cell data.</span> <em>Genome Biol 21:111.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1186/s13059-020-02015-1" target="_blank">10.1186/s13059-020-02015-1</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1186/s13059-020-02015-1" target="_blank">10.1186/s13059-020-02015-1</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Korsunsky I et al. (2019).</span> <span class="ref-title">Fast, sensitive and accurate integration of single-cell data with Harmony.</span> <em>Nat Methods 16:1289-1296.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1038/s41592-019-0619-0" target="_blank">10.1038/s41592-019-0619-0</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1038/s41592-019-0619-0" target="_blank">10.1038/s41592-019-0619-0</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Johnson WE, Li C, Rabinovic A (2007).</span> <span class="ref-title">Adjusting batch effects in microarray expression data using empirical Bayes methods (ComBat).</span> <em>Biostatistics 8(1):118-127.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/biostatistics/kxj037" target="_blank">10.1093/biostatistics/kxj037</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/biostatistics/kxj037" target="_blank">10.1093/biostatistics/kxj037</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch19">
+<div class="section-label">Ch.19</div>
+<h2 data-zh="文獻探勘" data-en="Literature Mining">文獻探勘</h2>
+<ul class="ref-list">
+<li><span class="ref-tag doc">doc</span><span class="ref-author">NCBI (2024).</span> <span class="ref-title">Entrez Programming Utilities (E-utilities) Help.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://www.ncbi.nlm.nih.gov/books/NBK25501/" target="_blank">ncbi.nlm.nih.gov/books/NBK25501</a></span><span data-lang="en"><a href="https://www.ncbi.nlm.nih.gov/books/NBK25501/" target="_blank">ncbi.nlm.nih.gov/books/NBK25501</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Sung MJ et al. (2022).</span> <span class="ref-title">BERN2: an advanced neural biomedical named entity recognition and normalization tool.</span> <em>Bioinformatics 38(20):4837-4839.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/bioinformatics/btac598" target="_blank">10.1093/bioinformatics/btac598</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/bioinformatics/btac598" target="_blank">10.1093/bioinformatics/btac598</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Luo L et al. (2022).</span> <span class="ref-title">BioRED: a rich biomedical relation extraction dataset.</span> <em>Briefings in Bioinformatics 23(5):bbac282.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/bib/bbac282" target="_blank">10.1093/bib/bbac282</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/bib/bbac282" target="_blank">10.1093/bib/bbac282</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Wei CH et al. (2024).</span> <span class="ref-title">PubTator 3.0: an AI-powered literature resource for unlocking biomedical knowledge.</span> <em>Nucleic Acids Res 52(W1):W540-W546.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/nar/gkae235" target="_blank">10.1093/nar/gkae235</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/nar/gkae235" target="_blank">10.1093/nar/gkae235</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Luo R et al. (2022).</span> <span class="ref-title">BioGPT: generative pre-trained transformer for biomedical text generation and mining.</span> <em>Briefings in Bioinformatics 23(6):bbac409.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/bib/bbac409" target="_blank">10.1093/bib/bbac409</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/bib/bbac409" target="_blank">10.1093/bib/bbac409</a></span></span></li>
+<li><span class="ref-tag db">db</span><span class="ref-author">OpenTargets Consortium (2024).</span> <span class="ref-title">Open Targets Platform 24.x release notes.</span> <span class="ref-meta"><span data-lang="zh"><a href="https://platform-docs.opentargets.org/" target="_blank">platform-docs.opentargets.org</a></span><span data-lang="en"><a href="https://platform-docs.opentargets.org/" target="_blank">platform-docs.opentargets.org</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="ch20">
+<div class="section-label">Ch.20</div>
+<h2 data-zh="倫理與可重現性" data-en="Ethics & Reproducibility">倫理與可重現性</h2>
+<ul class="ref-list">
+<li><span class="ref-tag policy">policy</span><span class="ref-author">European Parliament (2024).</span> <span class="ref-title">Regulation (EU) 2024/1689 — EU Artificial Intelligence Act.</span> <em>OJ L of 2024-07-12.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://eur-lex.europa.eu/eli/reg/2024/1689" target="_blank">eur-lex.europa.eu</a> · GPAI in force 2026-08-02; high-risk 2027-08-02</span><span data-lang="en"><a href="https://eur-lex.europa.eu/eli/reg/2024/1689" target="_blank">eur-lex.europa.eu</a> · GPAI in force 2026-08-02; high-risk 2027-08-02</span></span></li>
+<li><span class="ref-tag policy">policy</span><span class="ref-author">U.S. Department of Health and Human Services.</span> <span class="ref-title">HIPAA Privacy Rule — De-Identification of PHI (Safe Harbor &amp; Expert Determination).</span> <span class="ref-meta"><span data-lang="zh"><a href="https://www.hhs.gov/hipaa/for-professionals/privacy/special-topics/de-identification/" target="_blank">hhs.gov</a></span><span data-lang="en"><a href="https://www.hhs.gov/hipaa/for-professionals/privacy/special-topics/de-identification/" target="_blank">hhs.gov</a></span></span></li>
+<li><span class="ref-tag policy">policy</span><span class="ref-author">European Parliament (2016).</span> <span class="ref-title">Regulation (EU) 2016/679 — General Data Protection Regulation (GDPR).</span> <span class="ref-meta"><span data-lang="zh"><a href="https://gdpr-info.eu/" target="_blank">gdpr-info.eu</a></span><span data-lang="en"><a href="https://gdpr-info.eu/" target="_blank">gdpr-info.eu</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Sweeney L (2000).</span> <span class="ref-title">Simple demographics often identify people uniquely.</span> <em>Carnegie Mellon Data Privacy Working Paper 3.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Wilkinson MD et al. (2016).</span> <span class="ref-title">The FAIR Guiding Principles for scientific data management and stewardship.</span> <em>Sci Data 3:160018.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1038/sdata.2016.18" target="_blank">10.1038/sdata.2016.18</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1038/sdata.2016.18" target="_blank">10.1038/sdata.2016.18</a></span></span></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Lundberg SM, Lee SI (2017).</span> <span class="ref-title">A unified approach to interpreting model predictions (SHAP).</span> <em>NeurIPS 2017.</em></li>
+<li><span class="ref-tag paper">paper</span><span class="ref-author">Mitchell M et al. (2019).</span> <span class="ref-title">Model Cards for Model Reporting.</span> <em>FAT* 2019.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1145/3287560.3287596" target="_blank">10.1145/3287560.3287596</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1145/3287560.3287596" target="_blank">10.1145/3287560.3287596</a></span></span></li>
+<li><span class="ref-tag standard">standard</span><span class="ref-author">Köster J, Rahmann S (2012).</span> <span class="ref-title">Snakemake — a scalable bioinformatics workflow engine.</span> <em>Bioinformatics 28(19):2520-2522.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1093/bioinformatics/bts480" target="_blank">10.1093/bioinformatics/bts480</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1093/bioinformatics/bts480" target="_blank">10.1093/bioinformatics/bts480</a></span></span></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="books">
+<div class="section-label">📚</div>
+<h2 data-zh="經典教科書與線上書籍" data-en="Classic Textbooks & Online Books">經典教科書與線上書籍</h2>
+<ul class="ref-list">
+<li><span class="ref-tag book">book</span><span class="ref-author">Han J, Kamber M, Pei J (2011).</span> <span class="ref-title">Data Mining: Concepts and Techniques (3rd ed.).</span> <em>Morgan Kaufmann.</em> <span class="ref-meta"><span data-lang="zh">ISBN 978-0123814791</span><span data-lang="en">ISBN 978-0123814791</span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Tan PN, Steinbach M, Karpatne A, Kumar V (2018).</span> <span class="ref-title">Introduction to Data Mining (2nd ed.).</span> <em>Pearson.</em> <span class="ref-meta"><span data-lang="zh">ISBN 978-0133128901</span><span data-lang="en">ISBN 978-0133128901</span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Hastie T, Tibshirani R, Friedman J (2009).</span> <span class="ref-title">The Elements of Statistical Learning (2nd ed.).</span> <em>Springer.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1007/978-0-387-84858-7" target="_blank">10.1007/978-0-387-84858-7</a> · <a href="https://hastie.su.domains/Papers/ESLII.pdf" target="_blank">free PDF</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1007/978-0-387-84858-7" target="_blank">10.1007/978-0-387-84858-7</a> · <a href="https://hastie.su.domains/Papers/ESLII.pdf" target="_blank">free PDF</a></span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">James G, Witten D, Hastie T, Tibshirani R (2021).</span> <span class="ref-title">An Introduction to Statistical Learning with Applications in R / Python (2nd ed.).</span> <em>Springer.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://www.statlearning.com/" target="_blank">statlearning.com</a></span><span data-lang="en"><a href="https://www.statlearning.com/" target="_blank">statlearning.com</a></span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Bishop CM (2006).</span> <span class="ref-title">Pattern Recognition and Machine Learning.</span> <em>Springer.</em></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Aggarwal CC (2015).</span> <span class="ref-title">Data Mining: The Textbook.</span> <em>Springer.</em> <span class="ref-meta"><span data-lang="zh">DOI <a href="https://doi.org/10.1007/978-3-319-14142-8" target="_blank">10.1007/978-3-319-14142-8</a></span><span data-lang="en">DOI <a href="https://doi.org/10.1007/978-3-319-14142-8" target="_blank">10.1007/978-3-319-14142-8</a></span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Kuhn M, Silge J (2022).</span> <span class="ref-title">Tidy Modeling with R.</span> <em>O'Reilly.</em> <span class="ref-meta"><span data-lang="zh"><a href="https://www.tmwr.org/" target="_blank">tmwr.org</a> (free online)</span><span data-lang="en"><a href="https://www.tmwr.org/" target="_blank">tmwr.org</a> (free online)</span></span></li>
+<li><span class="ref-tag book">book</span><span class="ref-author">Géron A (2022).</span> <span class="ref-title">Hands-On Machine Learning with Scikit-Learn, Keras &amp; TensorFlow (3rd ed.).</span> <em>O'Reilly.</em></li>
+</ul>
+</section>
+
+<section class="section section-anchor" id="errata">
+<div class="section-label" data-zh="教學註記" data-en="TUTORIAL NOTES">教學註記</div>
+<h2 data-zh="📌 教學註記與細節" data-en="📌 Tutorial Notes & Details">📌 教學註記與細節</h2>
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span><h4 data-zh="📌 Ch.11 ASEA 引用" data-en="📌 Ch.11 ASEA citation">📌 Ch.11 ASEA 引用</h4>
+<p data-lang="zh">Ch.11 中提到的 ASEA 演算法引自 <em>Scientific Reports</em> 2026 論文（DOI 10.1038/s41598-026-42584-y）。在不同的 itemset/Eclat 評估資料集中其相對效能可能不同；建議讀者在採用前先以自身資料 benchmark。</p>
+<p data-lang="en">The ASEA algorithm referenced in Ch.11 comes from <em>Scientific Reports</em> 2026 (DOI 10.1038/s41598-026-42584-y). Its relative performance vs Apriori / FP-Growth / Eclat may vary by dataset; benchmark on your own data before adopting.</p>
+</div>
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span><h4 data-zh="📌 Ch.13 PyOD 版本" data-en="📌 Ch.13 PyOD versions">📌 Ch.13 PyOD 版本</h4>
+<p data-lang="zh">教程示例使用 PyOD 2.x API；自 PyOD 3 起 API 採三層架構但保持 fit/predict 向下相容。注意 LLM-based model selection 仍為 PyOD 2 才有的 highlight 功能。</p>
+<p data-lang="en">Tutorial uses PyOD 2.x API; from PyOD 3 onward the API is restructured into 3 layers but preserves fit/predict backward compatibility. The LLM-powered model selection is a PyOD 2 highlight.</p>
+</div>
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span><h4 data-zh="📌 Ch.20 EU AI Act 時程" data-en="📌 Ch.20 EU AI Act timeline">📌 Ch.20 EU AI Act 時程</h4>
+<p data-lang="zh">EU AI Act 條文 2024 年生效，但<strong>分階段</strong>強制執行：(a) 通用 AI 模型 (GPAI) 義務於 2026-08-02 啟動；(b) 高風險系統 (含醫療裝置 AI) 義務於 2027-08-02 啟動。教程內提到的時程依此區分。</p>
+<p data-lang="en">The EU AI Act entered into force in 2024 but is enforced in <strong>phases</strong>: (a) GPAI obligations from 2026-08-02; (b) high-risk system obligations (including AI medical devices) from 2027-08-02.</p>
+</div>
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="📌 Ch.17 OMOP CDM 版本" data-en="📌 Ch.17 OMOP CDM version">📌 Ch.17 OMOP CDM 版本</h4>
+<p data-lang="zh">課程示例採 OMOP CDM v5.4 (2024) 結構欄位（DRUG_EXPOSURE 等）。未來 v6 規格仍在 OHDSI WG 評估中，部分欄位可能會調整；請以官方 spec 為準。</p>
+</div>
+
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="📌 Ch.11 Apriori vs FP-Growth 記憶體權衡 (Han 2000)" data-en="📌 Ch.11 Apriori vs FP-Growth memory tradeoff (Han 2000)">📌 Ch.11 Apriori vs FP-Growth 記憶體權衡 (Han 2000)</h4>
+<p data-lang="zh">教程列舉關聯規則挖掘演算法時未充分區分 Apriori (Agrawal &amp; Srikant 1994) 與 FP-Growth (Han, Pei &amp; Yin 2000 SIGMOD) 的核心差異：(a) <strong>Apriori</strong> 採 BFS + 多次資料庫掃描（每個 k 階候選需掃一次），<strong>低記憶體但高 I/O</strong>，適合超出 RAM 的超大型資料集；(b) <strong>FP-Growth</strong> 建構 FP-tree 後僅需<strong>兩次掃描</strong>，<strong>低 I/O 但高 RAM</strong>（FP-tree 在最壞情況可能比原始資料更大）；(c) 當 minsup 低或 item 數爆炸時，FP-tree 在密集資料上反而會比 Apriori 更慢（樹擴張過大）。實務建議：稀疏交易資料 (retail basket) → FP-Growth；密集二元矩陣 (基因表達二元化) → Eclat 或 LCM；超大磁碟駐留資料 → Apriori 仍有價值。mlxtend 與 SPMF 提供三者實作可直接 benchmark。</p>
+<p data-lang="en">The tutorial under-distinguishes Apriori (Agrawal &amp; Srikant 1994) and FP-Growth (Han, Pei &amp; Yin 2000 SIGMOD): (a) <strong>Apriori</strong> uses BFS with multiple DB scans (one per k-itemset level) — <strong>low memory, high I/O</strong>, suitable for datasets exceeding RAM; (b) <strong>FP-Growth</strong> builds an FP-tree after just <strong>two scans</strong> — <strong>low I/O, high RAM</strong> (FP-tree worst-case can exceed source data size); (c) at low minsup or with item explosion, FP-tree on dense data can be slower than Apriori due to tree blowup. Guidance: sparse transactions (retail baskets) → FP-Growth; dense binary matrices (binarized gene expression) → Eclat or LCM; very large disk-resident data → Apriori is still useful. mlxtend and SPMF provide all three for direct benchmarking.</p>
+</div>
+
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="📌 Ch.13 Outlier ≠ Anomaly 區別 (Chandola 2009)" data-en="📌 Ch.13 Outlier ≠ anomaly distinction (Chandola 2009)">📌 Ch.13 Outlier ≠ Anomaly 區別 (Chandola 2009)</h4>
+<p data-lang="zh">教程在離群值偵測章節未嚴格區分 <strong>Outlier</strong> 與 <strong>Anomaly</strong>，常被學習者混用。Chandola, Banerjee &amp; Kumar 2009 (ACM Computing Surveys) 標準綜述定義：(a) <strong>Outlier</strong> 是統計性概念，指相對於資料分佈在某距離/密度度量下偏遠的點（如 IQR×1.5 規則、Z-score &gt; 3），<strong>不必然</strong>具語意異常性；(b) <strong>Anomaly</strong> 是領域語意層概念，指違反「正常行為定義」的觀察（如信用卡詐欺、ICU 病情惡化），<strong>不一定</strong>是統計上的離群點。實務影響：(a) 高斯分佈尾端的「outlier」可能完全正常（如身高 195cm 的人）；(b) 真正的 anomaly 可能藏在分佈中央（如偽冒交易模仿正常消費模式）。Chandola 進一步分類 anomaly 為 point / contextual / collective 三型；point anomaly detection 是最簡單情境，contextual (時序、空間) 需建模 context attribute，collective 需建模 sequence/group pattern。</p>
+<p data-lang="en">The tutorial does not strictly distinguish <strong>outlier</strong> from <strong>anomaly</strong> and learners conflate them. Chandola, Banerjee &amp; Kumar 2009 (ACM Computing Surveys) canonical survey defines: (a) <strong>outlier</strong> is a statistical concept — a point distant under some distance/density metric (IQR×1.5, Z &gt; 3), <strong>not necessarily</strong> semantically anomalous; (b) <strong>anomaly</strong> is a domain-semantic concept — observation violating "normal behavior definition" (credit card fraud, ICU deterioration), <strong>not necessarily</strong> a statistical outlier. Practical impact: (a) tail "outliers" of a Gaussian may be perfectly normal (195cm person); (b) real anomalies may hide in the distribution center (fraud mimicking normal patterns). Chandola further classifies anomaly into point / contextual / collective — point anomaly is the easiest setting; contextual (temporal, spatial) requires context attributes; collective requires sequence/group pattern modeling.</p>
+</div>
+
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="📌 Ch.9 k-means K 選擇：elbow / silhouette / gap" data-en="📌 Ch.9 k-means K selection: elbow / silhouette / gap">📌 Ch.9 k-means K 選擇：elbow / silhouette / gap</h4>
+<p data-lang="zh">教程示範 k-means 時主要依 elbow method (within-cluster SS 對 k 圖) 視覺選 K，但 elbow 在實務上常無明確「肘點」。建議補充三大方法：(a) <strong>Silhouette coefficient</strong> (Rousseeuw 1987, J. Computational and Applied Mathematics)：每點計算 s = (b−a)/max(a,b)，全資料平均 ∈[−1,1]，越接近 1 越好；可同時診斷個別點分群品質。(b) <strong>Gap statistic</strong> (Tibshirani, Walther &amp; Hastie 2001, JRSS-B)：將實際 within-cluster SS 與從均勻分佈生成的參考資料比較，取 Gap(k) 最大且 Gap(k) ≥ Gap(k+1)−s_{k+1} 的 k；理論基礎較強。(c) <strong>BIC / AIC</strong> (GMM 適用) 與 (d) consensus clustering（穩定性）。實務上建議 silhouette + gap 雙重檢核；單看 elbow 容易高估或低估 K。NbClust (R) 與 yellowbrick (Python) 可自動跑 20+ 指標投票。</p>
+<p data-lang="en">The k-means demos rely on elbow method (within-cluster SS vs k) for visual K selection, but elbows are often ambiguous in practice. Supplement with: (a) <strong>Silhouette coefficient</strong> (Rousseeuw 1987, J. Computational and Applied Mathematics): per-point s = (b−a)/max(a,b), dataset mean ∈[−1,1] — closer to 1 is better; also diagnoses per-point cluster fit. (b) <strong>Gap statistic</strong> (Tibshirani, Walther &amp; Hastie 2001, JRSS-B): compares actual within-cluster SS to that under a uniform reference distribution; pick smallest k where Gap(k) ≥ Gap(k+1)−s_{k+1} — stronger theoretical grounding. (c) <strong>BIC / AIC</strong> (for GMM) and (d) consensus clustering (stability). Practical advice: cross-check silhouette + gap; elbow alone over- or under-estimates K. NbClust (R) and yellowbrick (Python) run 20+ indices in a vote.</p>
+</div>
+
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="📌 Ch.10 DBSCAN 參數敏感性 vs HDBSCAN (Campello 2013)" data-en="📌 Ch.10 DBSCAN parameter sensitivity vs HDBSCAN (Campello 2013)">📌 Ch.10 DBSCAN 參數敏感性 vs HDBSCAN (Campello 2013)</h4>
+<p data-lang="zh">教程介紹 DBSCAN (Ester et al. 1996) 時建議以 k-distance plot 選 ε，但實務上：(a) ε 對結果<strong>極度敏感</strong>，差 5% 可能讓整個 cluster 結構崩塌；(b) DBSCAN 假設<strong>全域密度均勻</strong>，當資料有<strong>不同密度的群</strong>（多 manifold 混合）時無法同時挑出疏密群；(c) 高維下 ε 選擇受維度詛咒影響極大。Campello, Moulavi &amp; Sander 2013 (PAKDD) 提出 <strong>HDBSCAN</strong> 解決方案：(a) 將 DBSCAN 從<strong>單一 ε</strong> 推廣為跨所有 ε 的<strong>階層密度估計</strong>；(b) 只需設定 min_cluster_size（語意比 ε 直觀）；(c) 自動偵測不同密度的群並輸出穩定性分數；(d) 對雜訊點自動賦予「軟」群成員機率 (Campello 2015 ACM TKDD)。McInnes 等 (2017, J. Open Source Software) 的 hdbscan Python 套件已是 scRNA-seq、UMAP 後續分群的事實標準。建議：教學示範時並列 DBSCAN 與 HDBSCAN 並展示密度不均的反例。</p>
+<p data-lang="en">When introducing DBSCAN (Ester et al. 1996), the tutorial recommends k-distance plot for ε selection, but in practice: (a) ε is <strong>extremely sensitive</strong> — 5% change can collapse cluster structure; (b) DBSCAN assumes <strong>globally uniform density</strong> and cannot capture clusters of <strong>different densities</strong> simultaneously (multi-manifold mixtures); (c) ε selection suffers severely from curse of dimensionality. Campello, Moulavi &amp; Sander 2013 (PAKDD) proposed <strong>HDBSCAN</strong>: (a) generalizes DBSCAN from <strong>single ε</strong> to a <strong>hierarchical density estimate across all ε</strong>; (b) only requires min_cluster_size (more semantically intuitive than ε); (c) auto-detects clusters of varying density with stability scores; (d) provides "soft" cluster membership probability for noise (Campello 2015 ACM TKDD). The hdbscan Python package (McInnes et al. 2017, JOSS) is now de facto standard for scRNA-seq and post-UMAP clustering. Recommendation: present DBSCAN and HDBSCAN side-by-side with a varying-density counterexample.</p>
+</div>
+
+<div class="errata">
+
+  <span class="errata-label" data-zh="補充說明" data-en="Notes" style="display:inline-block;background:#e0e7ff;color:#3730a3;padding:2px 10px;border-radius:4px;font-size:.72rem;font-weight:700;letter-spacing:.5px;margin-bottom:8px">補充說明 · Notes</span>
+  <h4 data-zh="📌 Ch.11 關聯規則 support / confidence / lift 解讀" data-en="📌 Ch.11 Association rule support/confidence/lift interpretation">📌 Ch.11 關聯規則 support / confidence / lift 解讀</h4>
+<p data-lang="zh">教程列出 support、confidence、lift 三大指標但未充分提醒其各自的<strong>誤用陷阱</strong>：(a) <strong>Support</strong> 是無條件機率 P(A∩B)，過低（&lt;0.001）的規則統計上不可靠，過高則發現「人盡皆知」規則；(b) <strong>Confidence</strong> 是條件機率 P(B|A)，但<strong>會被 B 的基線盛行率欺騙</strong>：若 P(B)=0.9，幾乎任何 A 的 confidence 都會 ≥0.9，看似強規則實則無資訊；(c) <strong>Lift</strong> = P(B|A)/P(B) 修正了 (b)，lift &gt; 1 表示正關聯，lift = 1 為獨立，lift &lt; 1 為負關聯；但 lift 對<strong>稀有 itemset 不穩定</strong>（變異大）。建議補充 (d) <strong>Conviction</strong> = (1−P(B))/(1−conf) 對方向性敏感、(e) <strong>Leverage</strong> = P(A∩B)−P(A)P(B) 量化絕對偏離、(f) Brin et al. 1997 SIGMOD 提出的 χ² 與 (g) Tan, Kumar &amp; Srivastava 2004 (Information Systems) 系統比較 21 種對稱/不對稱指標。實務原則：僅靠 confidence 篩選會誤導；至少加上 lift 過濾，並對稀疏項目用置信區間或 minimum-occurrence 門檻。</p>
+<p data-lang="en">The tutorial lists support / confidence / lift but under-warns their <strong>pitfalls</strong>: (a) <strong>Support</strong> is the unconditional P(A∩B); too low (&lt;0.001) is statistically unreliable, too high surfaces trivial rules; (b) <strong>Confidence</strong> is conditional P(B|A) but <strong>can be fooled by B's baseline prevalence</strong>: if P(B)=0.9, almost any A yields confidence ≥0.9 — looks strong, conveys no information; (c) <strong>Lift</strong> = P(B|A)/P(B) corrects (b), with lift &gt; 1 positive, = 1 independent, &lt; 1 negative — but is <strong>unstable on rare itemsets</strong> (high variance). Add (d) <strong>Conviction</strong> = (1−P(B))/(1−conf) — direction-sensitive; (e) <strong>Leverage</strong> = P(A∩B)−P(A)P(B) — absolute deviation; (f) χ² from Brin et al. 1997 SIGMOD; (g) Tan, Kumar &amp; Srivastava 2004 (Information Systems) systematic comparison of 21 symmetric/asymmetric measures. Rule: confidence alone misleads; always add lift, and apply confidence intervals or minimum-occurrence thresholds for rare items.</p>
+</div>
+</section>
+<nav class="page-nav">
+  <a href="../index.html"><span class="nav-dir" data-zh="← 教學首頁" data-en="← Tutorial home">← 教學首頁</span><span class="nav-title" data-zh="回到主教學頁" data-en="Back to tutorial hub">回到主教學頁</span></a>
+  <a href="../data-mining-quiz/index.html" target="_blank" rel="noopener"><span class="nav-dir" data-zh="互動考題 →" data-en="Interactive quiz →">互動考題 →</span><span class="nav-title" data-zh="互動式考題" data-en="Interactive Quiz">互動式考題</span></a>
+</nav>
+
+</main>
+<script src="../i18n.js"></script>
+</body>
+</html>

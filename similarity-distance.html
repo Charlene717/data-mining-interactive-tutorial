@@ -1,0 +1,212 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 4: Similarity & Distance — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html" class="active">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 4 / 20 · MODULE A</div>
+<h1 data-zh="相似度與距離度量" data-en="Similarity & Distance Metrics">相似度與距離度量</h1>
+<p class="subtitle" data-lang="zh">幾乎所有探勘演算法（KNN、K-Means、Hierarchical、UMAP、DBSCAN）都依賴一個核心問題：「兩筆資料有多像？」</p>
+<p class="subtitle" data-lang="en">Nearly every mining algorithm (KNN, K-Means, Hierarchical, UMAP, DBSCAN) hinges on one question: "How similar are two records?"</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="距離度量的四個性質" data-en="Four Properties of Distance Metrics">距離度量的四個性質</h2>
+<div data-lang="zh">
+<p>嚴格意義的「距離度量 (metric)」必須滿足四個公理：(1) 非負 d(x,y)≥0、(2) 同一性 d(x,y)=0 ⇔ x=y、(3) 對稱 d(x,y)=d(y,x)、(4) 三角不等式 d(x,z) ≤ d(x,y)+d(y,z)。不滿足全部四項的稱為 <em>半度量</em> 或 <em>相似度</em>（如 Cosine 不是嚴格距離）。</p>
+<p>距離選擇直接決定模型行為——KNN 預測、K-Means cluster 形狀、Hierarchical 樹結構都會因此改變。在生物醫學上更要小心：基因表現量用 <strong>Cosine / Pearson</strong>，影像 fingerprint 用 <strong>Tanimoto / Jaccard</strong>，混合型病人特徵用 <strong>Gower</strong>，ECG 時間序列用 <strong>DTW</strong>。</p>
+</div>
+<div data-lang="en">
+<p>A strict <em>metric</em> satisfies four axioms: (1) non-negativity d(x,y)≥0, (2) identity d(x,y)=0 ⇔ x=y, (3) symmetry d(x,y)=d(y,x), (4) triangle inequality d(x,z) ≤ d(x,y)+d(y,z). Failing any of these makes it a <em>semi-metric</em> or just a <em>similarity</em> (e.g., Cosine is not a strict metric).</p>
+<p>The choice of distance shapes model behavior — KNN predictions, K-Means cluster shapes, hierarchical trees all change. In biomedicine: gene expression uses <strong>Cosine / Pearson</strong>, chemical fingerprints use <strong>Tanimoto / Jaccard</strong>, mixed patient features use <strong>Gower</strong>, ECG time-series uses <strong>DTW</strong>.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="常用距離" data-en="COMMON DISTANCES">常用距離</div>
+<h2 data-zh="一、九種最常用的度量" data-en="I. Nine Most-Used Metrics">一、九種最常用的度量</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="度量" data-en="Metric">度量</th><th data-zh="公式" data-en="Formula">公式</th><th data-zh="適用" data-en="Use Case">適用</th></tr></thead>
+<tbody>
+<tr><td><strong>Euclidean (L2)</strong></td><td>√Σ(x−y)²</td><td data-zh="連續、相同單位、低維">連續、相同單位、低維</td><td data-en="Continuous, same units, low-D"></td></tr>
+<tr><td><strong>Manhattan (L1)</strong></td><td>Σ|x−y|</td><td data-zh="高維更穩、對 outlier 容忍">高維更穩、對 outlier 容忍</td><td data-en="High-D more robust, outlier-tolerant"></td></tr>
+<tr><td><strong>Minkowski (Lp)</strong></td><td>(Σ|x−y|ᵖ)^(1/p)</td><td data-zh="泛化形式，p=1→Manhattan, p=2→Euclidean">泛化形式</td><td data-en="Generalization; p=1→Manhattan, p=2→Euclidean"></td></tr>
+<tr><td><strong>Chebyshev (L∞)</strong></td><td>max|x−y|</td><td data-zh="只在乎最大差異的維度">只在乎最大差異的維度</td><td data-en="Only worst-axis difference matters"></td></tr>
+<tr><td><strong>Mahalanobis</strong></td><td>√((x−y)ᵀΣ⁻¹(x−y))</td><td data-zh="考慮共變異，多變量異常值偵測">考慮共變異</td><td data-en="Covariance-aware; multivariate anomalies"></td></tr>
+<tr><td><strong>Cosine</strong></td><td>1 − (x·y)/(‖x‖‖y‖)</td><td data-zh="文本 TF-IDF、基因表現方向相似性">文本、基因表現方向</td><td data-en="Text TF-IDF, gene expression direction"></td></tr>
+<tr><td><strong>Jaccard</strong></td><td>1 − |X∩Y|/|X∪Y|</td><td data-zh="集合/二元向量（symptoms, SNPs）">集合/二元向量</td><td data-en="Sets/binary vectors (symptoms, SNPs)"></td></tr>
+<tr><td><strong>Gower</strong></td><td data-zh="混合型加權均值">混合型加權均值</td><td data-zh="混合連續+類別+順序（EHR 病人）">混合型 EHR</td><td data-en="Weighted average of mixed types"></td></tr>
+<tr><td><strong>DTW</strong></td><td data-zh="動態規劃最短對齊">動態規劃最短對齊</td><td data-zh="時間序列（ECG、步態、語音）">時間序列</td><td data-en="Dynamic programming alignment"></td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="不同距離下的「最近鄰」改變" data-en="How Nearest Neighbor Changes with Distance">不同距離下的「最近鄰」改變</h2>
+<div data-lang="zh"><p>查詢點 (橘色 ★) 與三個候選 A、B、C 的距離會隨度量改變。試試切換不同度量，觀察「最像」會改變。</p></div>
+<div data-lang="en"><p>The query point (orange ★) vs candidates A, B, C — distance changes the "most similar" answer. Switch metrics to see.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-metric="euclidean">Euclidean</button>
+<button class="toggle-btn" data-metric="manhattan">Manhattan</button>
+<button class="toggle-btn" data-metric="chebyshev">Chebyshev</button>
+<button class="toggle-btn" data-metric="cosine">Cosine</button>
+</div>
+<div class="chart-container"><canvas id="distChart"></canvas></div>
+<div id="distRanking" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="二、如何挑選正確的距離？" data-en="II. How to Pick the Right Distance?">二、如何挑選正確的距離？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="距離選擇決策樹" data-en="Distance Choice Decision Tree">距離選擇決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>資料是<strong>純二元/集合</strong>（symptoms, SNPs, fingerprints）？ <span class="dt-arrow">→ Jaccard / Tanimoto / Dice</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>資料是<strong>連續且方向比尺度重要</strong>（gene expression、TF-IDF）？ <span class="dt-arrow">→ Cosine / Pearson</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>資料是<strong>連續同單位低維</strong>？ <span class="dt-arrow">→ Euclidean（記得先 scaling）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>資料是<strong>高維且雜訊多</strong>？ <span class="dt-arrow">→ Manhattan / Cosine（避免「維度詛咒」）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>資料是<strong>混合型 EHR</strong>（age + sex + 用藥）？ <span class="dt-arrow">→ Gower (R: cluster::daisy)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>資料是<strong>時間序列且長度不同</strong>？ <span class="dt-arrow">→ DTW (dtaidistance / tslearn)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q7:</span><div>需考慮<strong>特徵間共變異</strong>？ <span class="dt-arrow">→ Mahalanobis</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Pure <strong>binary / set</strong> data (symptoms, SNPs, fingerprints)? <span class="dt-arrow">→ Jaccard / Tanimoto / Dice</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Continuous, <strong>direction matters more than magnitude</strong> (gene expression, TF-IDF)? <span class="dt-arrow">→ Cosine / Pearson</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Continuous, same units, low-D? <span class="dt-arrow">→ Euclidean (after scaling!)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>High-D and noisy? <span class="dt-arrow">→ Manhattan / Cosine (mitigate curse of dimensionality)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Mixed EHR (age + sex + meds)? <span class="dt-arrow">→ Gower (R: cluster::daisy)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>Time series of differing length? <span class="dt-arrow">→ DTW (dtaidistance / tslearn)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q7:</span><div>Need covariance awareness? <span class="dt-arrow">→ Mahalanobis</span></div></div>
+</div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>維度詛咒：</strong>在高維空間中（&gt;30 維），所有點之間的 Euclidean 距離趨於相等，使 KNN 變得無意義。解法：先 PCA / UMAP 降維，或改用 Cosine / Manhattan。</span>
+<span data-lang="en"><strong>Curse of dimensionality:</strong> In high-D (&gt;30), all pairwise Euclidean distances converge — KNN becomes meaningless. Fix: PCA / UMAP first, or use Cosine / Manhattan.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：計算與比較" data-en="Implementation: Compute & Compare">實作：計算與比較</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / proxy + cluster</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / scipy + sklearn</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(proxy); <span class="func">library</span>(cluster)
+X &lt;- <span class="func">scale</span>(iris[, <span class="num">1</span>:<span class="num">4</span>])
+
+<span class="comment"># 多種距離 / Multiple distances</span>
+d_euc &lt;- <span class="func">dist</span>(X, method = <span class="str">"euclidean"</span>)
+d_man &lt;- <span class="func">dist</span>(X, method = <span class="str">"manhattan"</span>)
+d_cos &lt;- proxy::<span class="func">dist</span>(X, method = <span class="str">"cosine"</span>)
+d_jac &lt;- proxy::<span class="func">dist</span>(X &gt; <span class="num">0</span>, method = <span class="str">"Jaccard"</span>)
+
+<span class="comment"># Gower 距離 — 混合型資料 / Gower for mixed types</span>
+df_mix &lt;- iris  <span class="comment"># Sepal* 連續 + Species 類別</span>
+d_gow &lt;- cluster::<span class="func">daisy</span>(df_mix, metric = <span class="str">"gower"</span>)
+
+<span class="comment"># DTW 距離 / Dynamic Time Warping</span>
+<span class="func">library</span>(dtw)
+<span class="func">dtw</span>(ts1, ts2)$distance</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> scipy.spatial.distance <span class="kw">import</span> pdist, squareform, cdist
+<span class="kw">from</span> sklearn.metrics.pairwise <span class="kw">import</span> cosine_distances
+<span class="kw">import</span> numpy <span class="kw">as</span> np, gower
+<span class="kw">from</span> dtaidistance <span class="kw">import</span> dtw
+
+X = StandardScaler().fit_transform(X_raw)
+d_euc = squareform(pdist(X, metric=<span class="str">"euclidean"</span>))
+d_man = squareform(pdist(X, metric=<span class="str">"cityblock"</span>))
+d_che = squareform(pdist(X, metric=<span class="str">"chebyshev"</span>))
+d_cos = cosine_distances(X)
+d_mah = squareform(pdist(X, metric=<span class="str">"mahalanobis"</span>, VI=np.linalg.inv(np.cov(X.T))))
+
+<span class="comment"># Gower for mixed-type (gower 套件) / mixed-type</span>
+d_gow = gower.gower_matrix(df_mixed)
+
+<span class="comment"># DTW for time series of any length / variable-length</span>
+d = dtw.distance(s1, s2, window=<span class="num">10</span>)
+<span class="comment"># dtw distance matrix for many series</span>
+dm = dtw.distance_matrix_fast(series_list)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 文本 TF-IDF 向量的相似度，最常用？</p>
+<p data-lang="en">1. For TF-IDF document vectors, the most common similarity is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. Euclidean</span><span data-lang="en">A. Euclidean</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Jaccard</span><span data-lang="en">B. Jaccard</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Cosine</span><span data-lang="en">C. Cosine</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Chebyshev</span><span data-lang="en">D. Chebyshev</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="3">
+<p data-lang="zh">2. 病人資料含年齡（連續）、性別（類別）、用藥（多元類別）。最適合？</p>
+<p data-lang="en">2. Patient data with age (continuous), sex (categorical), meds (multi-categorical). Best metric?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. Euclidean</span><span data-lang="en">A. Euclidean</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Cosine</span><span data-lang="en">B. Cosine</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Mahalanobis</span><span data-lang="en">C. Mahalanobis</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Gower</span><span data-lang="en">D. Gower</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">3. 在 1000 維空間做 KNN，效果不佳的主因？</p>
+<p data-lang="en">3. KNN underperforms in 1000-D space — main reason?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. K 值設太小</span><span data-lang="en">A. K too small</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 維度詛咒：高維距離趨近相等</span><span data-lang="en">B. Curse of dimensionality — pairwise distances converge</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Python 比 R 慢</span><span data-lang="en">C. Python slower than R</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. KNN 不支援超過 100 維</span><span data-lang="en">D. KNN doesn't support &gt;100 D</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="eda-visualization.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 3: 探索性資料分析 (EDA) 與視覺化" data-en="Ch 3: EDA &amp; Visualization">Ch 3: 探索性資料分析 (EDA) 與視覺化</span></a>
+<a href="classification-overview.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 5: 分類概論：KNN 與 Logistic Regression" data-en="Ch 5: Classification Overview: KNN &amp; Logistic Regression">Ch 5: 分類概論：KNN 與 Logistic Regression</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+const Q={x:3,y:3}, P={A:{x:5,y:5},B:{x:1,y:5},C:{x:6,y:2}};
+const distFn={
+ euclidean:(a,b)=>Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2),
+ manhattan:(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y),
+ chebyshev:(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)),
+ cosine:(a,b)=>{const dot=a.x*b.x+a.y*b.y,na=Math.sqrt(a.x*a.x+a.y*a.y),nb=Math.sqrt(b.x*b.x+b.y*b.y);return 1-dot/(na*nb);}
+};
+const distChart=new Chart(document.getElementById('distChart'),{type:'scatter',data:{datasets:[
+ {label:'Query ★',data:[{x:Q.x,y:Q.y}],backgroundColor:'rgba(217,119,6,1)',pointStyle:'star',pointRadius:14,borderColor:'#78350f',borderWidth:2},
+ {label:'A',data:[{x:P.A.x,y:P.A.y}],backgroundColor:'#16a34a',pointRadius:9},
+ {label:'B',data:[{x:P.B.x,y:P.B.y}],backgroundColor:'#2563eb',pointRadius:9},
+ {label:'C',data:[{x:P.C.x,y:P.C.y}],backgroundColor:'#dc2626',pointRadius:9}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:8},y:{min:0,max:8}},plugins:{legend:{position:'top'}}}});
+
+function updateD(m){
+ const ds=Object.entries(P).map(([k,p])=>[k,distFn[m](Q,p)]).sort((a,b)=>a[1]-b[1]);
+ const L=I18n.get(),tag=L==='zh'?'最近':'Nearest';
+ document.getElementById('distRanking').innerHTML=ds.map((d,i)=>`<span class="sim-stat ${i===0?'pass':'neutral'}">${i===0?'#1 '+tag+'→ ':'#'+(i+1)+' '} ${d[0]}: ${d[1].toFixed(3)}</span>`).join('');
+}
+document.querySelectorAll('[data-metric]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-metric]').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateD(b.dataset.metric);}));
+document.addEventListener('langchange',()=>updateD(document.querySelector('[data-metric].active').dataset.metric));
+updateD('euclidean');
+
+const QF={zh:{q1_y:'Cosine 是 TF-IDF 向量相似度的標準選擇。',q1_n:'C 為正確答案。',q2_y:'Gower 距離專為混合型資料設計。',q2_n:'D 為正確答案。',q3_y:'維度詛咒：高維空間距離趨近相等。',q3_n:'B 為正確答案。'},
+          en:{q1_y:'Cosine is the standard choice for TF-IDF.',q1_n:'Correct answer is C.',q2_y:'Gower distance is designed for mixed-type data.',q2_n:'Correct answer is D.',q3_y:'Curse of dimensionality — distances converge in high-D.',q3_n:'Correct answer is B.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

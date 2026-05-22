@@ -1,0 +1,244 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 6: Decision Trees & Random Forests — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html" class="active">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 6 / 20 · MODULE B</div>
+<h1 data-zh="決策樹、隨機森林與梯度提升" data-en="Decision Trees, Random Forests & Gradient Boosting">決策樹、隨機森林與梯度提升</h1>
+<p class="subtitle" data-lang="zh">樹型模型是表格資料的霸主——從可解釋的單棵 CART，到實務 KPI 標配的 XGBoost、LightGBM、CatBoost。本章帶你從分裂準則一路走到 2025 年最新提升器版本。</p>
+<p class="subtitle" data-lang="en">Tree-based models reign on tabular data — from interpretable single CART to industry-standard XGBoost, LightGBM, CatBoost. We walk from splitting criteria to the 2025 generation of boosters.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="為什麼樹模型在表格資料上稱王？" data-en="Why Trees Dominate Tabular Data">為什麼樹模型在表格資料上稱王？</h2>
+<div data-lang="zh">
+<p>樹模型 (decision trees) 透過遞迴二元切分讓資料逐步「純化」，天然處理非線性、特徵交互、不同單位、缺失值與類別變數，且無需 scaling。集成版本 (Random Forest、Gradient Boosting) 進一步穩定變異與抑制偏差——在 Kaggle 結構化資料賽事中，2015 之後幾乎都是 XGBoost / LightGBM / CatBoost 拿冠軍。</p>
+<p>但單棵樹對小變動極敏感（high variance），因此實務上鮮少獨自使用；它的價值在於<strong>可解釋的規則</strong>（臨床決策、合規場景）和<strong>集成的基底單元</strong>。</p>
+</div>
+<div data-lang="en">
+<p>Decision trees recursively split data into purer subsets — natively handling nonlinearity, feature interactions, mixed units, missing values, and categoricals, all without scaling. Ensembles (Random Forest, Gradient Boosting) tame variance and bias further — since 2015, nearly every Kaggle tabular winner has used XGBoost / LightGBM / CatBoost.</p>
+<p>A single tree is extremely sensitive to small data changes (high variance); its real value is as an <strong>interpretable rule set</strong> (clinical decisions, compliance) and as the <strong>base learner</strong> for ensembles.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="CART" data-en="CART">CART</div>
+<h2 data-zh="一、分裂準則：Gini、Entropy、MSE" data-en="I. Splitting Criteria: Gini, Entropy, MSE">一、分裂準則</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="準則" data-en="Criterion">準則</th><th data-zh="公式" data-en="Formula">公式</th><th data-zh="任務" data-en="Task">任務</th><th data-zh="特性" data-en="Property">特性</th></tr></thead>
+<tbody>
+<tr><td><strong>Gini</strong></td><td>1 − Σp<sub>k</sub>²</td><td>Classification</td><td data-zh="計算快、偏好大且純的分支">計算快</td></tr>
+<tr><td><strong>Entropy</strong></td><td>−Σp<sub>k</sub>log p<sub>k</sub></td><td>Classification</td><td data-zh="資訊增益基礎，較對稱">資訊增益基礎</td></tr>
+<tr><td><strong>Log-Loss</strong></td><td>−Σy log p̂</td><td>Classification (boosting)</td><td data-zh="boosting 中常用">boosting 標準</td></tr>
+<tr><td><strong>MSE / MAE</strong></td><td>Σ(y−ȳ)²</td><td>Regression</td><td data-zh="連續目標">連續目標</td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>Gini vs Entropy：</strong>實務差異極小（&lt;2% 準確率），Gini 計算快是 sklearn 預設。</span>
+<span data-lang="en"><strong>Gini vs Entropy:</strong> Differences in practice are tiny (&lt;2% accuracy). Gini is faster — sklearn's default.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="過擬合" data-en="OVERFITTING">過擬合</div>
+<h2 data-zh="二、樹的深度 vs 過擬合" data-en="II. Tree Depth vs Overfitting">二、樹的深度 vs 過擬合</h2>
+<div data-lang="zh"><p>單棵樹若不剪枝會長到每個葉子只含一筆資料——訓練準確率 100%、驗證準確率崩壞。控制方法：<code>max_depth</code>、<code>min_samples_split</code>、<code>min_samples_leaf</code>、<code>ccp_alpha</code> (cost-complexity pruning)。拖動下方深度滑桿觀察 train/val 曲線分離。</p></div>
+<div data-lang="en"><p>An unpruned tree grows until each leaf holds one sample — training acc 100%, validation collapses. Controls: <code>max_depth</code>, <code>min_samples_split</code>, <code>min_samples_leaf</code>, <code>ccp_alpha</code> (cost-complexity pruning). Drag the depth slider to see train/val curves diverge.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row" style="align-items:center;gap:1rem">
+<label>max_depth = <strong id="dtDVal">3</strong></label>
+<input type="range" id="dtD" min="1" max="15" value="3" style="flex:1;max-width:300px">
+</div>
+<div class="chart-container"><canvas id="dtChart"></canvas></div>
+<div id="dtStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="集成方法" data-en="ENSEMBLES">集成方法</div>
+<h2 data-zh="三、Bagging、RF 與 Gradient Boosting" data-en="III. Bagging, RF & Gradient Boosting">三、集成方法</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">🌲</div><h4>Random Forest</h4><div data-lang="zh"><p>Bagging（bootstrap aggregating）+ 每次分裂只看隨機 √p 個特徵 → 降低樹間相關性，<strong>顯著減少變異</strong>。平行可訓練。</p></div><div data-lang="en"><p>Bagging (bootstrap aggregating) + random √p feature subset at each split → decorrelates trees, <strong>greatly reduces variance</strong>. Embarrassingly parallel.</p></div></div>
+<div class="card"><div class="card-icon">🚀</div><h4>Gradient Boosting</h4><div data-lang="zh"><p>每棵新樹擬合前一輪的<strong>殘差 / 負梯度</strong>，序列建構。降低<strong>偏差</strong>為主，常勝過 RF 但易過擬合。</p></div><div data-lang="en"><p>Each new tree fits the previous round's <strong>residuals / negative gradient</strong>. Sequential. Lowers <strong>bias</strong> mostly; often beats RF but overfits more easily.</p></div></div>
+<div class="card"><div class="card-icon">🏆</div><h4>Modern Boosters</h4><div data-lang="zh"><p><strong>XGBoost 2.x、LightGBM 4.x、CatBoost</strong>——2025 表格賽事三巨頭。</p></div><div data-lang="en"><p><strong>XGBoost 2.x, LightGBM 4.x, CatBoost</strong> — the 2025 trio for tabular contests.</p></div></div>
+</div>
+<table class="comp-table">
+<thead><tr><th>Library</th><th data-zh="分裂策略" data-en="Split Strategy">分裂策略</th><th data-zh="類別處理" data-en="Categoricals">類別處理</th><th data-zh="特色" data-en="Highlight">特色</th></tr></thead>
+<tbody>
+<tr><td><strong>XGBoost 2.x</strong></td><td data-zh="level-wise / hist">level-wise / hist</td><td data-zh="2.0+ 原生支援">2.0+ 原生支援</td><td data-zh="泛用、文件最完整、GPU 成熟">泛用、GPU 成熟</td></tr>
+<tr><td><strong>LightGBM 4.x</strong></td><td data-zh="leaf-wise + histogram">leaf-wise</td><td data-zh="原生支援 + EFB">原生 + EFB</td><td data-zh="大資料最快、Goss 取樣">大資料最快</td></tr>
+<tr><td><strong>CatBoost</strong></td><td data-zh="symmetric (oblivious)">symmetric</td><td data-zh="Ordered TS encoding (最佳)">Ordered TS</td><td data-zh="高基數類別 + 抗 target leakage">類別資料王</td></tr>
+<tr><td><strong>sklearn HistGB</strong></td><td data-zh="histogram">histogram</td><td data-zh="0.24+ 支援">0.24+ 支援</td><td data-zh="無額外相依、API 統一">純 sklearn</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="四、什麼時候用哪一個？" data-en="IV. Which One to Use?">四、什麼時候用哪一個？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="樹型模型選擇決策樹" data-en="Tree Model Choice Decision Tree">樹型模型選擇決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>需要<strong>單一可解釋規則</strong>（臨床指引、稽核）？ <span class="dt-arrow">→ 單棵 CART (rpart / DecisionTree)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>追求<strong>穩健 baseline、容易調</strong>？ <span class="dt-arrow">→ Random Forest</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>追求<strong>最高準確率</strong>且接受長一點的調參？ <span class="dt-arrow">→ XGBoost / LightGBM</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>資料含<strong>大量高基數類別</strong>（地區、商品、ICD code）？ <span class="dt-arrow">→ CatBoost</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>資料超大（&gt;10M rows）？ <span class="dt-arrow">→ LightGBM（leaf-wise + Goss）</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Need a <strong>single interpretable rule</strong> (clinical guideline, audit)? <span class="dt-arrow">→ Single CART (rpart / DecisionTree)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Want a <strong>robust, easy-to-tune baseline</strong>? <span class="dt-arrow">→ Random Forest</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Need the <strong>highest accuracy</strong> and willing to tune? <span class="dt-arrow">→ XGBoost / LightGBM</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Many <strong>high-cardinality categoricals</strong> (region, SKU, ICD code)? <span class="dt-arrow">→ CatBoost</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Huge data (&gt;10M rows)? <span class="dt-arrow">→ LightGBM (leaf-wise + Goss)</span></div></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>RF vs GBM：</strong>RF 平行訓練、抗過擬合、易調 → 適合 baseline；GBM 通常更準但需要早停 (early_stopping_rounds) 與較多 hyperparam tuning。</span>
+<span data-lang="en"><strong>RF vs GBM:</strong> RF is parallel, robust, easy to tune — great baseline. GBM is usually more accurate but needs early stopping and heavier tuning.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：從 CART 到 XGBoost / LightGBM" data-en="Implementation: From CART to XGBoost / LightGBM">實作</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / rpart + ranger + xgboost</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn + xgboost + lightgbm</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(rpart); <span class="func">library</span>(rpart.plot); <span class="func">library</span>(ranger); <span class="func">library</span>(xgboost); <span class="func">library</span>(lightgbm)
+
+<span class="comment"># 1. 單棵 CART / Single CART</span>
+fit &lt;- rpart::<span class="func">rpart</span>(Species ~ ., data=iris, control=<span class="func">rpart.control</span>(maxdepth=<span class="num">3</span>, cp=<span class="num">0.01</span>))
+rpart.plot::<span class="func">rpart.plot</span>(fit)
+
+<span class="comment"># 2. Random Forest (ranger — 快) / Random Forest</span>
+rf &lt;- ranger::<span class="func">ranger</span>(Species ~ ., data=iris, num.trees=<span class="num">500</span>, mtry=<span class="num">2</span>,
+                       importance=<span class="str">"impurity"</span>, probability=<span class="kw">TRUE</span>)
+
+<span class="comment"># 3. XGBoost 2.x</span>
+dtrain &lt;- xgboost::<span class="func">xgb.DMatrix</span>(<span class="func">as.matrix</span>(iris[,<span class="num">1</span>:<span class="num">4</span>]), label=<span class="func">as.integer</span>(iris$Species)-<span class="num">1</span>)
+bst &lt;- xgboost::<span class="func">xgb.train</span>(params=<span class="func">list</span>(objective=<span class="str">"multi:softprob"</span>, num_class=<span class="num">3</span>,
+                eta=<span class="num">0.1</span>, max_depth=<span class="num">4</span>, eval_metric=<span class="str">"mlogloss"</span>),
+                data=dtrain, nrounds=<span class="num">200</span>, early_stopping_rounds=<span class="num">20</span>,
+                watchlist=<span class="func">list</span>(train=dtrain))
+
+<span class="comment"># 4. LightGBM 4.x</span>
+lgb_data &lt;- lightgbm::<span class="func">lgb.Dataset</span>(<span class="func">as.matrix</span>(iris[,<span class="num">1</span>:<span class="num">4</span>]), label=<span class="func">as.integer</span>(iris$Species)-<span class="num">1</span>)
+lgb &lt;- lightgbm::<span class="func">lgb.train</span>(<span class="func">list</span>(objective=<span class="str">"multiclass"</span>, num_class=<span class="num">3</span>, learning_rate=<span class="num">0.05</span>,
+                num_leaves=<span class="num">15</span>), data=lgb_data, nrounds=<span class="num">200</span>)</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.tree <span class="kw">import</span> DecisionTreeClassifier, plot_tree
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier, HistGradientBoostingClassifier
+<span class="kw">import</span> xgboost <span class="kw">as</span> xgb, lightgbm <span class="kw">as</span> lgb
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+
+X_tr,X_te,y_tr,y_te = train_test_split(X,y,test_size=<span class="num">.2</span>,random_state=<span class="num">42</span>,stratify=y)
+
+<span class="comment"># 1. CART (single tree) / 單棵樹</span>
+dt = DecisionTreeClassifier(criterion=<span class="str">"gini"</span>, max_depth=<span class="num">4</span>, min_samples_leaf=<span class="num">5</span>, ccp_alpha=<span class="num">.005</span>)
+dt.fit(X_tr,y_tr)
+
+<span class="comment"># 2. Random Forest</span>
+rf = RandomForestClassifier(n_estimators=<span class="num">500</span>, max_features=<span class="str">"sqrt"</span>, n_jobs=-<span class="num">1</span>,
+                            class_weight=<span class="str">"balanced"</span>, random_state=<span class="num">42</span>)
+rf.fit(X_tr,y_tr)
+
+<span class="comment"># 3. XGBoost 2.x — native categorical + GPU</span>
+xgb_clf = xgb.XGBClassifier(n_estimators=<span class="num">500</span>, learning_rate=<span class="num">0.05</span>, max_depth=<span class="num">6</span>,
+                            subsample=<span class="num">0.8</span>, colsample_bytree=<span class="num">0.8</span>, enable_categorical=<span class="kw">True</span>,
+                            tree_method=<span class="str">"hist"</span>, device=<span class="str">"cuda"</span>, early_stopping_rounds=<span class="num">30</span>)
+xgb_clf.fit(X_tr,y_tr,eval_set=[(X_te,y_te)],verbose=<span class="kw">False</span>)
+
+<span class="comment"># 4. LightGBM 4.x — leaf-wise + categorical_features</span>
+lgb_clf = lgb.LGBMClassifier(n_estimators=<span class="num">500</span>, learning_rate=<span class="num">0.05</span>, num_leaves=<span class="num">31</span>,
+                             min_data_in_leaf=<span class="num">20</span>, objective=<span class="str">"multiclass"</span>)
+lgb_clf.fit(X_tr,y_tr,eval_set=[(X_te,y_te)],callbacks=[lgb.early_stopping(<span class="num">30</span>)])
+
+<span class="comment"># 5. sklearn HistGB — no extra dep</span>
+hgb = HistGradientBoostingClassifier(max_iter=<span class="num">500</span>, learning_rate=<span class="num">.05</span>, max_depth=<span class="num">6</span>,
+                                     early_stopping=<span class="kw">True</span>); hgb.fit(X_tr,y_tr)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. 下列何者是衡量「節點不純度」的指標？</p>
+<p data-lang="en">1. Which of the following measures node impurity?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. RMSE</span><span data-lang="en">A. RMSE</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. R²</span><span data-lang="en">B. R²</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Gini / Entropy</span><span data-lang="en">C. Gini / Entropy</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Cosine 相似度</span><span data-lang="en">D. Cosine similarity</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. Random Forest 主要靠什麼機制降低變異？</p>
+<p data-lang="en">2. How does Random Forest mainly reduce variance?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 序列擬合殘差</span><span data-lang="en">A. Sequentially fitting residuals</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Bootstrap 取樣 + 每次分裂隨機取 √p 特徵（去相關）</span><span data-lang="en">B. Bootstrap sampling + random √p feature subsets (decorrelation)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 強制每棵樹深度為 1</span><span data-lang="en">C. Forcing each tree to depth 1</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 全部特徵標準化</span><span data-lang="en">D. Standardizing all features</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. Gradient Boosting 相對於 Random Forest 的主要優點是？</p>
+<p data-lang="en">3. The main advantage of Gradient Boosting over Random Forest is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 透過序列擬合殘差，通常達到更低偏差與更高準確率</span><span data-lang="en">A. Sequential residual fitting yields lower bias and higher accuracy</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 完全不會過擬合</span><span data-lang="en">B. Never overfits</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 不需要 hyperparameter</span><span data-lang="en">C. No hyperparameters needed</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 訓練是平行的</span><span data-lang="en">D. Training is parallel</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="classification-overview.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 5: 分類概論：KNN 與 Logistic Regression" data-en="Ch 5: Classification Overview: KNN &amp; Logistic Regression">Ch 5: 分類概論：KNN 與 Logistic Regression</span></a>
+<a href="naive-bayes-svm.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 7: 樸素貝氏與支持向量機" data-en="Ch 7: Naive Bayes &amp; Support Vector Machines">Ch 7: 樸素貝氏與支持向量機</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Synthetic train/val curves vs tree depth — illustrate over-fitting pattern
+function trainAcc(d){return Math.min(1, 0.55 + 0.06*d + (d>=8?0.005*(d-8):0));}
+function valAcc(d){const peak=4;return 0.92 - 0.012*(d-peak)*(d-peak) - (d>=10?0.015*(d-10):0);}
+const depths=[];for(let d=1;d<=15;d++)depths.push(d);
+
+const dtChart=new Chart(document.getElementById('dtChart'),{type:'line',data:{labels:depths,datasets:[
+ {label:'Train accuracy',data:depths.map(trainAcc),borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.1)',fill:false,tension:0.3,pointRadius:4},
+ {label:'Validation accuracy',data:depths.map(valAcc),borderColor:'#dc2626',backgroundColor:'rgba(220,38,38,0.1)',fill:false,tension:0.3,pointRadius:4},
+ {label:'Current depth',data:[],borderColor:'#16a34a',backgroundColor:'#16a34a',pointRadius:10,pointStyle:'rectRot',showLine:false}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{title:{display:true,text:'max_depth'}},y:{min:0.4,max:1.0,title:{display:true,text:'accuracy'}}},plugins:{legend:{position:'top'}}}});
+
+function updateDepth(d){
+  document.getElementById('dtDVal').textContent=d;
+  const tr=trainAcc(d), va=valAcc(d), gap=tr-va;
+  dtChart.data.datasets[2].data=[{x:d,y:tr},{x:d,y:va}];
+  dtChart.update();
+  const L=I18n.get();
+  const trL=L==='zh'?'訓練':'train', vaL=L==='zh'?'驗證':'val', gapL=L==='zh'?'差距':'gap';
+  const status = gap<0.04 ? (L==='zh'?'剛剛好':'good fit') : gap<0.12 ? (L==='zh'?'輕度過擬合':'mild overfit') : (L==='zh'?'過擬合':'overfit');
+  const cls = gap<0.04 ? 'pass' : gap<0.12 ? 'neutral' : 'warn';
+  document.getElementById('dtStats').innerHTML=
+    `<span class="sim-stat neutral">${trL}: ${tr.toFixed(3)}</span>`+
+    `<span class="sim-stat neutral">${vaL}: ${va.toFixed(3)}</span>`+
+    `<span class="sim-stat ${cls}">${gapL}: ${gap.toFixed(3)} → ${status}</span>`;
+}
+document.getElementById('dtD').addEventListener('input',e=>updateDepth(+e.target.value));
+document.addEventListener('langchange',()=>updateDepth(+document.getElementById('dtD').value));
+updateDepth(3);
+
+const QF={zh:{q1_y:'Gini 與 Entropy 是節點不純度的核心指標。',q1_n:'C 為正確答案。',q2_y:'RF 的 bagging + 隨機特徵子集是減少變異的關鍵。',q2_n:'B 為正確答案。',q3_y:'GBM 序列擬合殘差，能逼近更低偏差，常勝過 RF 準確率。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'Gini and Entropy are the core impurity measures.',q1_n:'Correct answer is C.',q2_y:'RF combines bagging with random feature subsets — the key variance reducer.',q2_n:'Correct answer is B.',q3_y:'GBM sequentially fits residuals — lower bias, usually higher accuracy than RF.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 8: Model Evaluation & Tuning — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html" class="active">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 8 / 20 · MODULE B</div>
+<h1 data-zh="模型評估與調參" data-en="Model Evaluation & Hyperparameter Tuning">模型評估與調參</h1>
+<p class="subtitle" data-lang="zh">「模型有多好？」這個問題沒有單一答案。本章涵蓋交叉驗證、混淆矩陣、ROC/PR、校準與三大搜尋策略——一份完整的評估框架。</p>
+<p class="subtitle" data-lang="en">"How good is the model?" has no single answer. This chapter covers cross-validation, confusion matrix, ROC/PR, calibration, and the three search strategies — a complete evaluation framework.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="為什麼評估這麼難？" data-en="Why is Evaluation So Hard?">為什麼評估這麼難？</h2>
+<div data-lang="zh">
+<p>單一準確率 (accuracy) 在類別不平衡時極度誤導——若 99% 樣本為陰性，模型「全猜陰性」就 99% 準確率，但對任何陽性都毫無預測力。實務上需要從<strong>切資料的方式（CV）、選指標、看分布、做校準、調參</strong>五個面向整體評估。</p>
+<p>下方表格展示同一個模型在不同指標下可能呈現完全不同樣貌，這就是為什麼「報告單一數字」是 ML 論文的常見錯誤。</p>
+</div>
+<div data-lang="en">
+<p>A single accuracy number is wildly misleading under class imbalance — if 99% of samples are negative, "always predict negative" hits 99% accuracy with zero predictive power for positives. In practice you must combine <strong>splitting strategy (CV), metric choice, distribution, calibration, and tuning</strong> for honest evaluation.</p>
+<p>The table below shows how the same model can look completely different under different metrics — this is why "report a single number" is one of the most common errors in ML papers.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="切資料" data-en="SPLITTING">切資料</div>
+<h2 data-zh="一、Hold-out vs K-Fold vs Nested CV" data-en="I. Hold-out vs K-Fold vs Nested CV">一、切資料策略</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="策略" data-en="Strategy">策略</th><th data-zh="說明" data-en="Description">說明</th><th data-zh="優缺" data-en="Pros / Cons">優缺</th></tr></thead>
+<tbody>
+<tr><td><strong>Hold-out</strong></td><td data-zh="一次切 train/test (e.g., 80/20)">一次切 train/test</td><td data-zh="快、簡單，但對小資料變異大">小資料變異大</td></tr>
+<tr><td><strong>K-Fold CV</strong></td><td data-zh="切 K 等分輪流當驗證集，平均 K 次分數">K 等分輪流驗證</td><td data-zh="估計穩健；K=5 或 10 最常用">穩健、標準</td></tr>
+<tr><td><strong>Stratified K-Fold</strong></td><td data-zh="K-Fold 但維持每 fold 類別比例">維持類別比例</td><td data-zh="類別不平衡分類必備">不平衡必備</td></tr>
+<tr><td><strong>Group K-Fold</strong></td><td data-zh="按 group (病人/醫院) 切，避免同人資料跨 fold">按 group 切</td><td data-zh="醫療資料避免 leakage">避免 leakage</td></tr>
+<tr><td><strong>Time-Series Split</strong></td><td data-zh="時間順序切，過去 → 未來">時間順序</td><td data-zh="時序資料避免 look-ahead">時序必須</td></tr>
+<tr><td><strong>Nested CV</strong></td><td data-zh="外層估泛化、內層調超參">雙層 CV</td><td data-zh="解決「拿驗證集調出來的 metric 偏樂觀」">最嚴謹</td></tr>
+</tbody></table>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>內部 vs 外部驗證：</strong>即便做了 nested CV，仍只是「內部驗證」。臨床部署前必須做 <strong>外部驗證 (external validation)</strong>——不同醫院、不同時段、不同人口。</span>
+<span data-lang="en"><strong>Internal vs external validation:</strong> Even nested CV is still <em>internal</em>. Before clinical deployment you must do <strong>external validation</strong> — different hospital, time period, population.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="指標" data-en="METRICS">指標</div>
+<h2 data-zh="二、混淆矩陣與衍生指標" data-en="II. Confusion Matrix & Derived Metrics">二、混淆矩陣與衍生指標</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">✅</div><h4>Accuracy</h4><div data-lang="zh"><p>(TP+TN)/N。類別平衡時可用，不平衡時誤導。</p></div><div data-lang="en"><p>(TP+TN)/N. OK when balanced; misleading under imbalance.</p></div></div>
+<div class="card"><div class="card-icon">🎯</div><h4>Precision / Recall / F1</h4><div data-lang="zh"><p>P=TP/(TP+FP), R=TP/(TP+FN), F1=2PR/(P+R)。F-β 加權 (β&gt;1 重視 recall)。</p></div><div data-lang="en"><p>P=TP/(TP+FP), R=TP/(TP+FN), F1=2PR/(P+R). F-β weights recall (β&gt;1).</p></div></div>
+<div class="card"><div class="card-icon">📈</div><h4>ROC-AUC / PR-AUC</h4><div data-lang="zh"><p>ROC：TPR vs FPR；PR：Precision vs Recall。<strong>類別不平衡時 PR-AUC 更誠實</strong>。</p></div><div data-lang="en"><p>ROC: TPR vs FPR; PR: Precision vs Recall. <strong>Under heavy imbalance, PR-AUC is more honest</strong>.</p></div></div>
+</div>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>校準 (Calibration)：</strong>模型輸出 0.8 是否真的 80% 機率事件會發生？<strong>Brier score</strong> 與 <strong>reliability diagram</strong> 評估校準度；不準時用 Platt scaling 或 Isotonic regression 校正。</span>
+<span data-lang="en"><strong>Calibration:</strong> If the model outputs 0.8, does the event truly occur 80% of the time? Use <strong>Brier score</strong> and <strong>reliability diagrams</strong>; correct with Platt scaling or isotonic regression.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="ROC 互動：拖動門檻看 TPR / FPR / Precision / Recall 變化" data-en="ROC Interactive: Slide Threshold to See TPR / FPR / Precision / Recall">ROC 互動：拖動門檻</h2>
+<div data-lang="zh"><p>玩具情境：一個二元分類器輸出 0–1 機率分數。拖動下方<strong>判定門檻</strong>，觀察混淆矩陣與四個常用指標的即時變化。低門檻 → 抓到所有陽性 (Recall↑) 但誤警多 (Precision↓)；高門檻反之。</p></div>
+<div data-lang="en"><p>Toy: a binary classifier outputs 0–1 probability scores. Drag the <strong>threshold</strong> slider to see the confusion matrix and four metrics update live. Low threshold → catches all positives (Recall↑) but many false alarms (Precision↓); high threshold reverses this.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row" style="align-items:center;gap:1rem">
+<label data-zh="判定門檻" data-en="Threshold">判定門檻</label>
+<strong id="thrVal">0.50</strong>
+<input type="range" id="thr" min="0" max="1" value="0.5" step="0.01" style="flex:1;max-width:300px">
+</div>
+<div class="chart-container"><canvas id="rocChart"></canvas></div>
+<div id="cmStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="超參搜尋" data-en="SEARCH">超參搜尋</div>
+<h2 data-zh="三、Grid / Random / Bayesian / Optuna" data-en="III. Grid / Random / Bayesian / Optuna">三、超參搜尋四方法</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="方法" data-en="Method">方法</th><th data-zh="原理" data-en="Idea">原理</th><th data-zh="何時用" data-en="When">何時用</th></tr></thead>
+<tbody>
+<tr><td><strong>Grid Search</strong></td><td data-zh="窮舉預設網格">窮舉</td><td data-zh="超參少 (≤3 個) 且範圍小">超參少</td></tr>
+<tr><td><strong>Random Search</strong></td><td data-zh="從分布隨機抽樣 N 次">隨機抽樣</td><td data-zh="超參多時通常勝過 grid (Bergstra 2012)">超參多</td></tr>
+<tr><td><strong>Bayesian (TPE/GP)</strong></td><td data-zh="用先前結果建 surrogate model 引導下一試">序列引導</td><td data-zh="每次評估昂貴（深學、長 CV）">昂貴模型</td></tr>
+<tr><td><strong>Optuna / Hyperband</strong></td><td data-zh="Bayesian + 早停截斷無望組合">Pruning</td><td data-zh="現代首選，整合 successive halving">現代主流</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="四、要報告什麼指標？" data-en="IV. Which Metric to Report?">四、要報告什麼指標？</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="指標選擇決策樹" data-en="Metric Choice Decision Tree">指標選擇決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>類別<strong>極度不平衡</strong>（陽性 &lt;5%）？ <span class="dt-arrow">→ PR-AUC + Recall@k，避免單看 Accuracy / ROC-AUC</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>FN 成本&gt;&gt;FP（漏診癌症）？ <span class="dt-arrow">→ Recall / F-β (β=2) 優先</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>FP 成本&gt;&gt;FN（垃圾訊息）？ <span class="dt-arrow">→ Precision 優先</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>機率本身會被下游用（風險分層、決策）？ <span class="dt-arrow">→ 報告 Brier + reliability diagram</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>多元分類？ <span class="dt-arrow">→ macro-F1 (各類等權) 或 weighted-F1 (按樣本量)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>調超參時？ <span class="dt-arrow">→ 用 nested CV；外圈報泛化、內圈調 hyperparam</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div><strong>Severe imbalance</strong> (positives &lt;5%)? <span class="dt-arrow">→ PR-AUC + Recall@k; never Accuracy / ROC-AUC alone</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>FN cost &gt;&gt; FP (missed cancer)? <span class="dt-arrow">→ Prioritize Recall / F-β (β=2)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>FP cost &gt;&gt; FN (spam)? <span class="dt-arrow">→ Prioritize Precision</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Downstream uses the probability itself? <span class="dt-arrow">→ Report Brier + reliability diagram</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Multiclass? <span class="dt-arrow">→ macro-F1 (equal weight) or weighted-F1 (sample-weighted)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>When tuning hyperparameters? <span class="dt-arrow">→ Use nested CV; outer = generalization, inner = tuning</span></div></div>
+</div>
+<div class="callout danger"><span class="callout-icon">🚨</span><div>
+<span data-lang="zh"><strong>調參偏誤：</strong>用同一份驗證集既調超參又報 metric → 分數一定偏樂觀。Nested CV 或留一個從未動過的 holdout 是必須。</span>
+<span data-lang="en"><strong>Tuning bias:</strong> Using one validation set to both tune and report → metrics are guaranteed optimistic. Use nested CV or a true never-touched holdout.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：CV、指標、搜尋" data-en="Implementation: CV, Metrics, Search">實作</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / tidymodels + yardstick</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn + Optuna</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(tidymodels); <span class="func">library</span>(yardstick)
+
+<span class="comment"># 1. Stratified K-Fold CV / 分層 K-Fold</span>
+folds &lt;- <span class="func">vfold_cv</span>(data, v=<span class="num">10</span>, strata=label)
+
+<span class="comment"># 2. workflow + tune_grid（內層調參） / 內層調參</span>
+spec &lt;- <span class="func">rand_forest</span>(mtry=<span class="func">tune</span>(), trees=<span class="num">500</span>, min_n=<span class="func">tune</span>()) |&gt;
+        <span class="func">set_engine</span>(<span class="str">"ranger"</span>) |&gt; <span class="func">set_mode</span>(<span class="str">"classification"</span>)
+wf   &lt;- <span class="func">workflow</span>() |&gt; <span class="func">add_recipe</span>(rec) |&gt; <span class="func">add_model</span>(spec)
+res  &lt;- <span class="func">tune_grid</span>(wf, resamples=folds, grid=<span class="num">20</span>,
+                metrics=<span class="func">metric_set</span>(roc_auc, pr_auc, f_meas))
+
+<span class="comment"># 3. yardstick 全套指標 / full metric set</span>
+preds |&gt; <span class="func">conf_mat</span>(truth=label, estimate=.pred_class)
+preds |&gt; <span class="func">roc_auc</span>(label, .pred_pos)
+preds |&gt; <span class="func">pr_auc</span>(label, .pred_pos)
+preds |&gt; <span class="func">f_meas</span>(label, .pred_class, beta=<span class="num">2</span>)
+
+<span class="comment"># 4. Calibration: probably 套件 / probably package</span>
+<span class="func">library</span>(probably)
+preds |&gt; <span class="func">cal_plot_breaks</span>(label, .pred_pos)  <span class="comment"># reliability diagram</span></pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> (cross_val_score, StratifiedKFold, GroupKFold,
+                                     GridSearchCV, RandomizedSearchCV, cross_validate)
+<span class="kw">from</span> sklearn.metrics <span class="kw">import</span> (confusion_matrix, classification_report,
+                             roc_auc_score, average_precision_score, brier_score_loss,
+                             precision_recall_curve, roc_curve)
+<span class="kw">from</span> sklearn.calibration <span class="kw">import</span> CalibratedClassifierCV, calibration_curve
+<span class="kw">import</span> optuna
+
+<span class="comment"># 1. Stratified K-Fold + multiple metrics / 多指標</span>
+cv = StratifiedKFold(n_splits=<span class="num">5</span>, shuffle=<span class="kw">True</span>, random_state=<span class="num">42</span>)
+scores = cross_validate(model, X, y, cv=cv,
+            scoring=[<span class="str">"roc_auc"</span>,<span class="str">"average_precision"</span>,<span class="str">"f1"</span>,<span class="str">"recall"</span>,<span class="str">"precision"</span>])
+
+<span class="comment"># 2. Nested CV — 解決 tuning bias / 外層估泛化</span>
+inner = StratifiedKFold(<span class="num">5</span>); outer = StratifiedKFold(<span class="num">5</span>)
+gs = GridSearchCV(model, params, cv=inner, scoring=<span class="str">"average_precision"</span>)
+nested_scores = cross_val_score(gs, X, y, cv=outer, scoring=<span class="str">"average_precision"</span>)
+
+<span class="comment"># 3. Calibration — Platt / Isotonic</span>
+cal = CalibratedClassifierCV(model, method=<span class="str">"isotonic"</span>, cv=<span class="num">5</span>); cal.fit(X_tr,y_tr)
+prob_true, prob_pred = calibration_curve(y_te, cal.predict_proba(X_te)[:,<span class="num">1</span>], n_bins=<span class="num">10</span>)
+brier = brier_score_loss(y_te, cal.predict_proba(X_te)[:,<span class="num">1</span>])
+
+<span class="comment"># 4. Optuna — Bayesian + pruning</span>
+<span class="kw">def</span> objective(trial):
+    params = {<span class="str">"n_estimators"</span>: trial.suggest_int(<span class="str">"n_estimators"</span>,<span class="num">100</span>,<span class="num">1000</span>),
+              <span class="str">"max_depth"</span>: trial.suggest_int(<span class="str">"max_depth"</span>,<span class="num">3</span>,<span class="num">12</span>),
+              <span class="str">"learning_rate"</span>: trial.suggest_float(<span class="str">"lr"</span>,<span class="num">.01</span>,<span class="num">.3</span>,log=<span class="kw">True</span>)}
+    <span class="kw">return</span> cross_val_score(xgb.XGBClassifier(**params), X, y, cv=<span class="num">5</span>,
+                           scoring=<span class="str">"average_precision"</span>).mean()
+study = optuna.create_study(direction=<span class="str">"maximize"</span>,
+                            pruner=optuna.pruners.HyperbandPruner())
+study.optimize(objective, n_trials=<span class="num">100</span>)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. 何時 PR-AUC 比 ROC-AUC 更能反映模型實際效用？</p>
+<p data-lang="en">1. When is PR-AUC more informative than ROC-AUC?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 類別完全平衡時</span><span data-lang="en">A. When classes are perfectly balanced</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 類別嚴重不平衡（少數陽性類）時</span><span data-lang="en">B. When classes are heavily imbalanced (rare positive class)</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 多元分類時</span><span data-lang="en">C. For multiclass problems</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 任何情況下兩者等價</span><span data-lang="en">D. They are always equivalent</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">2. Nested CV（巢狀交叉驗證）主要解決什麼問題？</p>
+<p data-lang="en">2. Nested CV mainly solves which problem?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 加快訓練</span><span data-lang="en">A. Faster training</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 自動特徵選擇</span><span data-lang="en">B. Automatic feature selection</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 「用同一份資料調參+評估」導致的偏樂觀分數</span><span data-lang="en">C. Optimistic bias from using the same data to both tune and evaluate</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 缺失值處理</span><span data-lang="en">D. Missing value handling</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">3. Calibration（校準）評估的是什麼？</p>
+<p data-lang="en">3. What does calibration evaluate?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 預測機率是否符合真實事件發生率（0.8 對應 80%）</span><span data-lang="en">A. Whether predicted probability matches true event frequency (0.8 ↔ 80%)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 模型訓練速度</span><span data-lang="en">B. Training speed</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 特徵重要性的穩定度</span><span data-lang="en">C. Stability of feature importance</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. CV fold 的劃分品質</span><span data-lang="en">D. Quality of CV fold partitioning</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="naive-bayes-svm.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 7: 樸素貝氏與支持向量機" data-en="Ch 7: Naive Bayes &amp; Support Vector Machines">Ch 7: 樸素貝氏與支持向量機</span></a>
+<a href="clustering-kmeans-hierarchical.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 9: K-Means 與階層式分群" data-en="Ch 9: K-Means &amp; Hierarchical Clustering">Ch 9: K-Means 與階層式分群</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Toy scores: 100 positives + 200 negatives, scores drawn from beta-ish bumps
+function seed(){let s=11;return ()=>{s=(s*9301+49297)%233280;return s/233280;}}
+const r=seed();
+const POS=[], NEG=[];
+for(let i=0;i<100;i++){const a=r(),b=r();POS.push(0.30+0.55*((a+b)/2));}     // positives skew high
+for(let i=0;i<200;i++){const a=r(),b=r();NEG.push(0.05+0.55*((a+b)/2));}     // negatives skew low
+
+// Precompute ROC and PR curves
+function curves(){
+  const all=[...POS.map(s=>[s,1]),...NEG.map(s=>[s,0])].sort((a,b)=>b[0]-a[0]);
+  const P=POS.length, N=NEG.length;
+  let tp=0,fp=0; const roc=[{x:0,y:0}], pr=[];
+  for(const [s,y] of all){if(y)tp++;else fp++;roc.push({x:fp/N,y:tp/P});pr.push({x:tp/P,y:tp/(tp+fp)});}
+  return {roc, pr};
+}
+const C = curves();
+
+const rocChart=new Chart(document.getElementById('rocChart'),{type:'line',data:{datasets:[
+ {label:'ROC curve',data:C.roc,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.08)',fill:true,tension:0,pointRadius:0,borderWidth:2},
+ {label:'Random',data:[{x:0,y:0},{x:1,y:1}],borderColor:'#94a3b8',borderDash:[6,4],pointRadius:0,fill:false},
+ {label:'Operating point',data:[],backgroundColor:'#dc2626',borderColor:'#7f1d1d',pointRadius:10,pointStyle:'rectRot',showLine:false}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:1,title:{display:true,text:'False Positive Rate'}},y:{min:0,max:1,title:{display:true,text:'True Positive Rate'}}},plugins:{legend:{position:'top'}}}});
+
+function update(t){
+  document.getElementById('thrVal').textContent=t.toFixed(2);
+  let TP=0,FN=0,FP=0,TN=0;
+  POS.forEach(s=>{if(s>=t)TP++;else FN++;});
+  NEG.forEach(s=>{if(s>=t)FP++;else TN++;});
+  const TPR=TP/(TP+FN||1), FPR=FP/(FP+TN||1);
+  const PREC=TP/(TP+FP||1), REC=TPR;
+  const F1=(PREC+REC)?2*PREC*REC/(PREC+REC):0;
+  const ACC=(TP+TN)/(TP+TN+FP+FN);
+  rocChart.data.datasets[2].data=[{x:FPR,y:TPR}];
+  rocChart.update();
+  const L=I18n.get();
+  document.getElementById('cmStats').innerHTML=
+    `<span class="sim-stat neutral">TP: ${TP} | FN: ${FN}</span>`+
+    `<span class="sim-stat neutral">FP: ${FP} | TN: ${TN}</span>`+
+    `<span class="sim-stat ${REC>=0.7?'pass':'warn'}">Recall (TPR): ${REC.toFixed(3)}</span>`+
+    `<span class="sim-stat ${PREC>=0.7?'pass':'warn'}">Precision: ${PREC.toFixed(3)}</span>`+
+    `<span class="sim-stat ${F1>=0.7?'pass':'warn'}">F1: ${F1.toFixed(3)}</span>`+
+    `<span class="sim-stat neutral">FPR: ${FPR.toFixed(3)} | Acc: ${ACC.toFixed(3)}</span>`;
+}
+document.getElementById('thr').addEventListener('input',e=>update(+e.target.value));
+document.addEventListener('langchange',()=>update(+document.getElementById('thr').value));
+update(0.5);
+
+const QF={zh:{q1_y:'類別嚴重不平衡時 PR-AUC 比 ROC-AUC 更誠實。',q1_n:'B 為正確答案。',q2_y:'Nested CV 避免「同一資料調參+評估」的偏樂觀。',q2_n:'C 為正確答案。',q3_y:'Calibration 評估預測機率是否符合真實事件率。',q3_n:'A 為正確答案。'},
+          en:{q1_y:'Under heavy imbalance, PR-AUC is more honest than ROC-AUC.',q1_n:'Correct answer is B.',q2_y:'Nested CV avoids optimistic bias from tune+evaluate on the same data.',q2_n:'Correct answer is C.',q3_y:'Calibration checks whether predicted probabilities match true event rates.',q3_n:'Correct answer is A.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

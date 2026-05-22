@@ -1,0 +1,281 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 12: Sequential Pattern Mining — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html" class="active">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 12 / 20 · MODULE C</div>
+<h1 data-zh="序列模式探勘與流程探勘導論" data-en="Sequential Pattern Mining + Process Mining Intro">序列模式探勘</h1>
+<p class="subtitle" data-lang="zh">關聯規則忽略「順序」——但臨床事件、購買行為、網頁瀏覽都是有時序的。本章介紹 GSP、SPADE、PrefixSpan、CloSpan，並帶入流程探勘 (process mining) 的橋樑。</p>
+<p class="subtitle" data-lang="en">Association rules ignore order, yet clinical events, purchases, and clickstreams are sequential. This chapter covers GSP, SPADE, PrefixSpan, CloSpan and bridges into process mining.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="序列 vs 項集：差別在於「順序」" data-en="Sequence vs Itemset — Order Matters">序列 vs 項集</h2>
+<div data-lang="zh">
+<p>關聯規則的輸入是 {A, B, C} 的<strong>集合</strong>，順序無關。<strong>序列 (sequence)</strong> 則是 ⟨(A)(B, C)(D)⟩ 這樣的有序事件集合——每個括號是同一時刻的 itemset，順序代表時間。一個序列「支援」另一序列若後者是子序列（順序保持但可跳項）。</p>
+<p>生物醫學上：clinical pathway（住院→檢查→診斷→處方→出院）、用藥順序（先 metformin → 加 insulin）、單細胞發育軌跡、ICD 共現的時序版本，全都是序列資料。</p>
+</div>
+<div data-lang="en">
+<p>Association rules treat the input as an unordered <strong>set</strong> {A, B, C}. A <strong>sequence</strong> is an ordered list of itemsets like ⟨(A)(B, C)(D)⟩ — each bracket is an itemset at one timestamp, the order encodes time. One sequence "supports" another if the latter is a subsequence (order preserved, gaps allowed).</p>
+<p>Biomedical examples: clinical pathways (admit → labs → diagnosis → meds → discharge), medication sequences (metformin first, insulin added later), single-cell developmental trajectories, time-ordered ICD code co-occurrences.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="演算法" data-en="ALGORITHMS">演算法</div>
+<h2 data-zh="一、四大序列模式探勘演算法" data-en="I. Four Sequential Pattern Algorithms">一、四大序列演算法</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="演算法" data-en="Algorithm">演算法</th><th data-zh="策略" data-en="Strategy">策略</th><th data-zh="特色 / 缺點" data-en="Pros / Cons">特色 / 缺點</th></tr></thead>
+<tbody>
+<tr><td><strong>GSP (1996)</strong></td><td data-zh="Apriori-like 逐層搜尋，加上時序限制（window, gap）">逐層搜尋 + 時序限制</td><td data-en="Apriori-like level-wise scan + temporal constraints"><span data-lang="zh">直觀；候選爆炸；可加 sliding window / min-gap / max-gap</span><span data-lang="en">Intuitive; candidate explosion; supports sliding window / min-gap / max-gap</span></td></tr>
+<tr><td><strong>SPADE (2001)</strong></td><td data-zh="垂直 id-list（每序列 ID 對應其位置）">垂直 id-list</td><td data-en="Vertical id-list (sequence-id ↔ event positions)"><span data-lang="zh">透過 id-list 交集計算支援度，效率比 GSP 高</span><span data-lang="en">Support via id-list intersection — faster than GSP</span></td></tr>
+<tr><td><strong>PrefixSpan (2001)</strong></td><td data-zh="pattern-growth：投影資料庫不斷縮小搜索空間">pattern-growth + projection</td><td data-en="Pattern-growth via projected databases"><span data-lang="zh">不產候選；長序列上效率最佳；最常用</span><span data-lang="en">No candidate generation; best on long sequences; most popular</span></td></tr>
+<tr><td><strong>CloSpan (2003)</strong></td><td data-zh="僅保留 closed 序列：無更長的相同支援度延伸">只保留 closed 序列</td><td data-en="Only closed sequences kept (no super-sequence with same support)"><span data-lang="zh">輸出大幅壓縮、無資訊損失</span><span data-lang="en">Vastly fewer patterns, lossless</span></td></tr>
+<tr><td><strong>BIDE</strong></td><td data-zh="另一 closed 演算法">另一 closed 演算法</td><td data-en="Alternative closed-sequence mining"><span data-lang="zh">記憶體更省</span><span data-lang="en">Lower memory than CloSpan</span></td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>PrefixSpan 的核心：</strong>取一個常見前綴（如 ⟨A⟩），把所有序列「投影」成 A 之後的尾巴（投影資料庫），再對投影資料庫遞迴找頻繁前綴——所以叫 pattern-growth。不用枚舉候選，直接成長。</p></span>
+<span data-lang="en"><strong>PrefixSpan's core:</strong> take a frequent prefix (e.g., ⟨A⟩), project every sequence to whatever comes after A (the projected DB), then recursively mine frequent prefixes there — hence pattern-growth. No candidates: patterns are grown directly.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="調整 min-support 觀察頻繁序列數" data-en="Slide min-support, watch frequent sequence count">PrefixSpan：玩具臨床事件</h2>
+<div data-lang="zh"><p>下方為 30 位糖尿病病人的事件序列（H=住院、L=檢驗、D=診斷、M=Metformin、I=Insulin、F=回診）。試試不同 min-support，看頻繁序列數與最高頻 Top-5 變化。</p></div>
+<div data-lang="en"><p>30 simulated diabetic patient sequences (H=admit, L=labs, D=diagnosis, M=Metformin, I=Insulin, F=follow-up). Slide min-support and watch the count of frequent sequences and the top-5 most common.</p></div>
+<div class="interactive-panel">
+<div class="slider-row">
+<label>min support = <span id="msVal">0.30</span></label>
+<input type="range" id="msSlider" min="0.10" max="0.90" value="0.30" step="0.05">
+</div>
+<div class="chart-container"><canvas id="psChart"></canvas></div>
+<div id="psStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="流程探勘" data-en="PROCESS MINING">流程探勘</div>
+<h2 data-zh="二、從序列到流程：Process Mining" data-en="II. From Sequences to Workflows — Process Mining">二、流程探勘：序列的圖形化升級</h2>
+<div data-lang="zh">
+<p>序列模式探勘輸出「常見子序列」清單，流程探勘進一步輸出可執行的<strong>工作流程圖 (Petri net / BPMN)</strong>。輸入也是 event log（每筆 = case_id, activity, timestamp），但輸出有並行、選擇、循環等結構，更接近真實流程。</p>
+<p>三大發現演算法：</p>
+<ul>
+<li><strong>Alpha-algorithm</strong>：從 event log 直接推導 Petri net；對雜訊敏感。</li>
+<li><strong>Inductive Miner</strong>：以分治遞迴拆解 log，保證輸出合理 (sound) 的流程；對雜訊較穩健。</li>
+<li><strong>Heuristic Miner</strong>：以依賴度閾值剪枝，可處理含噪 log。</li>
+</ul>
+<p>常用工具：Python 的 <strong>pm4py</strong>、ProM、Disco、Celonis。生醫應用：急診流程瓶頸分析、術後恢復路徑、與 clinical guideline 的順從度檢驗 (conformance checking)。</p>
+</div>
+<div data-lang="en">
+<p>Sequential mining outputs a list of frequent subsequences. Process mining goes further: it outputs an executable <strong>workflow graph (Petri net / BPMN)</strong>. Input is an event log (case_id, activity, timestamp), but output has parallelism, choice, and loops — much closer to real-world workflows.</p>
+<p>Three discovery algorithms:</p>
+<ul>
+<li><strong>Alpha-algorithm</strong>: derives Petri nets directly from event log; noise-sensitive.</li>
+<li><strong>Inductive Miner</strong>: divide-and-conquer recursion, guarantees a sound model; noise-robust.</li>
+<li><strong>Heuristic Miner</strong>: prunes by dependency threshold, handles noisy logs.</li>
+</ul>
+<p>Common tools: Python <strong>pm4py</strong>, ProM, Disco, Celonis. Biomedical uses: ED throughput bottlenecks, post-op recovery pathways, conformance checking against clinical guidelines.</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="決策樹" data-en="DECISION TREE">決策樹</div>
+<h2 data-zh="三、要選哪一種？" data-en="III. Which Method to Pick?">三、方法選擇決策樹</h2>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="序列 / 流程探勘決策樹" data-en="Sequence / Process Decision Tree">序列 / 流程探勘決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>資料順序不重要、純共現？ <span class="dt-arrow">→ Ch 11 關聯規則 (Apriori)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>序列短、想看每一步候選？ <span class="dt-arrow">→ GSP（教學/小資料）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>序列長、長度差大、想直接 pattern-growth？ <span class="dt-arrow">→ PrefixSpan（現代標準）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>記憶體受限、稀疏序列？ <span class="dt-arrow">→ SPADE（垂直 id-list 交集）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>輸出爆炸需壓縮？ <span class="dt-arrow">→ CloSpan / BIDE（closed 序列）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>想要可視化的工作流程圖、檢查 conformance？ <span class="dt-arrow">→ pm4py / Inductive Miner</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Order doesn't matter, only co-occurrence? <span class="dt-arrow">→ Ch 11 Association Rules (Apriori)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Short sequences, want to inspect candidate generation? <span class="dt-arrow">→ GSP (teaching / small data)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Long / variable-length sequences, want direct pattern-growth? <span class="dt-arrow">→ PrefixSpan (modern default)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Memory-tight, sparse sequences? <span class="dt-arrow">→ SPADE (vertical id-list)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>Output explosion — compress losslessly? <span class="dt-arrow">→ CloSpan / BIDE (closed sequences)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q6:</span><div>Want a visual workflow + conformance checking? <span class="dt-arrow">→ pm4py / Inductive Miner</span></div></div>
+</div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>序列探勘 vs 流程探勘：</strong>序列探勘<em>列舉</em>常見子序列，但不重構流程；流程探勘<em>合成</em>可執行流程圖（含並行、選擇），可做 conformance checking 與 bottleneck analysis。互補使用。</span>
+<span data-lang="en"><strong>Sequence vs process mining:</strong> sequence mining <em>enumerates</em> frequent subsequences but doesn't reconstruct a workflow; process mining <em>synthesizes</em> an executable graph (with parallel splits and choices), enabling conformance and bottleneck analysis. Complementary tools.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：PrefixSpan、SPADE、pm4py" data-en="Implementation: PrefixSpan, SPADE, pm4py">實作</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / arulesSequences</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / prefixspan + pm4py</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(arulesSequences)
+
+<span class="comment"># 1) 讀入 cspade 格式 sequence DB / read sequence DB</span>
+data(<span class="str">"zaki"</span>)     <span class="comment"># 內建範例 / built-in example</span>
+seqs &lt;- <span class="func">read_baskets</span>(<span class="str">"events.csv"</span>, info = c(<span class="str">"sequenceID"</span>, <span class="str">"eventID"</span>))
+
+<span class="comment"># 2) cSPADE（SPADE 含時序限制）/ cSPADE with time constraints</span>
+patterns &lt;- <span class="func">cspade</span>(seqs,
+    parameter = list(support = <span class="num">0.30</span>,
+                     maxgap  = <span class="num">3</span>,
+                     maxlen  = <span class="num">5</span>),
+    control = list(verbose = TRUE))
+<span class="func">summary</span>(patterns)
+<span class="func">as</span>(patterns, <span class="str">"data.frame"</span>) |&gt; head(<span class="num">10</span>)
+
+<span class="comment"># 3) 由頻繁序列產生序列規則 / induce sequence rules</span>
+srules &lt;- <span class="func">ruleInduction</span>(patterns, confidence = <span class="num">0.6</span>)
+inspect(<span class="func">head</span>(srules, <span class="num">10</span>))</pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="comment"># --- PrefixSpan ---</span>
+<span class="kw">from</span> prefixspan <span class="kw">import</span> PrefixSpan
+seqs = [
+  [<span class="str">"H"</span>,<span class="str">"L"</span>,<span class="str">"D"</span>,<span class="str">"M"</span>,<span class="str">"F"</span>],
+  [<span class="str">"H"</span>,<span class="str">"L"</span>,<span class="str">"D"</span>,<span class="str">"M"</span>,<span class="str">"I"</span>,<span class="str">"F"</span>],
+  [<span class="str">"L"</span>,<span class="str">"D"</span>,<span class="str">"M"</span>,<span class="str">"F"</span>,<span class="str">"F"</span>],
+  <span class="comment"># ...</span>
+]
+ps = <span class="func">PrefixSpan</span>(seqs)
+ps.minlen, ps.maxlen = <span class="num">2</span>, <span class="num">5</span>
+freq = ps.frequent(<span class="num">10</span>)                 <span class="comment"># min-support count = 10 / 絕對計數</span>
+top  = ps.topk(<span class="num">10</span>, closed=<span class="kw">True</span>)         <span class="comment"># closed 序列, Top-K / closed Top-K</span>
+
+<span class="comment"># --- Process mining with pm4py ---</span>
+<span class="kw">import</span> pm4py
+<span class="kw">import</span> pandas <span class="kw">as</span> pd
+log = pm4py.<span class="func">format_dataframe</span>(df,
+    case_id=<span class="str">"patient_id"</span>, activity_key=<span class="str">"event"</span>, timestamp_key=<span class="str">"ts"</span>)
+
+<span class="comment"># 1) Inductive Miner — robust to noise / 對雜訊穩健</span>
+tree = pm4py.<span class="func">discover_process_tree_inductive</span>(log)
+net, im, fm = pm4py.<span class="func">convert_to_petri_net</span>(tree)
+pm4py.<span class="func">view_petri_net</span>(net, im, fm)
+
+<span class="comment"># 2) Conformance check vs guideline / 比對臨床準則</span>
+fitness = pm4py.<span class="func">fitness_token_based_replay</span>(log, net, im, fm)
+print(fitness[<span class="str">"averageFitness"</span>])</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. PrefixSpan 增長模式 (pattern-growth) 的方式是？</p>
+<p data-lang="en">1. PrefixSpan grows patterns by?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 枚舉所有候選然後過濾</span><span data-lang="en">A. Enumerating all candidates then filtering</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 隨機抽樣序列</span><span data-lang="en">B. Random sampling sequences</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 在投影資料庫中遞迴擴展頻繁前綴</span><span data-lang="en">C. Recursively extending frequent prefixes inside projected databases</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 以共變異矩陣分解</span><span data-lang="en">D. Covariance-matrix decomposition</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">2. 「Closed 序列」的定義是？</p>
+<p data-lang="en">2. A "closed" sequence is defined as one where?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 長度超過 5 的序列</span><span data-lang="en">A. Sequence longer than 5</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 沒有相同支援度的較長超序列存在</span><span data-lang="en">B. No super-sequence has the same support</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 任何子序列也是 closed</span><span data-lang="en">C. Every subsequence is also closed</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 由 GSP 產生</span><span data-lang="en">D. Produced by GSP</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="3">
+<p data-lang="zh">3. 流程探勘 (process mining) 與序列模式探勘的關鍵差別是？</p>
+<p data-lang="en">3. The key difference between process mining and sequence mining is?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 流程探勘需要 GPU</span><span data-lang="en">A. Process mining needs a GPU</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 流程探勘不能處理生醫資料</span><span data-lang="en">B. Process mining can't handle biomedical data</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 序列探勘輸出 Petri net</span><span data-lang="en">C. Sequence mining outputs a Petri net</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 流程探勘合成可執行流程圖（含並行/選擇），序列探勘只列舉子序列</span><span data-lang="en">D. Process mining synthesizes an executable workflow (with parallelism/choice), sequence mining only enumerates subsequences</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="association-rules-apriori.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 11: 關聯規則探勘：Apriori 與 FP-Growth" data-en="Ch 11: Association Rule Mining: Apriori &amp; FP-Growth">Ch 11: 關聯規則探勘：Apriori 與 FP-Growth</span></a>
+<a href="anomaly-detection.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 13: 異常偵測 Anomaly Detection" data-en="Ch 13: Anomaly Detection">Ch 13: 異常偵測 Anomaly Detection</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// Toy clinical event sequences
+const E=['H','L','D','M','I','F'];
+function rng(seed){let s=seed;return()=>{s=(s*9301+49297)%233280;return s/233280;};}
+const rs=rng(99);
+const seqs=[];
+for(let i=0;i<30;i++){
+ const s=['H','L','D','M']; // most start with this
+ if(rs()<0.5)s.push('I');
+ s.push('F');
+ if(rs()<0.4)s.push('F');
+ if(rs()<0.25)s.splice(1,0,'F');  // some noise
+ if(rs()<0.15)s.shift();          // drop H
+ seqs.push(s);
+}
+
+// Count frequent subsequences (length 2-4) by sequence-support
+function isSub(p,s){let i=0;for(let j=0;j<s.length&&i<p.length;j++)if(s[j]===p[i])i++;return i===p.length;}
+function freqSeqs(seqs,minS){
+ const N=seqs.length;
+ const cand=[];
+ // length 2-4
+ for(const a of E)for(const b of E)cand.push([a,b]);
+ for(const a of E)for(const b of E)for(const c of E)cand.push([a,b,c]);
+ for(const a of E)for(const b of E)for(const c of E)for(const d of E)cand.push([a,b,c,d]);
+ const out=[];
+ for(const p of cand){
+  let c=0;for(const s of seqs)if(isSub(p,s))c++;
+  const sup=c/N;
+  if(sup>=minS)out.push({pat:p,sup});
+ }
+ // dedupe (keep one of each pattern)
+ const seen=new Set();const uniq=[];
+ for(const o of out){const k=o.pat.join('-');if(!seen.has(k)){seen.add(k);uniq.push(o);}}
+ return uniq.sort((a,b)=>b.sup-a.sup);
+}
+
+const psChart=new Chart(document.getElementById('psChart'),{type:'bar',data:{labels:[],datasets:[{label:'Support',data:[],backgroundColor:'rgba(37,99,235,.7)'}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{beginAtZero:true,max:1,title:{display:true,text:'Support'}}},plugins:{legend:{display:false}}}});
+
+function refresh(){
+ const minS=+document.getElementById('msSlider').value;
+ document.getElementById('msVal').textContent=minS.toFixed(2);
+ const all=freqSeqs(seqs,minS);
+ const top=all.slice(0,8);
+ psChart.data.labels=top.map(o=>'⟨'+o.pat.join('→')+'⟩');
+ psChart.data.datasets[0].data=top.map(o=>+o.sup.toFixed(2));
+ psChart.update('none');
+ const L=I18n.get();
+ const len2=all.filter(o=>o.pat.length===2).length;
+ const len3=all.filter(o=>o.pat.length===3).length;
+ const len4=all.filter(o=>o.pat.length===4).length;
+ document.getElementById('psStats').innerHTML=
+  `<span class="sim-stat ${all.length>0?'pass':'fail'}">${L==='zh'?'頻繁序列總數':'Frequent sequences'}: ${all.length}</span>`+
+  `<span class="sim-stat neutral">len 2: ${len2}</span>`+
+  `<span class="sim-stat neutral">len 3: ${len3}</span>`+
+  `<span class="sim-stat neutral">len 4: ${len4}</span>`+
+  `<span class="sim-stat neutral">min-supp = ${minS.toFixed(2)}</span>`;
+}
+document.getElementById('msSlider').addEventListener('input',refresh);
+document.addEventListener('langchange',refresh);
+refresh();
+
+const QF={zh:{q1_y:'PrefixSpan 透過投影資料庫遞迴擴展前綴。',q1_n:'C 為正確答案。',q2_y:'Closed 序列即沒有相同支援度的超序列。',q2_n:'B 為正確答案。',q3_y:'流程探勘合成含並行/選擇的可執行流程圖，序列探勘只列子序列。',q3_n:'D 為正確答案。'},
+          en:{q1_y:'PrefixSpan extends prefixes recursively via projected DBs.',q1_n:'Correct answer is C.',q2_y:'A closed sequence has no super-sequence with the same support.',q2_n:'Correct answer is B.',q3_y:'Process mining synthesizes workflows with parallel/choice; sequence mining only enumerates subsequences.',q3_n:'Correct answer is D.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

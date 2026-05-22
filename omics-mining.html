@@ -1,0 +1,245 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 18: Omics Data Mining — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html" class="active">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 18 / 20 · MODULE E</div>
+<h1 data-zh="組學資料探勘" data-en="Omics Data Mining">組學資料探勘</h1>
+<p class="subtitle" data-lang="zh">當 p ≫ n：在數萬個基因 / 蛋白 / 代謝物中找出真正有意義的少數，並把多個 -omics 層次整合。</p>
+<p class="subtitle" data-lang="en">When p ≫ n: pinpointing the meaningful few among tens of thousands of genes / proteins / metabolites, and integrating across omics layers.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="高維小樣本問題 (p ≫ n)" data-en="The High-Dimensional Small-Sample Problem (p ≫ n)">高維小樣本問題 (p ≫ n)</h2>
+<div data-lang="zh">
+<p>典型轉錄組研究：20,000 個基因 × 50 個樣本，p/n = 400。傳統 OLS 無解、Ridge 過擬合、單變項 t-test 校正完幾乎全失；這是組學探勘最根本的挑戰，也是<strong>正則化</strong>、<strong>特徵選擇</strong> 與 <strong>多重比較校正</strong> (BH-FDR) 成為標準配備的原因。</p>
+<p>除單一 omics 之外，現代研究幾乎都需要 <strong>multi-omics integration</strong>：基因組 (WGS)、轉錄組 (bulk / single-cell RNA-seq)、表觀基因組 (ATAC / methylation)、蛋白組 (DIA-MS)、代謝組 (LC-MS) 各自有不同雜訊結構，必須先做<strong>批次校正 (batch correction)</strong> 才可能找到跨層次共變模式。</p>
+</div>
+<div data-lang="en">
+<p>Typical transcriptomics: 20,000 genes × 50 samples, p/n = 400. OLS has no solution, Ridge over-fits, univariate t-tests largely die after multiple-testing correction. This is the founding challenge of omics mining and why <strong>regularization</strong>, <strong>feature selection</strong>, and <strong>multiple-testing control</strong> (BH-FDR) are mandatory.</p>
+<p>Beyond a single omics, modern studies need <strong>multi-omics integration</strong>: genome (WGS), transcriptome (bulk / single-cell RNA-seq), epigenome (ATAC / methylation), proteome (DIA-MS), metabolome (LC-MS). Each has its own noise structure — <strong>batch correction</strong> is the first checkpoint before any cross-layer pattern can emerge.</p>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>批次效應 ≈ 真實生物訊號：</strong>若樣本批次與表型混淆 (confounded)，再強的 ComBat / Harmony 都救不回。實驗設計時就要 randomize batch ↔ condition。</span>
+<span data-lang="en"><strong>Batch effect ≈ real biology:</strong> if batch confounds phenotype, no ComBat / Harmony can rescue it. Randomize batch ↔ condition at experimental design.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="特徵選擇" data-en="FEATURE SELECTION">特徵選擇</div>
+<h2 data-zh="一、三大特徵選擇家族" data-en="I. Three Families of Feature Selection">一、三大特徵選擇家族</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="家族" data-en="Family">家族</th><th data-zh="原理" data-en="Principle">原理</th><th data-zh="代表" data-en="Representative">代表</th></tr></thead>
+<tbody>
+<tr><td><strong>Filter</strong></td><td data-zh="統計量逐個變項評分，與模型無關">Per-feature statistic, model-agnostic</td><td>limma moderated t, ANOVA F, MI, mRMR</td></tr>
+<tr><td><strong>Wrapper</strong></td><td data-zh="搜尋特徵子集 → 訓練模型 → 評估">Search subsets → train → evaluate</td><td>RFE, Boruta (RF-based), GA</td></tr>
+<tr><td><strong>Embedded</strong></td><td data-zh="演算法在訓練中同時選變項">Selection happens inside training</td><td>LASSO (L1), Elastic Net, tree importance</td></tr>
+</tbody></table>
+<div class="callout tip"><span class="callout-icon">💡</span><div>
+<span data-lang="zh"><strong>Stability selection (Meinshausen-Bühlmann)：</strong>對資料做多次 bootstrap，記錄每個特徵被選中的頻率；最終保留 ≥ 60–80% 的特徵，可大幅降低 LASSO 對 λ 的敏感性。</span>
+<span data-lang="en"><strong>Stability selection (Meinshausen-Bühlmann):</strong> bootstrap many times, record per-feature selection frequency, keep features chosen ≥ 60–80% of the time — drastically reduces LASSO sensitivity to λ.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="LASSO 正則化路徑：λ 如何收縮係數" data-en="LASSO Regularization Path: How λ Shrinks Coefficients">LASSO 正則化路徑：λ 如何收縮係數</h2>
+<div data-lang="zh"><p>調整 <strong>λ</strong> (log scale)，觀察非零特徵數目下降、係數逐個被「壓到 0」。這就是 LASSO 同時做<strong>正則化</strong>與<strong>變項選擇</strong>的核心機制。</p></div>
+<div data-lang="en"><p>Adjust <strong>λ</strong> (log scale); watch the non-zero feature count drop as coefficients are squeezed to zero. This is how LASSO performs <strong>regularization</strong> and <strong>variable selection</strong> simultaneously.</p></div>
+<div class="interactive-panel">
+<div class="sim-stats"><span class="sim-stat pass" id="lassoNZ">Non-zero: —</span><span class="sim-stat neutral" id="lassoLam">log λ: —</span><span class="sim-stat fail" id="lassoCV">CV-error (toy): —</span></div>
+<div class="slider-group"><label><span data-zh="log(λ)" data-en="log(λ)">log(λ)</span> <span id="valLam">−3.0</span></label><input type="range" id="sliderLam" min="-6" max="2" value="-3" step="0.1"></div>
+<div class="chart-container"><canvas id="lassoChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">每條線 = 一個基因的係數隨 λ 收縮的軌跡</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">Each line = one gene's coefficient shrinking with λ</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="多組學整合" data-en="MULTI-OMICS">多組學整合</div>
+<h2 data-zh="二、多組學整合策略" data-en="II. Multi-Omics Integration Strategies">二、多組學整合策略</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">➕</div><h4 data-zh="Early (concatenation)" data-en="Early (concatenation)">Early</h4><div data-lang="zh"><p>把多 omics 直接 cbind；簡單但維度爆炸、忽略層次結構。</p></div><div data-lang="en"><p>Concatenate features; simple but blows up dimension and ignores layer structure.</p></div></div>
+<div class="card"><div class="card-icon">🔀</div><h4 data-zh="Intermediate (latent)" data-en="Intermediate (latent)">Intermediate</h4><div data-lang="zh"><p>學共享潛在因子：MOFA+ / DIABLO / iCluster+ / scVAE。</p></div><div data-lang="en"><p>Learn shared latent factors: MOFA+ / DIABLO / iCluster+ / scVAE.</p></div></div>
+<div class="card"><div class="card-icon">🧩</div><h4 data-zh="Late (ensemble)" data-en="Late (ensemble)">Late</h4><div data-lang="zh"><p>各 omics 各訓模型 → 在預測層融合（stacking / weighted vote）。</p></div><div data-lang="en"><p>Train per-omics models, fuse at prediction (stacking / weighted vote).</p></div></div>
+</div>
+<div class="decision-tree">
+<h4>🌳 <span data-zh="組學探勘任務決策樹" data-en="Omics Mining Decision Tree">組學探勘任務決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>單一 omics、要<strong>稀疏 biomarker panel</strong>？ <span class="dt-arrow">→ LASSO / Elastic Net + stability selection</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>要<strong>所有相關</strong>特徵（不只最稀疏）？ <span class="dt-arrow">→ Boruta（雙重 shadow feature 比較）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>多 omics 且要<strong>跨層解釋</strong>？ <span class="dt-arrow">→ MOFA+ / DIABLO（latent factor）</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>單細胞 RNA-seq 多 batch / donor？ <span class="dt-arrow">→ Harmony / scVI / Symphony</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div>要找<strong>表型亞群</strong>（subgroup discovery）？ <span class="dt-arrow">→ pysubgroup / SD-Map（規則 + 統計檢定）</span></div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Single omics, want a <strong>sparse biomarker panel</strong>? <span class="dt-arrow">→ LASSO / Elastic Net + stability selection</span></div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>Want <strong>all relevant</strong> features (not the sparsest)? <span class="dt-arrow">→ Boruta (shadow-feature comparison)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Multi-omics with <strong>cross-layer interpretation</strong>? <span class="dt-arrow">→ MOFA+ / DIABLO (latent factors)</span></div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>scRNA-seq with multiple batches / donors? <span class="dt-arrow">→ Harmony / scVI / Symphony</span></div></div>
+<div class="dt-node"><span class="dt-q">Q5:</span><div><strong>Subgroup discovery</strong>? <span class="dt-arrow">→ pysubgroup / SD-Map (rules + stat test)</span></div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="批次校正" data-en="BATCH CORRECTION">批次校正</div>
+<h2 data-zh="三、Batch Correction" data-en="III. Batch Correction">三、Batch Correction</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="方法" data-en="Method">方法</th><th data-zh="假設" data-en="Assumption">假設</th><th data-zh="適用" data-en="Use">適用</th></tr></thead>
+<tbody>
+<tr><td><strong>ComBat / ComBat-seq</strong></td><td data-zh="parametric empirical Bayes，假設 location/scale shift">EB; location/scale shift</td><td data-zh="bulk microarray / RNA-seq">bulk microarray / RNA-seq</td></tr>
+<tr><td><strong>SVA / RUV</strong></td><td data-zh="找未知 surrogate variable">surrogate variables</td><td data-zh="混雜未知時">when confounders unknown</td></tr>
+<tr><td><strong>Harmony</strong></td><td data-zh="soft k-means 在低維迭代對齊">iterative soft-cluster alignment</td><td>scRNA-seq</td></tr>
+<tr><td><strong>scVI / scANVI</strong></td><td data-zh="變分自編碼 + batch covariate">VAE + batch covariate</td><td>scRNA-seq probabilistic</td></tr>
+<tr><td><strong>MOFA+ (2020)</strong></td><td data-zh="多視角因子分解">multi-view factor decomposition</td><td data-zh="multi-omics 整合 + 批次">multi-omics + batch-aware</td></tr>
+</tbody></table>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：LASSO + Boruta + MOFA + Batch Correction" data-en="Implementation: LASSO + Boruta + MOFA + Batch">實作：LASSO + Boruta + MOFA + Batch Correction</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r18')">R / glmnet + Boruta + MOFA2 + sva</button><button class="code-tab-btn" onclick="switchTab(this,'py18')">Python / sklearn + boruta_py + mofapy2 + scanpy</button></div>
+<div class="code-tab-content active" id="r18"><pre><span class="func">library</span>(glmnet); <span class="func">library</span>(Boruta); <span class="func">library</span>(MOFA2); <span class="func">library</span>(sva); <span class="func">library</span>(harmony)
+
+<span class="comment"># --- LASSO with cv to pick lambda ---</span>
+fit_cv &lt;- cv.<span class="func">glmnet</span>(X, y, alpha = <span class="num">1</span>, family = <span class="str">"binomial"</span>, nfolds = <span class="num">10</span>)
+coef_sel &lt;- <span class="func">coef</span>(fit_cv, s = <span class="str">"lambda.1se"</span>)
+sel &lt;- <span class="func">rownames</span>(coef_sel)[<span class="func">which</span>(coef_sel != <span class="num">0</span>)][-<span class="num">1</span>]
+
+<span class="comment"># --- Boruta wrapper ---</span>
+bor &lt;- <span class="func">Boruta</span>(y ~ ., data = df, doTrace = <span class="num">1</span>, maxRuns = <span class="num">200</span>)
+<span class="func">getSelectedAttributes</span>(bor, withTentative = <span class="kw">FALSE</span>)
+
+<span class="comment"># --- Multi-omics integration with MOFA2 ---</span>
+mofa &lt;- <span class="func">create_mofa</span>(<span class="func">list</span>(rna = X_rna, methyl = X_meth, protein = X_pro))
+mofa &lt;- <span class="func">prepare_mofa</span>(mofa) |&gt; <span class="func">run_mofa</span>(use_basilisk = <span class="kw">TRUE</span>)
+<span class="func">plot_variance_explained</span>(mofa)
+
+<span class="comment"># --- Batch correction ---</span>
+X_combat   &lt;- sva::<span class="func">ComBat</span>(dat = X_log, batch = batch, mod = <span class="func">model.matrix</span>(~cond))
+sc_harmony &lt;- harmony::<span class="func">RunHarmony</span>(seurat_obj, group.by.vars = <span class="str">"batch"</span>)</pre></div>
+<div class="code-tab-content" id="py18"><pre><span class="kw">from</span> sklearn.linear_model <span class="kw">import</span> LassoCV
+<span class="kw">from</span> boruta <span class="kw">import</span> BorutaPy
+<span class="kw">from</span> sklearn.ensemble <span class="kw">import</span> RandomForestClassifier
+<span class="kw">import</span> mofapy2.run.entry_point <span class="kw">as</span> mofa
+<span class="kw">from</span> combat.pycombat <span class="kw">import</span> pycombat
+<span class="kw">import</span> scanpy <span class="kw">as</span> sc, scanpy.external <span class="kw">as</span> sce
+
+<span class="comment"># --- LASSO (L1) ---</span>
+lasso = LassoCV(cv=<span class="num">10</span>, n_alphas=<span class="num">100</span>, random_state=<span class="num">0</span>).fit(X, y)
+sel   = np.where(lasso.coef_ != <span class="num">0</span>)[<span class="num">0</span>]
+
+<span class="comment"># --- Boruta (Random-Forest based all-relevant) ---</span>
+rf = RandomForestClassifier(n_estimators=<span class="num">200</span>, n_jobs=-<span class="num">1</span>, max_depth=<span class="num">7</span>)
+bor = BorutaPy(rf, n_estimators=<span class="str">"auto"</span>, max_iter=<span class="num">200</span>, random_state=<span class="num">0</span>)
+bor.fit(X.values, y)
+X_sel = X.iloc[:, bor.support_]
+
+<span class="comment"># --- MOFA+ multi-omics ---</span>
+ent = mofa.entry_point()
+ent.set_data_matrix([[X_rna],[X_meth],[X_pro]], views_names=[<span class="str">"rna"</span>,<span class="str">"meth"</span>,<span class="str">"pro"</span>])
+ent.set_model_options(factors=<span class="num">15</span>); ent.set_train_options(iter=<span class="num">1000</span>); ent.build(); ent.run()
+
+<span class="comment"># --- batch: pycombat for bulk, Harmony for sc ---</span>
+X_corr = pycombat(X_log, batch_list)
+sce.pp.harmony_integrate(adata, key=<span class="str">"batch"</span>)</pre></div>
+</div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="1">
+<p data-lang="zh">1. 為什麼組學資料一定要做特徵選擇？</p>
+<p data-lang="en">1. Why is feature selection mandatory in omics data?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 為了減少儲存空間</span><span data-lang="en">A. To save storage</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. p ≫ n 導致過擬合與假發現膨脹</span><span data-lang="en">B. p ≫ n leads to over-fitting and inflated false-discovery</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 樹模型無法處理 &gt; 100 個變項</span><span data-lang="en">C. Tree models can't handle &gt; 100 features</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. R 套件不支援高維</span><span data-lang="en">D. R packages don't support high-D</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">2. LASSO (L1) 與 Ridge (L2) 最關鍵的差別？</p>
+<p data-lang="en">2. The key difference between LASSO (L1) and Ridge (L2)?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. LASSO 會把部分係數收縮到「正好為 0」，產生稀疏解</span><span data-lang="en">A. LASSO drives some coefficients exactly to zero (sparsity)</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. Ridge 只能用於分類</span><span data-lang="en">B. Ridge only works for classification</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. LASSO 不需要選 λ</span><span data-lang="en">C. LASSO needs no λ tuning</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Ridge 對 outlier 更敏感</span><span data-lang="en">D. Ridge is more outlier-sensitive</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">3. Boruta 的特徵選擇是基於？</p>
+<p data-lang="en">3. Boruta feature selection is based on?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 主成分分析</span><span data-lang="en">A. PCA</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. SVM 邊界</span><span data-lang="en">B. SVM margin</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Random Forest + shadow features 的重要性比較</span><span data-lang="en">C. Random Forest + shadow-feature importance comparison</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. L1 正則化</span><span data-lang="en">D. L1 regularization</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="ehr-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 17: 電子病歷資料探勘" data-en="Ch 17: EHR Data Mining">Ch 17: 電子病歷資料探勘</span></a>
+<a href="pubmed-literature-mining.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 19: PubMed 與文獻探勘" data-en="Ch 19: PubMed &amp; Literature Mining">Ch 19: PubMed 與文獻探勘</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+// --- LASSO regularization path (toy) ---
+// 10 features with true coefs (some sparse, some noise)
+const trueB = [2.5, -1.8, 1.2, -0.9, 0.6, 0.3, 0.15, 0.05, -0.02, 0.0];
+const colors=['#dc2626','#2563eb','#16a34a','#d97706','#7c3aed','#0891b2','#db2777','#65a30d','#475569','#9ca3af'];
+const lams = Array.from({length:60},(_,i)=>-6 + 8*i/59);          // log λ axis
+function softT(b, lam){ const s=Math.sign(b), m=Math.max(0,Math.abs(b)-lam); return s*m; }
+const paths = trueB.map(b=> lams.map(L=> softT(b, Math.exp(L))) );
+
+const datasets = paths.map((p,i)=>({label:'g'+(i+1), data:p, borderColor:colors[i], pointRadius:0, borderWidth:1.8, fill:false, tension:.1}));
+// vertical marker dataset
+datasets.push({label:'λ', data:lams.map(L=> L===lams[0]?null:null), borderColor:'#0f172a', borderDash:[4,4], pointRadius:0, borderWidth:0});
+
+const lassoChart = new Chart(document.getElementById('lassoChart'),{
+  type:'line',
+  data:{labels: lams.map(l=>l.toFixed(1)), datasets:datasets},
+  options:{responsive:true,maintainAspectRatio:false,animation:false,
+    scales:{x:{title:{display:true,text:'log λ'}}, y:{title:{display:true,text:'coef'}}},
+    plugins:{legend:{position:'top',labels:{boxWidth:10,font:{size:10}}},
+             annotation:{}}}
+});
+
+function updLasso(){
+  const L  = +document.getElementById('sliderLam').value;
+  const lam= Math.exp(L);
+  document.getElementById('valLam').textContent = L.toFixed(2);
+  const cur = trueB.map(b=> softT(b,lam));
+  const nz  = cur.filter(c=> Math.abs(c)>1e-6).length;
+  document.getElementById('lassoNZ').textContent  = (I18n.get()==='zh'?'非零特徵: ':'Non-zero: ')+nz+'/'+trueB.length;
+  document.getElementById('lassoLam').textContent = 'log λ = '+L.toFixed(2);
+  // toy CV-error: U-shaped around optimum λ* ≈ exp(-3)
+  const err = 0.10 + 0.04*Math.pow(L+3,2) + 0.18*Math.max(0,L+3.5);
+  document.getElementById('lassoCV').textContent = (I18n.get()==='zh'?'CV-error: ':'CV-error: ')+err.toFixed(3);
+}
+document.getElementById('sliderLam').addEventListener('input', updLasso);
+document.addEventListener('langchange', updLasso);
+updLasso();
+
+const QF={zh:{q1_y:'高維小樣本 (p≫n) 是組學最基本問題；FS 控制過擬合與 FDR。',q1_n:'B 為正確答案。',q2_y:'L1 penalty 在轉折處有「峰」，會把係數推到正好為 0。',q2_n:'A 為正確答案。',q3_y:'Boruta 與隨機 shadow features 比 importance，逐輪剃除。',q3_n:'C 為正確答案。'},
+          en:{q1_y:'p ≫ n is the founding omics challenge; FS controls over-fitting and FDR.',q1_n:'Correct answer is B.',q2_y:'The L1 penalty has a corner at zero, forcing exact-zero coefficients.',q2_n:'Correct answer is A.',q3_y:'Boruta compares feature importance vs random shadow features, iteratively pruning.',q3_n:'Correct answer is C.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>

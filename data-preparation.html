@@ -1,0 +1,239 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Ch 2: Data Preparation — Data Mining Tutorial</title>
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+</head><body>
+<nav class="top-nav"><div class="top-nav-inner">
+  <a href="index.html" class="top-nav-brand"><span>⛏️</span> <span data-zh="資料探勘教學" data-en="Data Mining Tutorial">資料探勘教學</span></a>
+  <ul class="top-nav-links">
+    <li><a href="intro-crisp-dm.html">CRISP</a></li><li><a href="data-preparation.html" class="active">Prep.</a></li><li><a href="eda-visualization.html">EDA</a></li><li><a href="similarity-distance.html">Dist.</a></li><li><a href="classification-overview.html">Classif.</a></li><li><a href="decision-trees-rf.html">Tree/RF</a></li><li><a href="naive-bayes-svm.html">NB/SVM</a></li><li><a href="model-evaluation.html">Eval.</a></li><li><a href="clustering-kmeans-hierarchical.html">K-Means</a></li><li><a href="density-based-dbscan.html">DBSCAN</a></li><li><a href="association-rules-apriori.html">Apriori</a></li><li><a href="sequential-pattern-mining.html">Seq.</a></li><li><a href="anomaly-detection.html">Anomaly</a></li><li><a href="text-mining-nlp.html">Text</a></li><li><a href="time-series-mining.html">TimeSer.</a></li><li><a href="graph-network-mining.html">Graph</a></li><li><a href="ehr-mining.html">EHR</a></li><li><a href="omics-mining.html">Omics</a></li><li><a href="pubmed-literature-mining.html">PubMed</a></li><li><a href="ethics-reproducibility.html">Ethics</a></li>
+    <li><a href="references/index.html" data-zh="📚 參考資料" data-en="📚 References">📚 參考資料</a></li>
+  </ul>
+</div></nav>
+<div class="progress-bar-container"><div class="progress-bar" id="progressBar"></div></div>
+<header class="page-hero"><div class="step-badge">CHAPTER 2 / 20 · MODULE A</div>
+<h1 data-zh="資料準備與前處理" data-en="Data Preparation & Preprocessing">資料準備與前處理</h1>
+<p class="subtitle" data-lang="zh">「Garbage in, garbage out」——再強的模型也無法救回失準的資料。</p>
+<p class="subtitle" data-lang="en">"Garbage in, garbage out" — no model can rescue ill-prepared data.</p>
+</header>
+<main class="content-wrap">
+
+<section class="section">
+<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
+<h2 data-zh="為什麼資料準備是最關鍵的階段？" data-en="Why is Data Preparation the Most Critical Phase?">為什麼資料準備是最關鍵的階段？</h2>
+<div data-lang="zh">
+<p>資料準備（含清理、整合、變形、特徵工程）通常佔資料探勘專案 <strong>60–80% 的時間</strong>。它決定了模型輸入的「天花板」——若資料含大量缺失、編碼不一致、外洩 (target leakage)，再強的演算法也只會放大雜訊。</p>
+<p>在生物醫學脈絡下，這個階段更具挑戰：EHR 缺失非隨機 (MNAR)、不同醫院 ICD 碼版本不一、檢驗值單位混雜 (mg/dL vs mmol/L)、組學批次效應 (batch effect)。許多失敗的探勘專案——例如多個 sepsis 早期預警模型於外院驗證崩潰——根因都出在這一步。</p>
+</div>
+<div data-lang="en">
+<p>Data Preparation (cleaning, integration, transformation, feature engineering) typically consumes <strong>60–80% of the project time</strong>. It defines the ceiling of model input — if the data has heavy missingness, inconsistent encoding, or target leakage, the strongest algorithm only amplifies noise.</p>
+<p>In a biomedical context, this phase is even harder: EHR missingness is non-random (MNAR), ICD versions differ across hospitals, lab units are mixed (mg/dL vs mmol/L), and omics batch effects dominate signal. Many failed mining projects — e.g., several sepsis early-warning models collapsing at external validation — trace back to this step.</p>
+</div>
+<div class="callout danger"><span class="callout-icon">🚨</span><div>
+<span data-lang="zh"><strong>Target leakage 警告：</strong>「為什麼我的 AUROC = 0.99？」十次有九次的答案是<strong>target leakage</strong>：例如把出院後的 discharge_diagnosis 餵進 readmit 模型；或把 follow-up CRP 當作 sepsis 預測特徵。任何使用「未來才會知道」的資訊都是不可接受的。</span>
+<span data-lang="en"><strong>Target leakage warning:</strong> "Why is my AUROC = 0.99?" Nine times out of ten the answer is <strong>target leakage</strong> — e.g., feeding post-discharge diagnosis into a readmission model, or treating follow-up CRP as a sepsis predictor. Any feature that uses "future" information is unacceptable.</span>
+</div></div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="核心步驟" data-en="CORE STEPS">核心步驟</div>
+<h2 data-zh="一、六個關鍵子步驟" data-en="I. Six Key Sub-steps">一、六個關鍵子步驟</h2>
+<div class="card-grid cols-3">
+<div class="card"><div class="card-icon">🧼</div><h4 data-zh="① 清理 Cleaning" data-en="① Cleaning">① 清理 Cleaning</h4><div data-lang="zh"><p>處理缺失值、重複列、不一致拼寫（如 'M' vs 'Male'）、單位轉換、時間戳對齊。</p></div><div data-lang="en"><p>Handle missing values, duplicate rows, inconsistent spellings ('M' vs 'Male'), unit conversion, timestamp alignment.</p></div></div>
+<div class="card"><div class="card-icon">🔗</div><h4 data-zh="② 整合 Integration" data-en="② Integration">② 整合 Integration</h4><div data-lang="zh"><p>串接多個來源（demographic + lab + medication），處理鍵衝突、版本歧異與時間視窗對齊。</p></div><div data-lang="en"><p>Join multiple sources (demographic + lab + medication); resolve key conflicts, version drift, time-window alignment.</p></div></div>
+<div class="card"><div class="card-icon">✂️</div><h4 data-zh="③ 切割 Splitting" data-en="③ Splitting">③ 切割 Splitting</h4><div data-lang="zh"><p>Train / Validation / Test split；時序資料用時間切割，醫院資料用 by-hospital 切割避免 leakage。</p></div><div data-lang="en"><p>Train / Validation / Test split; use time-based split for temporal data, by-hospital split to avoid leakage.</p></div></div>
+<div class="card"><div class="card-icon">⚖️</div><h4 data-zh="④ 縮放 Scaling" data-en="④ Scaling">④ 縮放 Scaling</h4><div data-lang="zh"><p>Min-Max、Z-score、Robust、Quantile。距離型 (KNN/SVM/K-Means) 必須；樹型則不需要。</p></div><div data-lang="en"><p>Min-Max, Z-score, Robust, Quantile. Mandatory for distance-based (KNN/SVM/K-Means); not needed for tree-based.</p></div></div>
+<div class="card"><div class="card-icon">🔢</div><h4 data-zh="⑤ 編碼 Encoding" data-en="⑤ Encoding">⑤ 編碼 Encoding</h4><div data-lang="zh"><p>One-Hot、Ordinal、Target、Frequency；高基數類別建議 Target Encoding + CV-fold。</p></div><div data-lang="en"><p>One-Hot, Ordinal, Target, Frequency. For high-cardinality use Target Encoding + CV-fold guarding.</p></div></div>
+<div class="card"><div class="card-icon">⚙️</div><h4 data-zh="⑥ 特徵工程 Feature Eng." data-en="⑥ Feature Engineering">⑥ 特徵工程</h4><div data-lang="zh"><p>分箱、log/exp、交互特徵、時間特徵（season、weekday）、領域知識特徵（BMI、CHA₂DS₂-VASc）。</p></div><div data-lang="en"><p>Binning, log/exp, interaction terms, time features (season, weekday), domain features (BMI, CHA₂DS₂-VASc).</p></div></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
+<h2 data-zh="不平衡資料與重採樣效果" data-en="Imbalanced Data & Resampling Effects">不平衡資料與重採樣效果</h2>
+<div data-lang="zh"><p>調整類別比例，觀察 SMOTE / Random Undersampling / Class Weight 對分類模型的影響。實務上，敗血症 ~5%、罕病 &lt;1% 都是常見的不平衡比例。</p></div>
+<div data-lang="en"><p>Adjust class ratio and observe SMOTE / Random Undersampling / Class Weight effects. In practice sepsis ~5%, rare disease &lt;1% are typical imbalances.</p></div>
+<div class="interactive-panel">
+<div class="sim-stats"><span class="sim-stat pass" id="majSt">Majority: —</span><span class="sim-stat fail" id="minSt">Minority: —</span><span class="sim-stat neutral" id="ratioSt">Ratio: —</span></div>
+<div class="slider-group"><label><span data-zh="少數類別比例 (%)" data-en="Minority class (%)">少數類別比例</span> <span id="valMin">5</span>%</label><input type="range" id="sliderMin" min="1" max="50" value="5" step="1"></div>
+<div class="toggle-row">
+<button class="toggle-btn active" data-strat="none" data-zh="原始" data-en="Original">原始</button>
+<button class="toggle-btn" data-strat="smote" data-zh="SMOTE 過採樣" data-en="SMOTE Oversample">SMOTE 過採樣</button>
+<button class="toggle-btn" data-strat="under" data-zh="隨機欠採樣" data-en="Random Undersample">隨機欠採樣</button>
+<button class="toggle-btn" data-strat="weight" data-zh="類別權重" data-en="Class Weight">類別權重</button>
+</div>
+<div class="chart-container"><canvas id="impChart"></canvas></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="zh">圓圈表示原始樣本；十字代表 SMOTE 合成樣本</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;" data-lang="en">Circles = original samples; crosses = SMOTE-synthesized samples</p>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="缺失值策略" data-en="MISSING-VALUE STRATEGY">缺失值策略</div>
+<h2 data-zh="二、缺失值類型與處理" data-en="II. Missing-Value Types & Treatment">二、缺失值類型與處理</h2>
+<table class="comp-table">
+<thead><tr><th data-zh="類型" data-en="Type">類型</th><th data-zh="意義" data-en="Meaning">意義</th><th data-zh="處理建議" data-en="Recommended">處理建議</th></tr></thead>
+<tbody>
+<tr><td><strong>MCAR</strong></td><td data-lang="zh">完全隨機缺失，與任何變數無關</td><td data-lang="zh">listwise deletion、中位數補</td><td data-lang="en">Missing completely at random</td><td data-lang="en">Listwise deletion, median imputation</td></tr>
+<tr><td><strong>MAR</strong></td><td data-lang="zh">隨機，但與其他觀測變數有關</td><td data-lang="zh">MICE、KNN imputer、迴歸補</td><td data-lang="en">Missing at random, depends on observed</td><td data-lang="en">MICE, KNN imputer, regression-based</td></tr>
+<tr><td><strong>MNAR</strong></td><td data-lang="zh">非隨機（如 viral load 太高未測即死亡）</td><td data-lang="zh">須建模化原因；用 missingness indicator</td><td data-lang="en">Not at random (e.g., viral load not measured before death)</td><td data-lang="en">Model the cause; use missingness indicator</td></tr>
+</tbody></table>
+
+<div class="decision-tree">
+<h4>🌳 <span data-zh="缺失值處理決策樹" data-en="Missing-Value Decision Tree">缺失值處理決策樹</span></h4>
+<div data-lang="zh">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>缺失率 &lt; 5% 且樣本量充足？ <span class="dt-arrow">→ 是 →</span> 直接 listwise delete。</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>是 MCAR/MAR？ <span class="dt-arrow">→ 是 →</span> MICE（多重補值，建議 m=5–20 次）。</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>樹型模型如 XGBoost？ <span class="dt-arrow">→ 是 →</span> 直接交給 model 處理 NA（sklearn 1.6 後 ExtraTrees 也支援）。</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>懷疑 MNAR？ <span class="dt-arrow">→ 是 →</span> 加 <code>is_missing</code> 二元指標當特徵，避免直接補導致偏差。</div></div>
+</div>
+<div data-lang="en">
+<div class="dt-node"><span class="dt-q">Q1:</span><div>Missingness &lt; 5% with abundant samples? <span class="dt-arrow">→ Yes →</span> Listwise delete.</div></div>
+<div class="dt-node"><span class="dt-q">Q2:</span><div>MCAR/MAR? <span class="dt-arrow">→ Yes →</span> MICE (multiple imputation, m=5–20).</div></div>
+<div class="dt-node"><span class="dt-q">Q3:</span><div>Tree-based model (XGBoost)? <span class="dt-arrow">→ Yes →</span> Let the model handle NA natively (sklearn 1.6+ also for ExtraTrees).</div></div>
+<div class="dt-node"><span class="dt-q">Q4:</span><div>Suspect MNAR? <span class="dt-arrow">→ Yes →</span> Add an <code>is_missing</code> indicator as feature; never directly impute.</div></div>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="程式碼" data-en="CODE">程式碼</div>
+<h2 data-zh="實作：Pipeline + Imputer + Scaler" data-en="Implementation: Pipeline + Imputer + Scaler">實作：Pipeline + Imputer + Scaler</h2>
+<div class="code-tabs"><div class="code-tab-btns"><button class="code-tab-btn active" onclick="switchTab(this,'r1')">R / tidymodels + mice</button><button class="code-tab-btn" onclick="switchTab(this,'py1')">Python / sklearn + imblearn</button></div>
+<div class="code-tab-content active" id="r1"><pre><span class="func">library</span>(tidymodels); <span class="func">library</span>(mice); <span class="func">library</span>(themis)
+
+<span class="comment"># 1) 缺失值多重補值 / Multiple imputation</span>
+imp &lt;- <span class="func">mice</span>(df, m = <span class="num">5</span>, method = <span class="str">"pmm"</span>, seed = <span class="num">42</span>)
+df_imp &lt;- <span class="func">complete</span>(imp, <span class="num">1</span>)
+
+<span class="comment"># 2) recipe：縮放 + 編碼 + SMOTE / scale + encode + SMOTE</span>
+rec &lt;- <span class="func">recipe</span>(target ~ ., data = df_imp) |&gt;
+  <span class="func">step_impute_knn</span>(<span class="func">all_predictors</span>(), neighbors = <span class="num">5</span>) |&gt;
+  <span class="func">step_normalize</span>(<span class="func">all_numeric_predictors</span>()) |&gt;
+  <span class="func">step_dummy</span>(<span class="func">all_nominal_predictors</span>()) |&gt;
+  <span class="func">step_smote</span>(target, over_ratio = <span class="num">1.0</span>)         <span class="comment"># themis</span>
+
+<span class="comment"># 3) Train/test 切割避免 leakage</span>
+sp &lt;- <span class="func">initial_split</span>(df_imp, prop = <span class="num">0.8</span>, strata = target)
+prep &lt;- <span class="func">prep</span>(rec, training = <span class="func">training</span>(sp))
+tr &lt;- <span class="func">bake</span>(prep, <span class="func">training</span>(sp))
+te &lt;- <span class="func">bake</span>(prep, <span class="func">testing</span>(sp))   <span class="comment"># test 不可再 SMOTE</span></pre></div>
+<div class="code-tab-content" id="py1"><pre><span class="kw">from</span> sklearn.compose       <span class="kw">import</span> ColumnTransformer
+<span class="kw">from</span> sklearn.impute        <span class="kw">import</span> SimpleImputer, KNNImputer
+<span class="kw">from</span> sklearn.preprocessing <span class="kw">import</span> StandardScaler, OneHotEncoder
+<span class="kw">from</span> imblearn.over_sampling <span class="kw">import</span> SMOTE
+<span class="kw">from</span> imblearn.pipeline      <span class="kw">import</span> Pipeline   <span class="comment"># note imblearn pipeline</span>
+<span class="kw">from</span> sklearn.model_selection <span class="kw">import</span> train_test_split
+
+X_tr, X_te, y_tr, y_te = train_test_split(
+    X, y, test_size=<span class="num">0.2</span>, stratify=y, random_state=<span class="num">42</span>)
+
+pre = ColumnTransformer([
+    (<span class="str">"num"</span>, Pipeline([
+        (<span class="str">"imp"</span>,   KNNImputer(n_neighbors=<span class="num">5</span>)),
+        (<span class="str">"sc"</span>,    StandardScaler())]), num_cols),
+    (<span class="str">"cat"</span>, OneHotEncoder(handle_unknown=<span class="str">"ignore"</span>), cat_cols)
+])
+
+pipe = Pipeline([
+    (<span class="str">"pre"</span>,   pre),
+    (<span class="str">"smote"</span>, SMOTE(random_state=<span class="num">42</span>)),     <span class="comment"># test 不會被 SMOTE</span>
+    (<span class="str">"clf"</span>,   <span class="func">XGBClassifier</span>(n_estimators=<span class="num">300</span>))
+])
+pipe.fit(X_tr, y_tr)</pre></div>
+</div>
+<div class="callout warn"><span class="callout-icon">⚠️</span><div>
+<span data-lang="zh"><strong>SMOTE 的常見錯誤：</strong>絕對不能在 <em>train/test split 之前</em> 做 SMOTE！否則合成樣本會洩漏到測試集。Pipeline 內的 imblearn.Pipeline 會自動只對 train fold 套用。</span>
+<span data-lang="en"><strong>SMOTE pitfall:</strong> Never apply SMOTE <em>before</em> train/test split — synthesized samples will leak into the test fold. The imblearn Pipeline automatically applies SMOTE only on training folds.</span>
+</div></div>
+</section>
+
+<section class="quiz-section">
+<h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
+<div class="quiz-q" data-answer="2">
+<p data-lang="zh">1. AUROC = 0.99 的模型最可能的問題？</p>
+<p data-lang="en">1. A model with AUROC = 0.99 most likely suffers from?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 模型太強</span><span data-lang="en">A. Model is too strong</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 資料太多</span><span data-lang="en">B. Too much data</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. Target leakage（特徵含未來資訊）</span><span data-lang="en">C. Target leakage (features use future info)</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 不平衡類別未處理</span><span data-lang="en">D. Untreated class imbalance</span></div>
+</div><div class="quiz-feedback" id="fb1"></div></div>
+
+<div class="quiz-q" data-answer="0">
+<p data-lang="zh">2. 對 KNN 或 SVM 而言，下列何者是必要的前處理？</p>
+<p data-lang="en">2. For KNN or SVM, which preprocessing is essential?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 特徵縮放 (scaling)</span><span data-lang="en">A. Feature scaling</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. PCA 降維</span><span data-lang="en">B. PCA reduction</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. SMOTE 過採樣</span><span data-lang="en">C. SMOTE oversampling</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. log 轉換</span><span data-lang="en">D. Log transform</span></div>
+</div><div class="quiz-feedback" id="fb2"></div></div>
+
+<div class="quiz-q" data-answer="3">
+<p data-lang="zh">3. SMOTE 應該在何時套用？</p>
+<p data-lang="en">3. When should SMOTE be applied?</p>
+<div class="quiz-options">
+<div class="quiz-opt" data-idx="0"><span data-lang="zh">A. 在資料載入後立刻套用</span><span data-lang="en">A. Right after loading the data</span></div>
+<div class="quiz-opt" data-idx="1"><span data-lang="zh">B. 同時對 train 與 test set 套用</span><span data-lang="en">B. On both train and test sets</span></div>
+<div class="quiz-opt" data-idx="2"><span data-lang="zh">C. 只對 test set 套用</span><span data-lang="en">C. Only on the test set</span></div>
+<div class="quiz-opt" data-idx="3"><span data-lang="zh">D. train/test 切割後，只對 training fold 套用</span><span data-lang="en">D. After train/test split, only on training folds</span></div>
+</div><div class="quiz-feedback" id="fb3"></div></div>
+</section>
+
+<nav class="page-nav">
+<a href="intro-crisp-dm.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 1: 資料探勘導論與 CRISP-DM" data-en="Ch 1: Data Mining &amp; CRISP-DM">Ch 1: 資料探勘導論與 CRISP-DM</span></a>
+<a href="eda-visualization.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 3: 探索性資料分析 (EDA) 與視覺化" data-en="Ch 3: EDA &amp; Visualization">Ch 3: 探索性資料分析 (EDA) 與視覺化</span></a>
+</nav>
+</main>
+<footer class="site-footer">© Charlene — Data Mining Interactive Tutorial</footer>
+<script src="i18n.js"></script>
+<script>
+window.addEventListener('scroll',()=>{const h=document.documentElement;document.getElementById('progressBar').style.width=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100+'%';});
+function switchTab(b,id){const p=b.closest('.code-tabs');p.querySelectorAll('.code-tab-btn').forEach(x=>x.classList.remove('active'));p.querySelectorAll('.code-tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(id).classList.add('active');}
+
+function randn(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const impChart=new Chart(document.getElementById('impChart'),{type:'bubble',data:{datasets:[
+ {label:'Majority',data:[],backgroundColor:'rgba(217,119,6,.45)',borderColor:'rgba(217,119,6,.7)'},
+ {label:'Minority',data:[],backgroundColor:'rgba(185,28,28,.45)',borderColor:'rgba(185,28,28,.7)'},
+ {label:'SMOTE',data:[],backgroundColor:'rgba(251,191,36,.65)',borderColor:'rgba(180,83,9,.8)',pointStyle:'crossRot',radius:5}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'top'}},scales:{x:{min:-4,max:4},y:{min:-4,max:4}}}});
+
+let strat='none';
+function regen(){
+ const minPct=+document.getElementById('sliderMin').value;
+ document.getElementById('valMin').textContent=minPct;
+ const total=400, nMin=Math.round(total*minPct/100), nMaj=total-nMin;
+ let maj=[],min=[],synth=[];
+ for(let i=0;i&lt;nMaj;i++) maj.push({x:randn()*1.2+1.2,y:randn()*1.2,r:4});
+ let pool=[];
+ for(let i=0;i&lt;nMin;i++){const p={x:randn()*0.9-1.2,y:randn()*0.9+0.8,r:4};min.push(p);pool.push(p);}
+ if(strat==='smote' && nMin&gt;1){
+  const need=nMaj-nMin;
+  for(let i=0;i&lt;Math.min(need,800);i++){
+   const a=pool[Math.floor(Math.random()*pool.length)],b=pool[Math.floor(Math.random()*pool.length)];
+   const t=Math.random();
+   synth.push({x:a.x+t*(b.x-a.x),y:a.y+t*(b.y-a.y),r:5});
+  }
+ } else if(strat==='under'){
+  maj=maj.slice(0,Math.max(nMin,1));
+ }
+ impChart.data.datasets[0].data=maj;
+ impChart.data.datasets[1].data=min;
+ impChart.data.datasets[2].data=synth;
+ const L=I18n.get();
+ document.getElementById('majSt').textContent=(L==='zh'?'多數類別 ':'Majority ')+maj.length;
+ document.getElementById('minSt').textContent=(L==='zh'?'少數類別 ':'Minority ')+(min.length+synth.length);
+ document.getElementById('ratioSt').textContent=(L==='zh'?'比例 ':'Ratio ')+((min.length+synth.length)/(maj.length+min.length+synth.length)*100).toFixed(1)+'%';
+ impChart.update('none');
+}
+document.getElementById('sliderMin').addEventListener('input',regen);
+document.querySelectorAll('[data-strat]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-strat]').forEach(x=>x.classList.remove('active'));b.classList.add('active');strat=b.dataset.strat;regen();}));
+document.addEventListener('langchange',regen);
+regen();
+
+const QF={zh:{q1_y:'極高 AUROC 往往是 target leakage 的徵兆。',q1_n:'C 為正確答案。',q2_y:'KNN/SVM 等距離型方法對特徵尺度敏感，必須縮放。',q2_n:'A 為正確答案。',q3_y:'SMOTE 只能用在 training fold；對 test 套用會洩漏。',q3_n:'D 為正確答案。'},
+          en:{q1_y:'Extreme AUROC is usually a target-leakage symptom.',q1_n:'Correct answer is C.',q2_y:'Distance-based methods (KNN/SVM) are scale-sensitive; scaling is mandatory.',q2_n:'Correct answer is A.',q3_y:'SMOTE belongs on training folds only; otherwise it leaks.',q3_n:'Correct answer is D.'}};
+document.querySelectorAll('.quiz-q').forEach((q,qi)=>{const ans=+q.dataset.answer;q.querySelectorAll('.quiz-opt').forEach(o=>{o.addEventListener('click',()=>{if(q.classList.contains('answered'))return;q.classList.add('answered');const fb=document.getElementById('fb'+(qi+1));const ok=+o.dataset.idx===ans;o.classList.add(ok?'correct':'wrong');if(!ok)q.querySelectorAll('.quiz-opt')[ans].classList.add('correct');const L=I18n.get();fb.className='quiz-feedback show '+(ok?'correct-fb':'wrong-fb');fb.textContent=(ok?'✅ ':'❌ ')+(QF[L]['q'+(qi+1)+'_'+(ok?'y':'n')]||'');});});});
+</script>
+</body></html>
