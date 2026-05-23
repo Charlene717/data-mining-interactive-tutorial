@@ -18,6 +18,48 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽 · 約 40 分鐘" data-en="In This Chapter · ~40 min">本章導覽</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+<span class="level-badge l-mid" data-zh="進階" data-en="Intermediate">進階</span>
+<span class="level-badge l-adv" data-zh="研究" data-en="Research">研究</span>
+<span class="pill teal" data-zh="⏱ 40 分鐘閱讀" data-en="⏱ 40-min read">⏱ 40 分鐘閱讀</span>
+<span class="pill amber" data-zh="🧪 1 互動模擬" data-en="🧪 1 interactive sim">🧪 1 互動模擬</span>
+<span class="pill violet" data-zh="📝 3 測驗題" data-en="📝 3 quiz Qs">📝 3 測驗題</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="📈 故事：對沖基金 vs 流行病學家" data-en="📈 Story: Hedge fund vs epidemiologist">📈 故事：對沖基金 vs 流行病學家</a></li>
+<li><a href="#glossary" data-zh="📖 名詞地圖（兒童版＋技術版）" data-en="📖 Glossary (kid + tech)">📖 名詞地圖</a></li>
+<li><a href="#history" data-zh="📜 時間線：從 Yule AR 到 TimesFM" data-en="📜 Timeline: Yule AR to TimesFM">📜 時間線</a></li>
+<li><a href="#walkthrough" data-zh="🧮 手算 ARIMA(1,1,1)：8 步走完" data-en="🧮 Hand-trace ARIMA(1,1,1)">🧮 手算 ARIMA(1,1,1)</a></li>
+<li><a href="#discussion" data-zh="💬 三大研究議題討論" data-en="💬 3 research discussions">💬 三大研究議題討論</a></li>
+<li><a href="#pitfalls" data-zh="🚧 常見地雷與修正" data-en="🚧 Pitfalls & fixes">🚧 常見地雷與修正</a></li>
+<li><a href="#reflection" data-zh="💭 反思問題" data-en="💭 Reflection questions">💭 反思問題</a></li>
+<li><a href="#advanced" data-zh="🔬 進階：Lag-Llama / Chronos / TimesFM" data-en="🔬 Advanced: Lag-Llama / Chronos / TimesFM">🔬 進階：Lag-Llama / Chronos / TimesFM</a></li>
+</ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="案例" data-en="CASE">案例</span>
+<h3 data-zh="📈 對沖基金 vs 流行病學家：同樣資料，誰救更多人？" data-en="📈 Hedge fund vs epidemiologist: same data, who saves more lives?">📈 對沖基金 vs 流行病學家：同樣資料，誰救更多人？</h3>
+<div data-lang="zh">
+<p>2020 年 3 月，紐約一家對沖基金的量化團隊用 LSTM + Prophet 套件在 Johns Hopkins COVID-19 dashboard 上跑時序預測；他們的客戶——避險基金與保險業——拿這份預測重新定價投資組合。同一個月，一所大學的流行病學家 Dr. M 也在分析同樣資料，但他用的是 <strong>compartmental SEIR 模型 + change-point detection + bootstrap 信心區間</strong>。</p>
+<p>兩個團隊面對的是同一個資料、同一個未來——但目標不同：基金要的是「未來 30 天 case 走勢」，因此 LSTM 在 R²=0.91 的訓練集上表現極好；流行病學家要的是「<strong>何時介入</strong>」，他不要點預測，而要轉折點。Dr. M 在 3 月 14 日偵測到 NYC 病例斜率 change-point，立刻發 email 給 Cuomo 辦公室——15 日宣布停課、22 日全市停工。</p>
+<p>同年 10 月回顧：基金的 LSTM 預測在「政策不變」的假設下 RMSE = 4.3% — 數值好得驚人；但<strong>政策改變後預測完全失準</strong>，避險決策損失上億。Dr. M 的 SEIR 模型沒有點預測準確度可言，但他的「介入時機建議」估計避免了 11,000 例死亡（Pei et al. Science 2020 supplementary）。</p>
+<p>同樣的時序資料、同樣的工具箱，但<strong>「正確的問題」決定了一切</strong>。本章帶你看清「forecast vs detect vs decompose」之間的差別。</p>
+</div>
+<div data-lang="en">
+<p>March 2020. A New York hedge fund's quant team runs LSTM + Prophet on Johns Hopkins COVID-19 data; their clients (insurers, hedge funds) reprice portfolios off the forecast. The same month a university epidemiologist, Dr M, analyses the same data — but with <strong>compartmental SEIR + change-point detection + bootstrap CIs</strong>.</p>
+<p>Two teams, same data, same future — different questions. The fund wants "next-30-day cases" → LSTM training R²=0.91, stunning. Dr M wants "<strong>when to intervene</strong>"; not a point forecast but a turning point. On 14 March he detects a change-point in NYC slope and emails Cuomo's office — schools close 15 March, full lockdown 22 March.</p>
+<p>October retrospective: the fund's LSTM had RMSE = 4.3% under "policy-unchanged" assumption — amazing — but <strong>fails catastrophically after policy changes</strong>, hedge decisions lose hundreds of millions. Dr M's SEIR has no impressive point accuracy, yet his "intervention-timing" advice is estimated to have averted 11,000 deaths (Pei et al. Science 2020 SI).</p>
+<p>Same series, same tools — but the <strong>right question is everything</strong>. This chapter teaches you "forecast vs detect vs decompose".</p>
+</div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="時序資料的四個關鍵性質" data-en="Four Key Properties of Time Series">時序資料的四個關鍵性質</h2>
@@ -28,6 +70,56 @@
 <div data-lang="en">
 <p>A time series is a sequence X<sub>t</sub> ordered by time. Key differences from i.i.d. data: (1) <strong>order matters</strong> (no shuffling), (2) <strong>autocorrelation</strong> (X<sub>t</sub> depends on X<sub>t−1</sub>), (3) <strong>trend + seasonality</strong>, (4) splits must be <strong>chronological</strong> (train precedes test).</p>
 <p>Tasks: <strong>forecasting</strong>, <strong>classification (TSC)</strong>, <strong>clustering</strong>, <strong>anomaly</strong>, <strong>change-point detection</strong>, <strong>pattern discovery (motif/discord, shapelet, matrix profile)</strong>. Biomedical: ICU early warning (HR, SpO₂), CGM glucose prediction, ECG classification, outbreak early detection.</p>
+</div>
+
+<div class="analogy-box">
+<div class="ana-icon">🫀</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="時間序列探勘像心臟科醫師看 ECG" data-en="Time-series mining = cardiologist reading an ECG">時間序列探勘像心臟科醫師看 ECG</h4>
+<p data-lang="zh">心臟科醫師不只「數心跳幾下」，而是：找<strong>規律性 (rhythms)</strong>——ARIMA / Fourier；找<strong>異常節律</strong>——anomaly detection；找<strong>重複出現的形狀 (motifs)</strong>——shapelets / matrix profile；找<strong>結構斷裂</strong>——change-point；最後預測<strong>下一次心律不整何時可能發生</strong>——forecast。同一條序列被切成四種「看法」，每一種都對應不同臨床決策。</p>
+<p data-lang="en">A cardiologist doesn't just "count heartbeats" — they read <strong>rhythms</strong> (ARIMA / Fourier), spot <strong>abnormal beats</strong> (anomaly), find <strong>recurring shapes</strong> (motifs / matrix profile / shapelets), detect <strong>structural breaks</strong> (change-point), and predict <strong>when the next arrhythmia may strike</strong> (forecast). One series, four lenses — each driving a different clinical call.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞地圖" data-en="GLOSSARY">名詞地圖</div>
+<h2 data-zh="關鍵名詞（小孩版 + 技術版）" data-en="Key Terms (Kid + Tech)">關鍵名詞（小孩版 + 技術版）</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Time Series</div><div class="term-zh">時間序列</div><div class="term-kid" data-lang="zh">「依時間順序」記錄的一串數字——日體溫、月血糖。</div><div class="term-kid" data-lang="en">A sequence of numbers recorded "in time order" — daily temperature, monthly glucose.</div><div class="term-tech" data-lang="zh">隨機過程 {X_t} 在離散時間 t 的觀測；可一元或多元。</div><div class="term-tech" data-lang="en">Observations of a stochastic process {X_t} at discrete t; univariate or multivariate.</div></div>
+<div class="glossary-card"><div class="term-en">Stationarity</div><div class="term-zh">平穩性</div><div class="term-kid" data-lang="zh">「平均、變異、規律」<em>不隨時間變</em>——河水穩定流。</div><div class="term-kid" data-lang="en">"Mean, variance, pattern" <em>do not drift</em> over time — a steady river.</div><div class="term-tech" data-lang="zh">弱平穩：E[X_t]、Var(X_t)、Cov(X_t, X_{t−k}) 與 t 無關。ARIMA 假設之。</div><div class="term-tech" data-lang="en">Weakly stationary: E[X_t], Var(X_t), Cov(X_t, X_{t−k}) independent of t. ARIMA assumes this.</div></div>
+<div class="glossary-card"><div class="term-en">ADF / KPSS test</div><div class="term-zh">ADF / KPSS 平穩性檢定</div><div class="term-kid" data-lang="zh">兩種測「序列穩不穩」的數學考試。</div><div class="term-kid" data-lang="en">Two statistical exams for "is this series stationary?"</div><div class="term-tech" data-lang="zh">ADF：H0=非平穩 (unit root) → p&lt;0.05 即拒絕；KPSS：H0=平穩。建議兩者一起跑。</div><div class="term-tech" data-lang="en">ADF: H0 = non-stationary (unit root) → p&lt;0.05 rejects; KPSS: H0 = stationary. Run both for cross-check.</div></div>
+<div class="glossary-card"><div class="term-en">ACF / PACF</div><div class="term-zh">自相關 / 偏自相關</div><div class="term-kid" data-lang="zh">看「今天和昨天像不像」「今天和前天像不像」。</div><div class="term-kid" data-lang="en">Does "today look like yesterday?" "two days ago?"</div><div class="term-tech" data-lang="zh">ACF(k) = Corr(X_t, X_{t−k})；PACF(k) 扣除中間 lag。AR 序列 PACF 在 p 後截斷。</div><div class="term-tech" data-lang="en">ACF(k) = Corr(X_t, X_{t−k}); PACF(k) controls for intermediate lags. AR(p) → PACF cuts off after p.</div></div>
+<div class="glossary-card"><div class="term-en">AR / MA / ARMA / ARIMA</div><div class="term-zh">自迴歸 / 移動平均</div><div class="term-kid" data-lang="zh">AR = 今天看昨天；MA = 今天看「過去一陣的雜訊」；ARIMA = 兩者 + 差分。</div><div class="term-kid" data-lang="en">AR = today depends on yesterday; MA = today depends on recent shocks; ARIMA = both + differencing.</div><div class="term-tech" data-lang="zh">ARMA(p,q): φ(L)X_t = θ(L)ε_t；ARIMA(p,d,q) = ARMA on Δ^d X。</div><div class="term-tech" data-lang="en">ARMA(p,q): φ(L)X_t = θ(L)ε_t; ARIMA(p,d,q) = ARMA on Δ^d X.</div></div>
+<div class="glossary-card"><div class="term-en">Seasonal ARIMA (SARIMA)</div><div class="term-zh">季節 ARIMA</div><div class="term-kid" data-lang="zh">加上「每週／每月／每年」週期。</div><div class="term-kid" data-lang="en">Adds weekly / monthly / yearly seasonality.</div><div class="term-tech" data-lang="zh">ARIMA(p,d,q)(P,D,Q)_s；季節 d=D 差分；常用 s=12 (月) 或 s=7 (日週期)。</div><div class="term-tech" data-lang="en">ARIMA(p,d,q)(P,D,Q)_s; seasonal differencing D; common s=12 (monthly) or s=7 (daily).</div></div>
+<div class="glossary-card"><div class="term-en">Holt-Winters / ETS</div><div class="term-zh">指數平滑</div><div class="term-kid" data-lang="zh">用「越近的點越重要」的加權平均，加上趨勢與季節項。</div><div class="term-kid" data-lang="en">Weighted average that "weights recent points more", plus trend and season.</div><div class="term-tech" data-lang="zh">level + trend + seasonal 三狀態；ETS(A/M, A/M, N/A/M) 9 種組合。</div><div class="term-tech" data-lang="en">Three states: level + trend + season; ETS(A/M, A/M, N/A/M) yields 9 variants.</div></div>
+<div class="glossary-card"><div class="term-en">Prophet (Meta 2018)</div><div class="term-zh">Prophet</div><div class="term-kid" data-lang="zh">Facebook 出的「自動會處理假日、季節、趨勢」的預測工具。</div><div class="term-kid" data-lang="en">Facebook's auto-handle-everything forecaster (trend + seasons + holidays).</div><div class="term-tech" data-lang="zh">Taylor-Letham 2018；加法模型 y = g(t) + s(t) + h(t) + ε，piecewise-linear 趨勢、Fourier 季節。</div><div class="term-tech" data-lang="en">Taylor-Letham 2018; additive y = g(t) + s(t) + h(t) + ε; piecewise-linear trend, Fourier seasonality.</div></div>
+<div class="glossary-card"><div class="term-en">DTW (Dynamic Time Warping)</div><div class="term-zh">動態時間扭曲</div><div class="term-kid" data-lang="zh">即使兩段歌「節奏不同」也能找出對齊方式比較。</div><div class="term-kid" data-lang="en">Aligns two melodies even when they have different tempos.</div><div class="term-tech" data-lang="zh">Sakoe-Chiba 1978；動態規劃求最佳路徑；非嚴格度量（不滿足三角不等式）。</div><div class="term-tech" data-lang="en">Sakoe-Chiba 1978; DP for the warping path; not a strict metric (violates triangle inequality).</div></div>
+<div class="glossary-card"><div class="term-en">Shapelet</div><div class="term-zh">形狀片段</div><div class="term-kid" data-lang="zh">序列中「最能區別兩類」的小片段——ECG 中的 QRS 寬度。</div><div class="term-kid" data-lang="en">A short snippet that "best separates classes" — e.g. QRS width in ECG.</div><div class="term-tech" data-lang="zh">Ye-Keogh 2009；窮舉候選 + 資訊增益挑選；shapelet transform。</div><div class="term-tech" data-lang="en">Ye-Keogh 2009; enumerate candidates + info-gain selection; shapelet transform.</div></div>
+<div class="glossary-card"><div class="term-en">Matrix Profile</div><div class="term-zh">矩陣輪廓</div><div class="term-kid" data-lang="zh">把序列切成小窗、把每個小窗和「最近鄰小窗」的距離記下來——一張地圖看完 motif 與 discord。</div><div class="term-kid" data-lang="en">Slide a window through the series, record each window's distance to its nearest non-trivial twin — one map shows motifs and discords.</div><div class="term-tech" data-lang="zh">Yeh 2016；STAMP/STUMP/SCRIMP，O(n²) → O(n log n) approx；STUMPY 套件。</div><div class="term-tech" data-lang="en">Yeh 2016; STAMP/STUMP/SCRIMP, O(n²) → O(n log n) approx; STUMPY package.</div></div>
+<div class="glossary-card"><div class="term-en">Change-point detection</div><div class="term-zh">變點偵測</div><div class="term-kid" data-lang="zh">「序列結構在第幾天突然變了？」如政策日、發病日。</div><div class="term-kid" data-lang="en">"When did the regime suddenly change?" — a policy date, an onset day.</div><div class="term-tech" data-lang="zh">PELT (Killick 2012)、BOCPD (Adams-MacKay 2007)、ruptures 套件。</div><div class="term-tech" data-lang="en">PELT (Killick 2012), BOCPD (Adams-MacKay 2007), ruptures package.</div></div>
+<div class="glossary-card"><div class="term-en">STL decomposition</div><div class="term-zh">STL 分解</div><div class="term-kid" data-lang="zh">把一條序列「拆成三層」：趨勢、季節、剩餘。</div><div class="term-kid" data-lang="en">Splits a series into three layers: trend, season, remainder.</div><div class="term-tech" data-lang="zh">Cleveland 1990；LOESS-based、抗極端值；statsmodels.tsa.STL。</div><div class="term-tech" data-lang="en">Cleveland 1990; LOESS-based, robust to outliers; statsmodels.tsa.STL.</div></div>
+<div class="glossary-card"><div class="term-en">TimeSeriesSplit / Walk-forward</div><div class="term-zh">時序切割</div><div class="term-kid" data-lang="zh">「不能洗牌」——訓練永遠在測試之前。</div><div class="term-kid" data-lang="en">"No shuffling" — train always precedes test.</div><div class="term-tech" data-lang="zh">sklearn TimeSeriesSplit；rolling-origin CV；random K-fold 在時序上是 data leakage。</div><div class="term-tech" data-lang="en">sklearn TimeSeriesSplit; rolling-origin CV; random K-fold on time series is data leakage.</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間線" data-en="TIMELINE">時間線</div>
+<h2 data-zh="從 1927 Yule AR 到 2026 TimesFM" data-en="From Yule AR (1927) to TimesFM (2026)">從 1927 Yule AR 到 2026 TimesFM</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1927</span> <span class="tl-title" data-zh="Yule 自迴歸模型" data-en="Yule AR model">Yule 自迴歸模型</span><span class="tl-desc" data-lang="zh">研究太陽黑子週期；首度引入 AR(p) 概念，現代時序分析的源頭。</span><span class="tl-desc" data-lang="en">Studying sunspot cycles; first AR(p) formulation — origin of modern time-series analysis.</span></div>
+<div class="timeline-item"><span class="tl-year">1970</span> <span class="tl-title" data-zh="Box-Jenkins ARIMA" data-en="Box-Jenkins ARIMA">Box-Jenkins ARIMA</span><span class="tl-desc" data-lang="zh">統計時序的「聖經」；提出 identification → estimation → diagnostics 三步法。</span><span class="tl-desc" data-lang="en">The "bible" of statistical TS — identification → estimation → diagnostics three-step.</span></div>
+<div class="timeline-item"><span class="tl-year">1978</span> <span class="tl-title" data-zh="Sakoe-Chiba DTW" data-en="Sakoe-Chiba DTW">Sakoe-Chiba DTW</span><span class="tl-desc" data-lang="zh">語音辨識起家；用 DP 找最佳對齊路徑，現代 ECG / 步態分析仍在用。</span><span class="tl-desc" data-lang="en">Born in speech recognition; DP-based warping path — still used in ECG / gait today.</span></div>
+<div class="timeline-item"><span class="tl-year">1985</span> <span class="tl-title" data-zh="Holt-Winters / ETS" data-en="Holt-Winters / ETS">Holt-Winters / ETS</span><span class="tl-desc" data-lang="zh">指數平滑加入趨勢 + 季節，至今仍是「快速基準」首選。</span><span class="tl-desc" data-lang="en">Exponential smoothing + trend + seasonality — still a "fast baseline" pick.</span></div>
+<div class="timeline-item"><span class="tl-year">2009</span> <span class="tl-title" data-zh="Ye-Keogh Shapelets" data-en="Ye-Keogh Shapelets">Ye-Keogh Shapelets</span><span class="tl-desc" data-lang="zh">KDD；首次「可解釋」時序分類——找「最有區別性的子序列」。</span><span class="tl-desc" data-lang="en">KDD; first interpretable TS classification — pick "most distinctive subsequence".</span></div>
+<div class="timeline-item"><span class="tl-year">2016</span> <span class="tl-title" data-zh="Yeh Matrix Profile" data-en="Yeh Matrix Profile">Yeh Matrix Profile</span><span class="tl-desc" data-lang="zh">ICDM；STAMP 演算法把「找 motif/discord」變成 O(n log n) 一張地圖。</span><span class="tl-desc" data-lang="en">ICDM; STAMP turns motif/discord search into an O(n log n) single map.</span></div>
+<div class="timeline-item"><span class="tl-year">2018</span> <span class="tl-title" data-zh="Taylor-Letham Prophet (Meta)" data-en="Taylor-Letham Prophet (Meta)">Taylor-Letham Prophet (Meta)</span><span class="tl-desc" data-lang="zh">Am. Statistician；「商業用」加法模型，自動處理假日，2018-2022 用爆。</span><span class="tl-desc" data-lang="en">Am. Statistician; "business-friendly" additive model with auto holidays — went viral 2018-2022.</span></div>
+<div class="timeline-item"><span class="tl-year">2019</span> <span class="tl-title" data-zh="STUMPY 套件首發" data-en="STUMPY package released">STUMPY 套件首發</span><span class="tl-desc" data-lang="zh">Law 2019 JOSS；GPU + CPU 的 Matrix Profile 實作，讓 motif/discord 平民化。</span><span class="tl-desc" data-lang="en">Law 2019 JOSS; GPU + CPU Matrix Profile lib — motif/discord goes mainstream.</span></div>
+<div class="timeline-item"><span class="tl-year">2022</span> <span class="tl-title" data-zh="N-BEATS / NHITS 興起" data-en="N-BEATS / NHITS rise">N-BEATS / NHITS 興起</span><span class="tl-desc" data-lang="zh">Oreshkin / Challu；深度純 MLP 在 M3/M4 競賽贏統計模型，深度 TS 元年。</span><span class="tl-desc" data-lang="en">Oreshkin / Challu; deep pure-MLP beats statistical models on M3/M4 — year zero of deep TS.</span></div>
+<div class="timeline-item"><span class="tl-year">2024</span> <span class="tl-title" data-zh="Lag-Llama + Chronos" data-en="Lag-Llama + Chronos">Lag-Llama + Chronos</span><span class="tl-desc" data-lang="zh">第一批「時序基礎模型」——pretrain on millions of series，<em>zero-shot</em> forecast。</span><span class="tl-desc" data-lang="en">First wave of "TS foundation models" — pretrained on millions of series, <em>zero-shot</em> forecast.</span></div>
+<div class="timeline-item"><span class="tl-year">2025</span> <span class="tl-title" data-zh="TimesFM (Google)" data-en="TimesFM (Google)">TimesFM (Google)</span><span class="tl-desc" data-lang="zh">200M parameters，在 TS Benchmark Hub 達多項 SOTA；商業 GCP API。</span><span class="tl-desc" data-lang="en">200M params, multiple SOTA on TS Benchmark Hub; commercial GCP API.</span></div>
+<div class="timeline-item"><span class="tl-year">2026</span> <span class="tl-title" data-zh="多模態時序基礎模型" data-en="Multi-modal TS foundation models">多模態時序基礎模型</span><span class="tl-desc" data-lang="zh">時序 + 文字（事件、政策）+ 結構化特徵聯合預訓；醫療應用如 ICU 多源訊號 + 病歷文字。</span><span class="tl-desc" data-lang="en">Joint TS + text (events, policies) + structured features; ICU multi-modal signal + notes.</span></div>
 </div>
 </section>
 
@@ -164,6 +256,146 @@ cps  = algo.predict(pen=<span class="num">5</span>)</pre></div>
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算演練" data-en="HAND-TRACE">手算演練</div>
+<h2 data-zh="ARIMA(1,1,1) 配適月疫苗銷售：8 步走完" data-en="Fitting ARIMA(1,1,1) on Monthly Vaccine Sales in 8 Steps">ARIMA(1,1,1) 配適月疫苗銷售：8 步走完</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">TS</div><h3 data-zh="情境：60 個月疫苗銷售量、上升趨勢、需預測未來 6 月" data-en="Setup: 60 monthly vaccine sales, upward trend, forecast next 6 months">情境：60 個月疫苗銷售量、上升趨勢、需預測未來 6 月</h3><span class="wt-tag">N=60 · horizon=6</span></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>視覺檢視 + ADF。</strong>plot 看到明顯上升趨勢、無季節週期；ADF p-value=<code>0.42</code> → <em>非平穩</em>，需要差分。</div><div class="wt-body" data-lang="en"><strong>Plot + ADF.</strong> Visible upward trend, no seasonality; ADF p-value=<code>0.42</code> → <em>non-stationary</em>, differencing needed.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>差分一次 (d=1)。</strong>計算 Δy_t = y_t − y_{t−1}；再跑 ADF 在差分序列：p-value=<code>0.008</code> → <em>平穩</em>。差分後資料看起來像穩定的噪音 + 一些波動。</div><div class="wt-body" data-lang="en"><strong>Difference once (d=1).</strong> Δy_t = y_t − y_{t−1}; ADF on Δy gives p-value=<code>0.008</code> → <em>stationary</em>. Differenced series looks like stable noise + small ripples.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>看 ACF on Δy。</strong>ACF 在 lag-1 顯著為正 (<code>0.62</code>)、lag-2 後迅速衰減到 0 — 提示 MA(1) 訊號（q=1）。</div><div class="wt-body" data-lang="en"><strong>ACF of Δy.</strong> ACF spikes at lag-1 (<code>0.62</code>) then quickly decays to 0 — suggests MA(1) signature (q=1).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>看 PACF on Δy。</strong>PACF 在 lag-1 顯著 (<code>0.54</code>)、之後 lag-2 已落到 0.1 內 — 提示 AR(1) (p=1)。</div><div class="wt-body" data-lang="en"><strong>PACF of Δy.</strong> PACF significant at lag-1 (<code>0.54</code>), within 0.1 from lag-2 — suggests AR(1) (p=1).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>配適 ARIMA(1,1,1)。</strong>statsmodels 估計 φ=<code>0.71</code>, θ=<code>−0.43</code>, σ²=<code>156</code>，AIC=<code>432.1</code>，BIC=<code>438.4</code>。</div><div class="wt-body" data-lang="en"><strong>Fit ARIMA(1,1,1).</strong> statsmodels gives φ=<code>0.71</code>, θ=<code>−0.43</code>, σ²=<code>156</code>, AIC=<code>432.1</code>, BIC=<code>438.4</code>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 6</div><div class="wt-body" data-lang="zh"><strong>殘差診斷。</strong>Ljung-Box Q(10) p-value=<code>0.65</code>（不能拒絕「殘差是白噪音」），ACF 殘差全部在 ±2/√N 帶內 → <em>模型抓到結構</em>。</div><div class="wt-body" data-lang="en"><strong>Residual diagnostics.</strong> Ljung-Box Q(10) p=<code>0.65</code> (cannot reject "white noise residuals"); residual ACF inside ±2/√N band → <em>model captured the structure</em>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 7</div><div class="wt-body" data-lang="zh"><strong>預測未來 6 個月。</strong>點預測 + 95% CI 寬度隨 horizon 拉長變寬（不確定累積）：h=1 CI 寬 ±25；h=6 CI 寬 ±62。</div><div class="wt-body" data-lang="en"><strong>Forecast 6 months ahead.</strong> Point forecast + 95% CI widening with horizon (uncertainty accumulates): h=1 CI ±25; h=6 CI ±62.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 8</div><div class="wt-body" data-lang="zh"><strong>回測 (back-test) 驗證。</strong>用 walk-forward CV 在最後 12 個月：RMSE=<code>14.2</code>，MAPE=<code>6.8%</code>。比 Holt-Winters baseline (RMSE=17) 與 random walk (RMSE=22) 都好——可上線。</div><div class="wt-body" data-lang="en"><strong>Back-test.</strong> Walk-forward CV on last 12 months: RMSE=<code>14.2</code>, MAPE=<code>6.8%</code>. Beats Holt-Winters (RMSE=17) and random walk (RMSE=22) — ready to deploy.</div></div>
+</div>
+<div class="formula-box">
+ARIMA(p,d,q):  φ(L)(1−L)<sup>d</sup>X_t = θ(L) ε_t<span class="f-where" data-lang="zh">φ(L) = 1 − φ_1 L − … − φ_p L^p；θ(L) = 1 + θ_1 L + … + θ_q L^q；L 為延遲算子 LX_t = X_{t−1}。</span><span class="f-where" data-lang="en">φ(L) = 1 − φ_1 L − … − φ_p L^p; θ(L) = 1 + θ_1 L + … + θ_q L^q; L is the lag operator LX_t = X_{t−1}.</span>
+</div>
+<details class="detail-toggle"><summary data-zh="🔬 為什麼 ARIMA(1,1,1) 的 ACF/PACF 不像純 AR 或純 MA 截斷？" data-en="🔬 Why don't ARIMA(1,1,1) ACF/PACF show clean cutoffs?">🔬 為什麼 ARIMA(1,1,1) 的 ACF/PACF 不像純 AR 或純 MA 截斷？</summary>
+<div class="detail-body">
+<p data-lang="zh">ARMA(1,1) 在差分後的 ACF 與 PACF <em>都會逐漸衰減</em>（不截斷）——因為 AR 部分讓 ACF 拖尾、MA 部分讓 PACF 拖尾。Box-Jenkins 三步法的「Identification」步驟在這時依賴 <strong>AIC / BIC</strong> 自動選擇，或用 <code>auto.arima</code> 搜尋。完全乾淨的「截斷」只在純 AR(p) → PACF 在 lag p 截斷、純 MA(q) → ACF 在 lag q 截斷時出現。</p>
+<p data-lang="en">For ARMA(1,1), both ACF and PACF of the differenced series <em>decay smoothly</em> (no cutoff) — AR drags ACF, MA drags PACF. The "Identification" step of Box-Jenkins then relies on <strong>AIC / BIC</strong> or <code>auto.arima</code> search. Clean cutoffs appear only for pure AR(p) → PACF cuts at lag p, or pure MA(q) → ACF cuts at lag q.</p>
+</div></details>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="研究討論" data-en="DISCUSSION">研究討論</div>
+<h2 data-zh="三個值得思考的真問題" data-en="Three Real Questions Worth Pondering">三個值得思考的真問題</h2>
+<div class="discussion-card">
+<span class="disc-label">Q1</span>
+<h3 data-zh="Prophet vs ARIMA：什麼時候用哪個？" data-en="Prophet vs ARIMA — when each?">Prophet vs ARIMA：什麼時候用哪個？</h3>
+<p class="disc-q" data-lang="zh">兩者都在「forecast 月銷售」場景常被推薦，但內在邏輯天差地別。</p>
+<p class="disc-q" data-lang="en">Both are go-to for "monthly sales forecast", yet their inner logic differs fundamentally.</p>
+<div class="disc-pov" data-lang="zh"><strong>Prophet 適合：</strong>強週期 + 假日效應 + 有缺失 + 業務分析師需要可解釋；缺點是「短序列」(< 24 點) 易過擬合 changepoints，且難正確處理外生變數。</div>
+<div class="disc-pov" data-lang="en"><strong>Prophet shines:</strong> strong seasonality + holidays + missing data + analyst needs interpretability. Cons: short series (&lt; 24 pts) overfit changepoints; exogenous regressors awkward.</div>
+<div class="disc-pov" data-lang="zh"><strong>ARIMA 適合：</strong>平穩 + 有自相關結構 + 不確定區間關鍵；好處是統計理論完整、CI 可信。缺點：對假日不友善、需要人工 (p,d,q)（雖然 auto.arima 已自動化）。</div>
+<div class="disc-pov" data-lang="en"><strong>ARIMA shines:</strong> stationary + autocorrelated + need credible intervals; full statistical theory, CIs reliable. Cons: holiday-unfriendly, requires (p,d,q) selection (auto.arima helps).</div>
+</div>
+<div class="discussion-card">
+<span class="disc-label">Q2</span>
+<h3 data-zh="深度時序模型值得花 GPU 嗎？" data-en="Are deep TS models worth the GPU?">深度時序模型值得花 GPU 嗎？</h3>
+<p class="disc-q" data-lang="zh">N-BEATS、PatchTST、TimesNet、TimesFM 一個比一個炫；但 Makridakis-M4 競賽 (2018) 顯示<em>統計 ensemble</em>仍勝深度。</p>
+<p class="disc-q" data-lang="en">N-BEATS, PatchTST, TimesNet, TimesFM each more dazzling — yet the Makridakis-M4 (2018) showed <em>statistical ensembles</em> still beat deep models.</p>
+<div class="disc-pov" data-lang="zh"><strong>Pro-Deep：</strong>多變量、長序列、跨領域 zero-shot——這些 ARIMA 做不來。TimesFM 2025 在零樣本下平均擊敗 auto-ARIMA 8% (TS Hub benchmark)。</div>
+<div class="disc-pov" data-lang="en"><strong>Pro-Deep:</strong> Multivariate, long-context, cross-domain zero-shot — ARIMA can't. TimesFM 2025 averages 8% better than auto-ARIMA in zero-shot (TS Hub).</div>
+<div class="disc-pov" data-lang="zh"><strong>反方：</strong>單變量、短序列 (N < 1000)、需 CI、解釋性高，<em>SARIMA + ETS ensemble</em> 至今仍是最強基準（Hyndman 2020）。GPU + 工程成本 + 維運難度通常不值。</div>
+<div class="disc-pov" data-lang="en"><strong>Counter:</strong> Univariate, short series (N &lt; 1000), need CIs, interpretability — <em>SARIMA + ETS ensemble</em> remains the strongest baseline (Hyndman 2020). GPU + engineering cost often not worth it.</div>
+</div>
+<div class="discussion-card">
+<span class="disc-label">Q3</span>
+<h3 data-zh="Matrix Profile 是「最被低估的時序技術」嗎？" data-en="Is Matrix Profile the most underrated TS technique?">Matrix Profile 是「最被低估的時序技術」嗎？</h3>
+<p class="disc-q" data-lang="zh">Eamonn Keogh 多次喊「Matrix Profile changes everything」——但 2024 Google Trends 仍遠低於 LSTM、Prophet。</p>
+<p class="disc-q" data-lang="en">Eamonn Keogh keeps saying "Matrix Profile changes everything" — yet Google Trends 2024 still ranks it far below LSTM, Prophet.</p>
+<div class="disc-pov" data-lang="zh"><strong>支持：</strong>一條序列下，<em>motif + discord + segmentation + classification + clustering</em> 全部一張地圖搞定。比起 ARIMA 預設「平穩」、LSTM 黑盒，MP 邏輯透明、近線性時間。</div>
+<div class="disc-pov" data-lang="en"><strong>Pro:</strong> One map gives you <em>motif + discord + segmentation + classification + clustering</em>. Compared to ARIMA's stationarity assumption or LSTM's black box, MP is transparent, near-linear time.</div>
+<div class="disc-pov" data-lang="zh"><strong>反方：</strong>學習曲線陡（要懂窗口大小選擇 + AB-join + STAMP/SCRIMP），且預測場景不如 forecasting 模型；社群仍在打基礎建設。STUMPY (2019) 才剛把它平民化。</div>
+<div class="disc-pov" data-lang="en"><strong>Counter:</strong> Steep learning curve (window size, AB-join, STAMP/SCRIMP); forecast support weak; ecosystem still maturing. STUMPY (2019) only recently made it accessible.</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="實戰案例" data-en="SPOTLIGHT">實戰案例</div>
+<div class="spotlight">
+<div class="sp-icon">📉</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="案例" data-en="CASE">案例</span>
+<h4 data-zh="2020 IHME COVID-19 模型：當「曲線擬合」遇到「政策介入」" data-en="2020 IHME COVID-19 Model: When curve-fitting meets policy intervention">2020 IHME COVID-19 模型：當「曲線擬合」遇到「政策介入」</h4>
+<p data-lang="zh">2020 年 3-4 月，華盛頓大學 IHME (Institute for Health Metrics and Evaluation) 發佈 COVID-19 死亡預測，<strong>白宮直接引用做為政策依據</strong>。其模型基於 ERF (extended Gaussian / Farr's law) — 假設疫情如標準曲線升降。預測 4 月底美國累積死亡 81,000；實際 4 月底 65,000，5 月 1 日已 81,000，<em>偏差約 30%</em>。</p>
+<p data-lang="en">March-April 2020. IHME (Univ. Washington) released COVID-19 death forecasts that the White House cited directly. Model: ERF (extended Gaussian / Farr's law), assuming a standard rise-fall curve. Predicted ~81,000 US deaths by end of April; actual ~65,000 end-April but 81,000 by May 1 — <em>~30% error</em>.</p>
+<p data-lang="zh">教訓：(1) 「無資料就外推」是時序預測的最深誤區；(2) 政策介入改變底層 data-generating process — <strong>歷史不再是未來的指引</strong>；(3) Jewell (Annals of Internal Medicine, 2020) 後續批評 IHME「過度依賴 functional form」；(4) 之後的版本改用 SEIR + Bayesian + 多模型 ensemble。</p>
+<p data-lang="en">Lessons: (1) "extrapolate with no data" is the deepest TS trap; (2) policy interventions change the data-generating process — <strong>history no longer guides the future</strong>; (3) Jewell (Ann. Intern. Med. 2020) later criticised IHME's "over-reliance on functional form"; (4) later versions used SEIR + Bayesian + multi-model ensemble.</p>
+<p data-lang="zh">外推一條 COVID 曲線和外推蘋果手機銷售是兩回事——後者沒有「強制隔離」這種干預。任何時序模型的有效範圍止於「process 不變」。</p>
+<p data-lang="en">Extrapolating a COVID curve is not extrapolating iPhone sales — the latter has no "lockdown" intervention. Every TS model's validity stops where the process changes.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="常見陷阱" data-en="PITFALLS">常見陷阱</div>
+<h2 data-zh="六個地雷與修正" data-en="Six Pitfalls & Fixes">六個地雷與修正</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① 對非平穩直接套 ARIMA" data-en="① ARIMA on non-stationary">① 對非平穩直接套 ARIMA</h4><p data-lang="zh">ARIMA 假設差分後平穩；若你沒驗證，估計參數會有 spurious regression 問題。<strong>修正：</strong>先 ADF / KPSS 雙檢；用 auto.arima 自動找 d；繪 ACF 看「是否完全衰減」。</p><p data-lang="en">ARIMA assumes stationarity after differencing; skip the check → spurious estimates. <strong>Fix:</strong> ADF + KPSS dual test; auto.arima for d; plot ACF for "does it decay?".</p></div>
+<div class="pitfall-card"><h4 data-zh="② 忽略季節性" data-en="② Ignoring seasonality">② 忽略季節性</h4><p data-lang="zh">月零售用 ARIMA(p,d,q) 而非 SARIMA → 殘差 ACF 在 lag 12 仍有強訊號。<strong>修正：</strong>用 STL 先檢驗、ACF 看 seasonal 高峰；改 SARIMA 或 Prophet。</p><p data-lang="en">Monthly retail with ARIMA(p,d,q) instead of SARIMA → residual ACF still spikes at lag 12. <strong>Fix:</strong> STL inspection, look for ACF seasonal peaks; use SARIMA or Prophet.</p></div>
+<div class="pitfall-card"><h4 data-zh="③ Prophet 套在短序列" data-en="③ Prophet on short series">③ Prophet 套在短序列</h4><p data-lang="zh">12 個月資料用 Prophet → changepoints 過多、預測抖動嚴重。<strong>修正：</strong>短序列改 ETS / ARIMA；如必須 Prophet，設 <code>changepoint_prior_scale=0.01</code>。</p><p data-lang="en">12-month data with Prophet → too many changepoints, forecast jitter. <strong>Fix:</strong> short series use ETS / ARIMA; if Prophet, set <code>changepoint_prior_scale=0.01</code>.</p></div>
+<div class="pitfall-card"><h4 data-zh="④ 沒做 back-test" data-en="④ No back-testing">④ 沒做 back-test</h4><p data-lang="zh">In-sample fit 漂亮，但 out-of-sample 慘敗——常見原因。<strong>修正：</strong>walk-forward / rolling-origin CV；至少保留最後 20% 當測試。</p><p data-lang="en">In-sample fit dazzling, out-of-sample disaster — classic. <strong>Fix:</strong> walk-forward / rolling-origin CV; reserve last 20% for test.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ CV 用 random K-fold 洩漏未來" data-en="⑤ Random K-fold leaks future">⑤ CV 用 random K-fold 洩漏未來</h4><p data-lang="zh">時序資料 shuffle 後 K-fold = 用未來預測過去；指標會極度樂觀。<strong>修正：</strong>sklearn TimeSeriesSplit；rolling-origin。</p><p data-lang="en">Shuffled K-fold = predicting past from future; metrics absurdly optimistic. <strong>Fix:</strong> sklearn TimeSeriesSplit; rolling-origin.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ 把隨機漫步當「趨勢」" data-en="⑥ Confusing random walk with trend">⑥ 把隨機漫步當「趨勢」</h4><p data-lang="zh">股價、基因表現某些指標其實是隨機漫步 (unit root)，但被誤判為趨勢 → 用線性回歸畫出「假趨勢」。<strong>修正：</strong>ADF 檢測 unit root；隨機漫步用差分後再分析。</p><p data-lang="en">Stock prices / some gene-expression indices are random walks (unit root), often mistaken for trends → linear regression draws a "fake trend". <strong>Fix:</strong> ADF unit-root test; analyse differences instead.</p></div>
+</div>
+
+<h3 data-zh="壞做法 vs 好做法" data-en="Bad vs Good Practice">壞做法 vs 好做法</h3>
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞做法" data-en="Bad practice">壞做法</h4>
+<p data-lang="zh">把 ICU 60 天 HR/SpO₂ shuffle 後做 5-fold CV，用 LSTM 訓 99% R²，發 paper 宣稱「可預測 sepsis」。實際上下午訓練、上午測試 = 完全未來洩漏。</p>
+<p data-lang="en">Shuffle 60-day ICU HR/SpO₂ for 5-fold CV, train LSTM at R²=0.99, publish "predicts sepsis". Reality: afternoon train, morning test = total future leakage.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好做法" data-en="Good practice">好做法</h4>
+<p data-lang="zh">按時間切：前 80% 訓練、後 20% 測試；用 walk-forward CV 評估；同時跑統計基準 (SARIMA, ETS) 與深度 (LSTM, TimesFM)；報告 RMSE + MAPE + sMAPE + 95% prediction CI；最終由臨床專家評估「介入時機」的決策價值。</p>
+<p data-lang="en">Split chronologically: 80% train, 20% test; walk-forward CV; run statistical baselines (SARIMA, ETS) and deep (LSTM, TimesFM); report RMSE + MAPE + sMAPE + 95% prediction CI; clinicians review the "intervention timing" decision value.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<div class="reflection-q">
+<h4 data-zh="閉上書本前先想想……" data-en="Before closing this chapter, ponder…">閉上書本前先想想……</h4>
+<ol>
+<li data-lang="zh">為什麼 IHME 模型在 2020 年 4 月偏差 30%？「曲線擬合」與「因果機制」有何根本差異？</li>
+<li data-lang="en">Why was the IHME model 30% off in April 2020? What's the fundamental difference between "curve fitting" and "causal mechanism"?</li>
+<li data-lang="zh">ARIMA(0,1,0) 等於什麼？這個簡單模型在金融、生物、醫學的哪些情境意外地強？</li>
+<li data-lang="en">What does ARIMA(0,1,0) equal? In which finance/biology/medicine contexts is this trivial model surprisingly strong?</li>
+<li data-lang="zh">設計一個 ICU sepsis 早警時序模型——你會選哪個 base learner？要做哪些 back-test 設定？</li>
+<li data-lang="en">Design an ICU sepsis early-warning TS model — which base learner? Which back-test setup?</li>
+<li data-lang="zh">Matrix Profile 為什麼能同時找 motif 和 discord？兩者在分數上的差異是什麼？</li>
+<li data-lang="en">Why does Matrix Profile find both motif and discord? How do they differ on the score axis?</li>
+<li data-lang="zh">TimesFM / Chronos 等時序基礎模型在你的領域真的能 zero-shot 嗎？哪些情境最容易失敗？</li>
+<li data-lang="en">Can TS foundation models (TimesFM / Chronos) truly zero-shot in your domain? In which scenarios do they fail most?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="section-label" data-zh="研究前沿" data-en="ADVANCED / SOTA">研究前沿</div>
+<div class="advanced-note">
+<span class="adv-label">SOTA 2025-2026</span>
+<h4 data-zh="從 Lag-Llama 到時序基礎模型生態系" data-en="From Lag-Llama to the TS foundation-model ecosystem">從 Lag-Llama 到時序基礎模型生態系</h4>
+<p data-lang="zh"><strong>Lag-Llama (Rasul 2024)</strong>：首個「decoder-only 時序 LLM」，pretrained 在 millions of synthetic + real series；可 zero-shot forecast。實測在 MAE 上和 auto-ARIMA 接近，但對「<em>非看過資料</em>」有優勢。</p>
+<p data-lang="en"><strong>Lag-Llama (Rasul 2024)</strong>: first decoder-only TS LLM, pretrained on millions of synthetic + real series; zero-shot. MAE close to auto-ARIMA, but shines on <em>unseen series</em>.</p>
+<p data-lang="zh"><strong>Chronos (Ansari 2024, Amazon)</strong>：把序列<em>量化成 tokens</em>，直接用 T5 / GPT 預訓——「時序 = 文本」概念革命。Chronos-large (710M params) 在 27 個 TS benchmark 平均勝 N-BEATS 12%。</p>
+<p data-lang="en"><strong>Chronos (Ansari 2024, Amazon)</strong>: <em>quantises series into tokens</em>, pretrains on T5/GPT — "TS = text" paradigm shift. Chronos-large (710M params) beats N-BEATS by 12% avg on 27 TS benchmarks.</p>
+<p data-lang="zh"><strong>TimesFM (Das 2025, Google)</strong>：200M 參數、100B time-points pretrain；在 zero-shot TS Hub benchmark 25/30 dataset 達 SOTA。<code>tfm.forecast(series, horizon=24)</code> 一行搞定。</p>
+<p data-lang="en"><strong>TimesFM (Das 2025, Google)</strong>: 200M params, 100B time-points pretrain; SOTA on 25/30 zero-shot TS Hub. <code>tfm.forecast(series, horizon=24)</code> in one line.</p>
+<p data-lang="zh"><strong>Matrix Profile 進階：</strong>MPdist (Gharghabi 2018) 把 motif distance 變成「distribution-aware」；SegMixer (2025) 結合 MP 與深度分割，可在 long ECG 上偵測心律不整段。</p>
+<p data-lang="en"><strong>Matrix Profile advances:</strong> MPdist (Gharghabi 2018) makes motif distance distribution-aware; SegMixer (2025) combines MP + deep segmentation for arrhythmia bouts in long ECG.</p>
+<p data-lang="zh"><strong>2026 方向：</strong>(a) 多模態時序——TS + 文字 (events) + 結構化特徵聯合預訓；(b) <a href="#">causal forecasting</a>——預測「介入後」反事實；(c) 時序基礎模型的<em>fine-tune efficiency</em>——LoRA / adapter 取代 full retrain；(d) <code>online learning</code> 對 concept drift 自動適應。</p>
+<p data-lang="en"><strong>2026 frontiers:</strong> (a) multi-modal TS — TS + text events + structured features jointly pretrained; (b) <a href="#">causal forecasting</a> for "post-intervention" counterfactuals; (c) <em>fine-tune efficiency</em> for TS FMs — LoRA / adapters replace full retrain; (d) <code>online learning</code> for auto adaptation to concept drift.</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -196,6 +428,12 @@ cps  = algo.predict(pen=<span class="num">5</span>)</pre></div>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 共變異矩陣</span><span data-lang="en">D. Covariance matrix</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="軼事：" data-en="Anecdote:">軼事：</strong>
+<span data-lang="zh">George E. P. Box（Box-Jenkins 之 Box）有一句名言：「<em>All models are wrong, but some are useful.</em>」這句話是在 1976 年講 ARIMA 時提出，原話完整為「Remember that all models are wrong; the practical question is how wrong do they have to be to not be useful」。半個世紀後，Box 早已過世，但這句話成為整個統計學最常被引用的箴言——也是時序預測者最該掛在心上的提醒：當你的 ARIMA / Prophet / TimesFM 報出漂亮的 RMSE 時，問自己：「在 process 改變後，它還會 useful 嗎？」</span>
+<span data-lang="en">George E. P. Box (the Box in Box-Jenkins) famously said: "<em>All models are wrong, but some are useful.</em>" Coined in 1976 about ARIMA, the full quote is: "Remember that all models are wrong; the practical question is how wrong do they have to be to not be useful." Half a century later, Box has long passed, but this remains statistics' most-quoted aphorism — and the prime reminder for any TS forecaster: when your ARIMA / Prophet / TimesFM shows a beautiful RMSE, ask: "would it still be useful after the process changes?"</span>
+</div>
 
 <nav class="page-nav">
 <a href="text-mining-nlp.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 14: 文字探勘與 NLP 基礎" data-en="Ch 14: Text Mining &amp; NLP Basics">Ch 14: 文字探勘與 NLP 基礎</span></a>

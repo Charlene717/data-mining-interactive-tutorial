@@ -19,6 +19,156 @@
 <main class="content-wrap">
 
 <section class="section">
+<div class="section-toc"><strong data-zh="本章閱讀地圖" data-en="Chapter Reading Map">本章閱讀地圖</strong>
+<ol>
+<li><a href="#story" data-zh="🎬 故事化導讀（Anscombe 1973）" data-en="🎬 Story-driven intro (Anscombe 1973)">🎬 故事化導讀（Anscombe 1973）</a></li>
+<li><a href="#glossary" data-zh="📚 名詞速查表（14 個關鍵詞）" data-en="📚 Glossary (14 key terms)">📚 名詞速查表（14 個關鍵詞）</a></li>
+<li><a href="#history" data-zh="🏛️ EDA 與視覺化時間軸" data-en="🏛️ EDA &amp; Viz Timeline">🏛️ EDA 與視覺化時間軸</a></li>
+<li><a href="#goals" data-zh="🎯 EDA 的四個目的" data-en="🎯 Four Goals of EDA">🎯 EDA 的四個目的</a></li>
+<li><a href="#binExplorer" data-zh="🎚️ 互動：bin-width 揭露雙峰" data-en="🎚️ Interactive: Bin-width Reveals Bimodality">🎚️ 互動：bin-width 揭露雙峰</a></li>
+<li><a href="#walkthrough" data-zh="🧮 完整案例走讀（乳癌資料集）" data-en="🧮 End-to-end walkthrough (Breast Cancer)">🧮 完整案例走讀（乳癌資料集）</a></li>
+<li><a href="#discussion" data-zh="💬 思辨：相關性、Violin、LLM-EDA" data-en="💬 Debate: Correlation, Violin, LLM-EDA">💬 思辨</a></li>
+<li><a href="#spotlight" data-zh="🌟 經典案例：Challenger O-ring" data-en="🌟 Spotlight: Challenger O-ring">🌟 經典案例：Challenger O-ring</a></li>
+<li><a href="#pitfalls" data-zh="🚧 視覺化六大陷阱" data-en="🚧 Six Visualization Pitfalls">🚧 視覺化六大陷阱</a></li>
+<li><a href="#reflection" data-zh="💭 自我反思題" data-en="💭 Reflection Questions">💭 自我反思題</a></li>
+<li><a href="#advanced" data-zh="🌳 進階：marimo, DuckDB, Datasaurus" data-en="🌳 Advanced: marimo, DuckDB, Datasaurus">🌳 進階</a></li>
+</ol>
+</div>
+<div class="pill-row" style="margin-top:14px;">
+<span class="level-badge l-beg" data-zh="🌱 初學者" data-en="🌱 Beginner">🌱 初學者</span>
+<span class="level-badge l-mid" data-zh="🌿 中階" data-en="🌿 Intermediate">🌿 中階</span>
+<span class="level-badge l-adv" data-zh="🌳 進階研究員" data-en="🌳 Advanced">🌳 進階研究員</span>
+<span class="pill teal" data-zh="⏱️ 預計閱讀 25–35 分鐘" data-en="⏱️ Est. 25–35 min">⏱️ 預計閱讀 25–35 分鐘</span>
+<span class="pill violet" data-zh="👁️ 「先看，再測」——Tukey 1977" data-en="👁️ 'Look first, test later' — Tukey 1977">👁️ 「先看，再測」——Tukey 1977</span>
+</div>
+</section>
+
+<section class="section" id="story">
+<div class="story-block">
+<span class="story-tag" data-zh="故事化導讀" data-en="STORY">故事化導讀</span>
+<h3 data-zh="🎩 一位生物學家、四組資料、與一聲驚嘆" data-en="🎩 A biologist, four datasets, and a gasp">🎩 一位生物學家、四組資料、與一聲驚嘆</h3>
+<div data-lang="zh">
+<p>1973 年，劍橋大學統計學家 Francis Anscombe 在《The American Statistician》發表了一張看似不起眼的表格——四組 (x, y) 資料，每組 11 筆。表格下方列出敘述統計：四組的平均、變異數、相關係數、線性回歸線<strong>完全一致</strong>到小數點第二位。</p>
+<p>當時許多生物學家、流行病學家正在大量發表「相關係數 r = 0.82」這類報告，預設 r 已經足以描述資料。Anscombe 沉默地附上四張散佈圖：第一張是「正常的線性關係」，第二張是「明顯的曲線」，第三張是「一個離群值拉動回歸線」，第四張是「所有 x 都等於 8，只有一個是 19」。</p>
+<p>讀者翻到那一頁的瞬間——大概都倒抽了一口氣。Anscombe 在文末寫下名言：<em>"Make both calculations and graphs. Both sorts of output should be studied; each will contribute to understanding."</em> 這四組資料後來被稱為 <strong>Anscombe's Quartet</strong>，是統計學家給世界的最重要禮物之一：<strong>絕對不要相信只有數字。</strong></p>
+</div>
+<div data-lang="en">
+<p>In 1973, Cambridge statistician Francis Anscombe published an unassuming table in <em>The American Statistician</em>: four datasets of 11 (x, y) pairs each. The descriptive statistics below — mean, variance, correlation, linear regression — were <strong>identical to two decimal places</strong> across all four.</p>
+<p>At the time, biologists and epidemiologists were publishing "r = 0.82"-style reports en masse, assuming the correlation alone captured the relationship. Anscombe silently attached four scatterplots: the first showed a "normal linear" relationship, the second an obvious curve, the third a single outlier dragging the regression line, the fourth all x-values clustered at 8 except a lone 19.</p>
+<p>The moment readers reached that page — they likely gasped. Anscombe closed with his famous line: <em>"Make both calculations and graphs. Both sorts of output should be studied; each will contribute to understanding."</em> Those four datasets — known forever as <strong>Anscombe's Quartet</strong> — are one of statistics' greatest gifts to the world: <strong>never trust numbers alone.</strong></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞速查" data-en="GLOSSARY">名詞速查</div>
+<h2 data-zh="14 個關鍵詞：從直白到精確" data-en="14 Key Terms: From Plain to Precise">14 個關鍵詞：從直白到精確</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">EDA</div><div class="term-zh">探索性資料分析</div>
+<div class="term-kid" data-lang="zh">就像第一次走進別人家——先到處看看，再決定要坐哪。</div>
+<div class="term-kid" data-lang="en">Like walking into someone's house for the first time — wander before sitting down.</div>
+<div class="term-tech" data-lang="zh">Tukey 1977 提出：在嚴格建模之前，以視覺與摘要先理解資料形狀、品質、與假設。</div>
+<div class="term-tech" data-lang="en">Tukey 1977: visualize and summarize to grasp the data's shape, quality, and assumptions before formal modeling.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Univariate</div><div class="term-zh">單變量</div>
+<div class="term-kid" data-lang="zh">一次只看一個欄位——像在水果攤先看蘋果再看橘子。</div>
+<div class="term-kid" data-lang="en">Looking at one column at a time — apples first, then oranges.</div>
+<div class="term-tech" data-lang="zh">針對單一變量的分佈、集中趨勢、離散度、形狀分析。圖型：histogram、density、ECDF、boxplot。</div>
+<div class="term-tech" data-lang="en">Analysis of a single variable: distribution, central tendency, spread, shape. Charts: histogram, density, ECDF, boxplot.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Bivariate</div><div class="term-zh">雙變量</div>
+<div class="term-kid" data-lang="zh">看兩個東西的關係——身高 vs 體重。</div>
+<div class="term-kid" data-lang="en">Looking at the relationship between two things — height vs weight.</div>
+<div class="term-tech" data-lang="zh">兩變量間的關係與相關性。圖型：scatter、hexbin、grouped boxplot、correlation。</div>
+<div class="term-tech" data-lang="en">Relationship between two variables. Charts: scatter, hexbin, grouped boxplot, correlation.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Multivariate</div><div class="term-zh">多變量</div>
+<div class="term-kid" data-lang="zh">一次看好幾個欄位——像同時觀察身高、體重、年齡、運動量的相互關係。</div>
+<div class="term-kid" data-lang="en">Looking at many columns together — height, weight, age, exercise all at once.</div>
+<div class="term-tech" data-lang="zh">≥3 變量同時分析；常用 pairplot、parallel coordinates、PCA biplot、UMAP/t-SNE 投影。</div>
+<div class="term-tech" data-lang="en">≥3 variables analyzed together; tools: pairplot, parallel coordinates, PCA biplot, UMAP/t-SNE projection.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Histogram</div><div class="term-zh">直方圖</div>
+<div class="term-kid" data-lang="zh">把一條一條的人按身高放進「身高箱子」，看哪個箱子的人最多。</div>
+<div class="term-kid" data-lang="en">Sort people into "height boxes" and see which box has the most.</div>
+<div class="term-tech" data-lang="zh">將連續變量切成 bin，計每 bin 的次數。bin 寬度選擇至關重要——Sturges、Scott、Freedman–Diaconis 公式各有派系。</div>
+<div class="term-tech" data-lang="en">Bin a continuous variable and count frequencies per bin. Bin width is critical — Sturges, Scott, Freedman–Diaconis formulae each have advocates.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Boxplot</div><div class="term-zh">盒鬚圖</div>
+<div class="term-kid" data-lang="zh">用一個盒子告訴你「最矮、四分之一矮、中間、四分之一高、最高」——還會把超級異常的人標出來。</div>
+<div class="term-kid" data-lang="en">A box that shows "min, 25%, middle, 75%, max" — and flags the freakishly extreme.</div>
+<div class="term-tech" data-lang="zh">Tukey 1977 提出。五數摘要 + 1.5 IQR outlier 規則；對大樣本可能掩蓋多峰結構。</div>
+<div class="term-tech" data-lang="en">Tukey 1977. Five-number summary + 1.5 IQR outlier rule; can mask multimodal structure for large N.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Violin Plot</div><div class="term-zh">小提琴圖</div>
+<div class="term-kid" data-lang="zh">把盒鬚圖跟密度圖合在一起——既能看摘要又能看分佈形狀。</div>
+<div class="term-kid" data-lang="en">A boxplot fused with a density plot — see summary and shape together.</div>
+<div class="term-tech" data-lang="zh">Hintze &amp; Nelson 1998。對稱 KDE + 中位數 + IQR；可揭示雙峰、長尾。</div>
+<div class="term-tech" data-lang="en">Hintze &amp; Nelson 1998. Mirrored KDE + median + IQR; reveals bimodality, long tails.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Scatter Plot</div><div class="term-zh">散佈圖</div>
+<div class="term-kid" data-lang="zh">每個人是一個點——把整群點畫在一張紙上看「形狀」。</div>
+<div class="term-kid" data-lang="en">Each person is a dot — plot them all on one page to see the "shape."</div>
+<div class="term-tech" data-lang="zh">兩連續變量的最直接表示；&gt;5,000 點建議用 hexbin / 2D density 防 overplotting。</div>
+<div class="term-tech" data-lang="en">The most direct depiction of two continuous variables; for &gt;5,000 points use hexbin / 2D density to avoid overplotting.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Hexbin</div><div class="term-zh">六角格密度圖</div>
+<div class="term-kid" data-lang="zh">六角形蜂窩格——顏色深淺顯示哪邊人比較多。</div>
+<div class="term-kid" data-lang="en">A hexagonal honeycomb where color shows where most dots cluster.</div>
+<div class="term-tech" data-lang="zh">將 2D 空間切成六角 bin；對 ≥10K 點優於 scatter。datashader 為極大資料版本。</div>
+<div class="term-tech" data-lang="en">Bins 2D space into hexagons; superior to scatter for ≥10K points. datashader scales further.</div>
+</div>
+<div class="glossary-card"><div class="term-en">ECDF</div><div class="term-zh">累積分佈函數</div>
+<div class="term-kid" data-lang="zh">從矮到高排隊，看每個身高以下有多少人。</div>
+<div class="term-kid" data-lang="en">Line up from shortest to tallest — see how many people are below each height.</div>
+<div class="term-tech" data-lang="zh">F(x) = #{X_i ≤ x}/n。比 histogram 更穩——不需 bin 選擇、保留所有資訊。</div>
+<div class="term-tech" data-lang="en">F(x) = #{X_i ≤ x}/n. More stable than histogram — no bin choice, preserves all information.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Q-Q Plot</div><div class="term-zh">分位數—分位數圖</div>
+<div class="term-kid" data-lang="zh">把你的資料跟「常態分佈」比賽看誰先排第 10 名、20 名⋯⋯如果一直保持對齊就很常態。</div>
+<div class="term-kid" data-lang="en">Race your data against a normal distribution — if they line up at every rank, your data is normal.</div>
+<div class="term-tech" data-lang="zh">將樣本分位數對比理論分位數；偏離 45° 線顯示偏態或重尾。</div>
+<div class="term-tech" data-lang="en">Plots sample quantiles against theoretical quantiles; deviation from 45° shows skew or heavy tails.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Correlation Matrix</div><div class="term-zh">相關矩陣</div>
+<div class="term-kid" data-lang="zh">把所有欄位兩兩配對，看哪一對「一起變」。</div>
+<div class="term-kid" data-lang="en">Pair every column with every other — which pairs "move together"?</div>
+<div class="term-tech" data-lang="zh">Pearson（線性、敏感於 outlier）vs Spearman（rank-based、穩健）vs Kendall（小樣本）。視覺化用 heatmap + viridis。</div>
+<div class="term-tech" data-lang="en">Pearson (linear, outlier-sensitive) vs Spearman (rank-based, robust) vs Kendall (small N). Visualize with heatmap + viridis.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Viridis</div><div class="term-zh">Viridis 色階</div>
+<div class="term-kid" data-lang="zh">為色盲人士設計的「漸層彩虹」——黑暗紫到亮黃。</div>
+<div class="term-kid" data-lang="en">A "gradient rainbow" designed for colorblind viewers — dark purple to bright yellow.</div>
+<div class="term-tech" data-lang="zh">Smith &amp; van der Walt 2015 設計；perceptually uniform + CVD-safe。同系列 cividis 對紅綠色盲更友善。</div>
+<div class="term-tech" data-lang="en">Smith &amp; van der Walt 2015; perceptually uniform + CVD-safe. Cividis (same family) is even safer for red-green CVD.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Anscombe's Quartet</div><div class="term-zh">Anscombe 四重組</div>
+<div class="term-kid" data-lang="zh">四組資料、相同統計、完全不同分佈——統計學家給世界的提醒。</div>
+<div class="term-kid" data-lang="en">Four datasets, identical statistics, totally different shapes — statisticians' gift to the world.</div>
+<div class="term-tech" data-lang="zh">Anscombe 1973。同 (mean, var, r, regression) 但四種完全不同的散佈型態；後續延伸有 Datasaurus Dozen (Matejka &amp; Fitzmaurice 2017)。</div>
+<div class="term-tech" data-lang="en">Anscombe 1973. Same (mean, var, r, regression) but four wildly different scatter shapes; later extended to the Datasaurus Dozen (Matejka &amp; Fitzmaurice 2017).</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="EDA 與資料視覺化時間軸" data-en="EDA &amp; Visualization Timeline">EDA 與資料視覺化時間軸</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1957</span><span class="tl-title" data-zh="Tukey 〈The Future of Data Analysis〉" data-en="Tukey 'The Future of Data Analysis'">Tukey 〈The Future of Data Analysis〉</span><span class="tl-desc" data-zh="John Tukey 在 Annals of Mathematical Statistics 提出資料分析將演化為一門獨立學科。" data-en="John Tukey's Annals of Math Stat paper argues data analysis is becoming a discipline of its own."></span></div>
+<div class="timeline-item"><span class="tl-year">1973</span><span class="tl-title" data-zh="Anscombe's Quartet 發表" data-en="Anscombe's Quartet published">Anscombe's Quartet 發表</span><span class="tl-desc" data-zh="The American Statistician 上四組「相同統計、不同分佈」的示例震撼學界。" data-en="The American Statistician publishes four 'same stats, different shape' datasets — a shock to the field."></span></div>
+<div class="timeline-item"><span class="tl-year">1977</span><span class="tl-title" data-zh="Tukey 出版《Exploratory Data Analysis》" data-en="Tukey publishes 'Exploratory Data Analysis'">Tukey 出版《Exploratory Data Analysis》</span><span class="tl-desc" data-zh="開創 boxplot、stem-and-leaf、rootogram 等視覺工具；正式樹立「先看後測」哲學。" data-en="Introduces boxplots, stem-and-leaf, rootograms; formalizes the 'look-before-test' philosophy."></span></div>
+<div class="timeline-item"><span class="tl-year">1983</span><span class="tl-title" data-zh="Tufte《The Visual Display of Quantitative Information》" data-en="Tufte 'The Visual Display of Quantitative Information'">Tufte《The Visual Display》</span><span class="tl-desc" data-zh="Edward Tufte 立下「data-ink ratio」「chartjunk」「sparkline」等核心概念。" data-en="Edward Tufte coins 'data-ink ratio,' 'chartjunk,' 'sparkline.'"></span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="ggplot2 grammar of graphics" data-en="ggplot2 grammar of graphics">ggplot2 grammar of graphics</span><span class="tl-desc" data-zh="Wilkinson《Grammar of Graphics》問世；Hadley Wickham 後在 R 中實作為 ggplot2 (2005)。" data-en="Wilkinson's 'Grammar of Graphics' published; Hadley Wickham implements it in R as ggplot2 (2005)."></span></div>
+<div class="timeline-item"><span class="tl-year">2014</span><span class="tl-title" data-zh="Viridis 色階發表" data-en="Viridis colormap released">Viridis 色階發表</span><span class="tl-desc" data-zh="van der Walt &amp; Smith 為 matplotlib 設計感知均勻 + 色盲友善色階。" data-en="van der Walt &amp; Smith design a perceptually uniform + CVD-safe colormap for matplotlib."></span></div>
+<div class="timeline-item"><span class="tl-year">2017</span><span class="tl-title" data-zh="Datasaurus Dozen" data-en="Datasaurus Dozen">Datasaurus Dozen</span><span class="tl-desc" data-zh="Matejka &amp; Fitzmaurice 用模擬退火造出 13 組「同 stats、極不同形狀」的資料集，含一隻恐龍。" data-en="Matejka &amp; Fitzmaurice use simulated annealing to craft 13 datasets — including a dinosaur — with identical summary statistics."></span></div>
+<div class="timeline-item"><span class="tl-year">2019</span><span class="tl-title" data-zh="Wilke《Fundamentals of Data Visualization》" data-en="Wilke 'Fundamentals of Data Visualization'">Wilke 視覺化教科書</span><span class="tl-desc" data-zh="Claus Wilke 以開源方式系統化視覺化原則 + ggplot2 範本。" data-en="Claus Wilke open-sources a comprehensive visualization textbook + ggplot2 templates."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="ydata-profiling 4.x" data-en="ydata-profiling 4.x">ydata-profiling 4.x</span><span class="tl-desc" data-zh="自動 EDA 報表（前身 pandas-profiling）成熟；支援 Spark 與 polars。" data-en="Auto-EDA reports (formerly pandas-profiling) mature; Spark + polars support."></span></div>
+<div class="timeline-item"><span class="tl-year">2025</span><span class="tl-title" data-zh="marimo 即時筆記本 + auto-EDA" data-en="marimo reactive notebooks + auto-EDA">marimo 即時筆記本</span><span class="tl-desc" data-zh="reactive notebook with built-in DuckDB + 自動 EDA UI；新一代探索性分析環境。" data-en="Reactive notebook with built-in DuckDB + auto-EDA UI; the new generation of exploratory environments."></span></div>
+</div>
+</section>
+
+<section class="section" id="goals">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="EDA 的四個目的" data-en="Four Goals of EDA">EDA 的四個目的</h2>
 <div data-lang="zh">
@@ -28,6 +178,32 @@
 <div data-lang="en">
 <p><strong>Exploratory Data Analysis (EDA)</strong>, coined by John Tukey in 1977, argues the first step of analysis should be to <em>look</em>, not to <em>test</em>. Four goals: ① understand distribution and scale ② surface outliers and quality issues ③ generate hypotheses and feature ideas ④ pre-select model families for modeling.</p>
 <p>The famous <em>Anscombe's Quartet</em> shows four datasets with identical mean, variance, correlation, and regression line — yet completely different shapes. Numbers alone mislead; only plots reveal truth.</p>
+</div>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">🩺</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="生活比喻" data-en="ANALOGY">生活比喻</span>
+<h4 data-zh="EDA 就像醫師的「視診 + 觸診」" data-en="EDA is like the doctor's 'look-and-touch' exam">EDA 就像醫師的「視診 + 觸診」</h4>
+<p data-lang="zh">沒有醫師會在病人一進診間就直接安排 MRI、CT、PET。他先<strong>看</strong>（臉色、姿勢、步態）、<strong>聽</strong>（呼吸、心音）、<strong>觸診</strong>（淋巴結、肝脾）——這些便宜、快速、無侵入性的「視覺檢查」往往就能定位 80% 的問題，貴重檢查才有指向性。EDA 就是資料的視診——便宜、快、能在 30 分鐘內告訴你 80% 該關心的問題。</p>
+<p data-lang="en">No doctor orders MRI, CT, PET the moment a patient sits down. They first <strong>look</strong> (color, posture, gait), <strong>listen</strong> (breath, heart), <strong>palpate</strong> (lymph nodes, liver, spleen) — these cheap, fast, non-invasive "visual checks" already localize 80% of issues; expensive imaging is targeted. EDA is the visual exam of your data — cheap, fast, telling you 80% of what to worry about in 30 minutes.</p>
+</div>
+</div>
+
+<section class="section" id="binExplorer">
+<div class="section-label" data-zh="互動：bin-width" data-en="INTERACTIVE: BIN-WIDTH">互動：bin-width</div>
+<h2 data-zh="Bin-width 探索器：當 histogram「說謊」" data-en="Bin-width Explorer: When Histograms 'Lie'">Bin-width 探索器：當 histogram「說謊」</h2>
+<div data-lang="zh"><p>下方資料是一個<strong>真實的雙峰分佈</strong>（μ₁=−2, μ₂=3，混合比 0.5/0.5）。試著拖動 bin 數目滑桿——當 bins=5 或 50 時，雙峰結構會「消失」，看起來像單峰甚至均勻分佈。<strong>Freedman–Diaconis 公式</strong>給出最佳值約 30——這就是為什麼「不要相信預設 bin 數」。</p></div>
+<div data-lang="en"><p>The data below is a <strong>true bimodal distribution</strong> (μ₁=−2, μ₂=3, mix 0.5/0.5). Drag the bin-count slider — at bins=5 or 50 the bimodality "vanishes" and looks unimodal or near-uniform. <strong>Freedman–Diaconis</strong> recommends ~30 — that's why "don't trust the default bin count" is a survival skill.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="bin 數量" data-en="Bin count">bin 數量</span> <span id="vBin">30</span></label><input type="range" id="sBin" min="3" max="80" value="30" step="1"></div>
+<div class="toggle-row">
+<button class="toggle-btn active" data-vt="hist" data-zh="Histogram" data-en="Histogram">Histogram</button>
+<button class="toggle-btn" data-vt="kde" data-zh="KDE 平滑" data-en="KDE smoothing">KDE 平滑</button>
+</div>
+<div class="chart-container"><canvas id="binChart"></canvas></div>
+<div class="sim-stats"><span class="sim-stat neutral" id="binAdv">—</span><span class="sim-stat pass" data-zh="🦠 樣本 N=2000、雙峰混合常態" data-en="🦠 N=2000, bimodal Gaussian mixture">🦠 樣本 N=2000、雙峰混合常態</span></div>
 </div>
 </section>
 
@@ -135,6 +311,192 @@ sns.despine()</pre></div>
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">Σ</div>
+<h3 data-zh="完整案例走讀：Wisconsin 乳癌資料集 EDA" data-en="End-to-End Walkthrough: EDA on Wisconsin Breast Cancer">完整案例走讀：Wisconsin 乳癌資料集 EDA</h3>
+<span class="wt-tag" data-zh="10 步" data-en="10 STEPS">10 步</span></div>
+<div class="wt-step"><div class="wt-label">Step 1<br>Shape</div><div class="wt-body"><strong data-zh="維度與類型：" data-en="Shape &amp; types:">維度與類型：</strong>
+<span data-lang="zh"><code>df.shape</code> → <code>(569, 32)</code>；30 個 numeric features + 1 ID + 1 target (M/B)。<code>df.dtypes</code> 確認沒有意外字串。</span>
+<span data-lang="en"><code>df.shape</code> → <code>(569, 32)</code>; 30 numeric features + 1 ID + 1 target (M/B). <code>df.dtypes</code> confirms no surprise strings.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 2<br>Missing</div><div class="wt-body"><strong data-zh="缺失地圖：" data-en="Missingness map:">缺失地圖：</strong>
+<span data-lang="zh"><code>df.isna().mean()</code> → 全 0。乳癌資料集是「乾淨教科書」——你的真實 EHR 不會這樣。</span>
+<span data-lang="en"><code>df.isna().mean()</code> → all 0. WBCD is a "clean textbook" — your real EHR won't be.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 3<br>Univariate</div><div class="wt-body"><strong data-zh="單變量分佈：" data-en="Univariate distributions:">單變量分佈：</strong>
+<span data-lang="zh">畫 <code>radius_mean</code>、<code>texture_mean</code> 等 30 個 histogram + density。發現 <code>area_mean</code> 重右偏 (skew=1.65) → log 變換候選；<code>concavity</code> 雙峰 → 暗示 M/B 分離。</span>
+<span data-lang="en">Plot 30 histograms + densities for <code>radius_mean</code>, <code>texture_mean</code>, etc. <code>area_mean</code> heavily right-skewed (skew=1.65) → log-transform candidate; <code>concavity</code> shows bimodality → hints at M/B separation.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 4<br>Outlier</div><div class="wt-body"><strong data-zh="異常值偵測：" data-en="Outlier detection:">異常值偵測：</strong>
+<span data-lang="zh">用 boxplot + IQR 1.5 規則：<code>area_mean</code> 有 5 個極端值（最大 2501）。但別自動刪——查看原始病理報告確認真實。</span>
+<span data-lang="en">Boxplot + IQR 1.5 rule: <code>area_mean</code> has 5 extreme values (max 2501). Don't auto-delete — check the original pathology report.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 5<br>Bivariate</div><div class="wt-body"><strong data-zh="雙變量探索：" data-en="Bivariate exploration:">雙變量探索：</strong>
+<span data-lang="zh">畫 <code>radius_mean</code> vs <code>area_mean</code> scatter → 強線性 (Pearson r=0.99)。原因：area ∝ radius²，這是冗餘特徵 → PCA 可降維。</span>
+<span data-lang="en">Plot <code>radius_mean</code> vs <code>area_mean</code> → strong linear (Pearson r=0.99). Reason: area ∝ radius² — redundant features, candidates for PCA.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 6<br>Corr</div><div class="wt-body"><strong data-zh="相關矩陣：" data-en="Correlation matrix:">相關矩陣：</strong>
+<span data-lang="zh">Spearman heatmap 用 viridis：<code>radius</code>/<code>perimeter</code>/<code>area</code> 三人團體 r=0.99；<code>smoothness_se</code> 幾乎獨立 (r&lt;0.1)。</span>
+<span data-lang="en">Spearman heatmap with viridis: <code>radius</code>/<code>perimeter</code>/<code>area</code> form a clique with r=0.99; <code>smoothness_se</code> is nearly independent (r&lt;0.1).</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 7<br>Facet</div><div class="wt-body"><strong data-zh="分類別著色：" data-en="Faceting by class:">分類別著色：</strong>
+<span data-lang="zh">用 grouped violin 對 M/B 切分：<code>concavity_mean</code> 之間幾乎不重疊——這就是強預測特徵；<code>fractal_dimension</code> 重疊嚴重——弱信號。</span>
+<span data-lang="en">Grouped violin on M/B: <code>concavity_mean</code> barely overlaps — strong predictor; <code>fractal_dimension</code> overlaps heavily — weak signal.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 8<br>Multi-D</div><div class="wt-body"><strong data-zh="多變量視覺化：" data-en="Multivariate viz:">多變量視覺化：</strong>
+<span data-lang="zh">PCA 2D biplot：前 2 PCs 解釋 63% 變異；M/B 在 PC1 軸明顯分離。UMAP 後分離更乾淨。</span>
+<span data-lang="en">PCA 2D biplot: first 2 PCs explain 63% variance; M/B clearly separate along PC1. UMAP gives even cleaner separation.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 9<br>Hypothesis</div><div class="wt-body"><strong data-zh="生成假設：" data-en="Generate hypotheses:">生成假設：</strong>
+<span data-lang="zh">基於 EDA：(1) 含 <code>concavity_mean</code> + <code>radius_se</code> 的線性模型應 AUROC &gt;0.95；(2) 樹型模型可能不需要 PCA；(3) area/perimeter 之一可移除。</span>
+<span data-lang="en">From EDA: (1) a linear model with <code>concavity_mean</code> + <code>radius_se</code> should hit AUROC &gt;0.95; (2) tree models likely don't need PCA; (3) one of area/perimeter can be removed.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 10<br>Report</div><div class="wt-body"><strong data-zh="EDA 報告：" data-en="EDA report:">EDA 報告：</strong>
+<span data-lang="zh"><code>ProfileReport(df).to_file("eda.html")</code> 一鍵；併入 git，每次資料更新都自動重新跑——這是 reproducibility 的基本動作。</span>
+<span data-lang="en"><code>ProfileReport(df).to_file("eda.html")</code> in one line; commit to git, re-run on every data update — basic reproducibility.</span></div></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="思辨" data-en="DEBATE">思辨</div>
+<h2 data-zh="三個值得爭論的問題" data-en="Three Worth-Debating Questions">三個值得爭論的問題</h2>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #1" data-en="DEBATE #1">爭論 #1</span>
+<h3 data-zh="相關性 (correlation) 何時重要、何時不重要？" data-en="When does correlation matter, when doesn't it?">相關性 (correlation) 何時重要、何時不重要？</h3>
+<div class="disc-q" data-lang="zh">「相關不是因果」是統計入門第一課——但相關到底有沒有用？</div>
+<div class="disc-q" data-lang="en">"Correlation is not causation" is Stats 101 — but is correlation actually useful?</div>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong>
+<span data-lang="zh">高 |r| 在 EDA 階段非常有用——它告訴你哪些特徵冗餘（candidate for removal）、哪些值得進一步探索。但發 paper 時不能宣稱因果。</span>
+<span data-lang="en">High |r| is very useful at EDA — it flags redundant features (candidates for removal) and worth-exploring pairs. Just don't claim causation in the paper.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong>
+<span data-lang="zh">Pearson 只抓線性、Spearman 只抓單調；對非線性 (如 U 形、混沌動力) 完全失效——這時 mutual information / HSIC 比 correlation 重要得多。</span>
+<span data-lang="en">Pearson only catches linear, Spearman only monotonic — both fail for nonlinear (U-shaped, chaotic). Mutual information / HSIC are far more important than correlation for these.</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #2" data-en="DEBATE #2">爭論 #2</span>
+<h3 data-zh="Violin plot 真的比 boxplot 好嗎？" data-en="Are violin plots really better than boxplots?">Violin plot 真的比 boxplot 好嗎？</h3>
+<div class="disc-q" data-lang="zh">2020 年後 Nature/Cell 論文大量採用 SuperPlot（Lord 2020 JCB）取代傳統 boxplot——但 boxplot 並未過時。</div>
+<div class="disc-q" data-lang="en">Post-2020, Nature/Cell papers heavily adopt SuperPlots (Lord 2020 JCB) over boxplots — but boxplots aren't obsolete.</div>
+<div class="disc-pov"><strong data-zh="支持 Violin：" data-en="Pro Violin:">支持 Violin：</strong>
+<span data-lang="zh">能揭露雙峰、長尾、不對稱——這些 boxplot 看不到。對大樣本特別重要。</span>
+<span data-lang="en">Reveals bimodality, long tails, asymmetry — invisible in boxplots. Especially important for large samples.</span></div>
+<div class="disc-pov"><strong data-zh="支持 Boxplot：" data-en="Pro Boxplot:">支持 Boxplot：</strong>
+<span data-lang="zh">Violin 對小樣本 (N&lt;30) 不可靠——KDE 在低資料下會「幻覺」多峰。Weissgerber 2015 PLOS Biology 主張小樣本必須 strip + jitter + boxplot 三件套。</span>
+<span data-lang="en">Violin is unreliable for small N (&lt;30) — KDE "hallucinates" peaks with little data. Weissgerber 2015 PLOS Biology argues small N must use strip + jitter + boxplot together.</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #3" data-en="DEBATE #3">爭論 #3</span>
+<h3 data-zh="LLM-EDA 工具會取代資料分析師嗎？" data-en="Will LLM-EDA tools replace data analysts?">LLM-EDA 工具會取代資料分析師嗎？</h3>
+<div class="disc-q" data-lang="zh">2024–2026：ChatGPT Code Interpreter / Claude Data Analyst / Anthropic agents 都能「自動 EDA」並提出洞察。</div>
+<div class="disc-q" data-lang="en">2024–2026: ChatGPT Code Interpreter / Claude Data Analyst / Anthropic agents all do "auto-EDA" and produce insights.</div>
+<div class="disc-pov"><strong data-zh="支持自動化：" data-en="Pro automation:">支持自動化：</strong>
+<span data-lang="zh">繁瑣的 univariate + correlation 報表完全可被自動產生；LLM 還能寫出可讀敘事，省下 50% 時間。</span>
+<span data-lang="en">Tedious univariate + correlation reports can be fully automated; LLMs even produce readable narratives, saving 50% of time.</span></div>
+<div class="disc-pov"><strong data-zh="持保留態度：" data-en="With reservations:">持保留態度：</strong>
+<span data-lang="zh">LLM 不懂領域語境——它不會看到「HbA1c 缺失與死亡相關」這種 MNAR 訊號；也不會質疑單位錯誤。EDA 是「資料對話」，需要人類好奇心。</span>
+<span data-lang="en">LLMs lack domain context — they won't catch "HbA1c missing correlates with mortality" (MNAR signals) or question unit errors. EDA is "data dialogue" — it needs human curiosity.</span></div>
+</div>
+</section>
+
+<section class="section" id="spotlight">
+<div class="spotlight">
+<div class="sp-icon">🚀</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="經典案例" data-en="CASE STUDY">經典案例</span>
+<h4 data-zh="Challenger 太空梭 (1986)：糟糕的視覺化能造成災難" data-en="Challenger Space Shuttle (1986): When Bad Viz Causes Disaster">Challenger 太空梭 (1986)：糟糕的視覺化能造成災難</h4>
+<p data-lang="zh">1986 年 1 月 28 日，Challenger 太空梭升空 73 秒後解體，7 名太空人喪生。事故根因是 O-ring 在低溫下失去彈性。發射前一晚，Morton Thiokol 工程師有完整資料——24 次先前發射的 O-ring 損傷記錄——但他們的圖表把<strong>沒有 O-ring 損傷的發射全部省略</strong>，只顯示有損傷的。結果，溫度與損傷的關係看起來像隨機。Edward Tufte 後來在《Visual Explanations》中重畫了同一份資料，但保留所有發射的點，並以溫度排序——關係立刻一目瞭然：<strong>低於 65°F 的發射全部有 O-ring 損傷</strong>。發射當天溫度 31°F——遠超出歷史經驗範圍。</p>
+<p data-lang="en">On January 28, 1986, the Challenger shuttle broke apart 73 seconds after launch, killing 7 astronauts. Root cause: O-ring loss of elasticity at low temperature. The night before, Morton Thiokol engineers had complete data — 24 prior launches with O-ring damage records — but their charts <strong>omitted all launches without damage</strong>. The temperature-damage relationship looked random. Edward Tufte later, in <em>Visual Explanations</em>, re-drew the same data keeping every launch and sorting by temperature — the relationship was immediately obvious: <strong>every launch below 65°F suffered O-ring damage</strong>. Launch day: 31°F — far outside historical experience.</p>
+<p data-lang="zh"><strong>教訓：</strong>不是資料缺失導致 Challenger 災難，而是<strong>糟糕的視覺化</strong>。EDA 的責任不只是「看資料」，而是「以正確方式看資料」。</p>
+<p data-lang="en"><strong>Lesson:</strong> Challenger wasn't lost to missing data — it was lost to <strong>bad visualization</strong>. EDA's responsibility isn't just "look at data" — it's "look at data the right way."</p>
+</div>
+</div>
+<div class="spotlight">
+<div class="sp-icon">🦠</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實例聚光燈 / CASE STUDY" data-en="CASE STUDY">CASE STUDY</span>
+<h4 data-zh="John Snow 1854：地圖打敗瘴氣論的那一夜" data-en="John Snow 1854: The Night a Map Beat the Miasma Theory">John Snow 1854：地圖打敗瘴氣論的那一夜</h4>
+<div data-lang="zh"><p>1854 年 8 月 31 日，倫敦 Soho 的 Broad Street 街口爆發霍亂——10 天內 500 人死亡。當時主流醫學界相信「瘴氣論」（壞空氣致病）。麻醉學家 John Snow 不接受這個假設，他做了現代資料探勘中第一個真正的「地理 EDA」：他在 Soho 街區地圖上，把每一個死亡病例畫成一個黑色長條。當圖完成時，所有人都看見了——所有死亡案例都集中在<strong>Broad Street 那口水井</strong>周圍。Snow 帶著地圖去見聖詹姆斯教區委員會，要求拆掉那口井的把手。把手拆掉後，疫情立刻止住。這張被稱為「Snow's Cholera Map」的圖表，是統計圖學史上最具影響力的單一視覺化——它不只救了命，還推動了流行病學、公共衛生工程、與現代地理資訊系統 (GIS) 的誕生。</p></div>
+<div data-lang="en"><p>On 31 August 1854, cholera erupted around Broad Street in London's Soho — 500 dead in 10 days. Mainstream medicine believed in miasma theory (bad air). Anaesthetist John Snow refused to accept it, and performed what may be the first real "geographic EDA" in data-mining history: on a Soho street map he marked every death as a black bar. When the chart was complete, everyone could see it — every death clustered around <strong>the Broad Street pump</strong>. Snow took the map to the St James parish council and demanded the pump handle be removed. Once removed, the outbreak stopped. Snow's Cholera Map is the single most influential visualization in the history of statistical graphics — it didn't just save lives, it gave birth to epidemiology, public-health engineering, and modern GIS.</p></div>
+<div data-lang="zh"><p><strong>啟示：</strong>Snow 沒有 p-value、沒有迴歸——只有一張正確的圖。EDA 不是「看圖找美感」，而是「找一張能讓所有人立刻同意的圖」。</p></div>
+<div data-lang="en"><p><strong>Implication:</strong> Snow had no p-values and no regression — just the right chart. EDA isn't about finding a pretty picture; it's about finding the one chart everyone can agree on, at a glance.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="視覺化六大陷阱" data-en="Six Visualization Pitfalls">視覺化六大陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① 3D 長條圖" data-en="① 3D Bar Charts">① 3D 長條圖</h4>
+<p data-lang="zh">PowerPoint 預設的「立體效果」會扭曲長度感知——同樣高度的柱看起來不一樣高。<strong>解：</strong>純 2D，使用 horizontal bar 對抗 cherry-picking。</p>
+<p data-lang="en">PowerPoint's default "3D effect" distorts length perception — equal-height bars look unequal. <strong>Fix:</strong> stick to 2D; use horizontal bars to resist cherry-picking.</p></div>
+<div class="pitfall-card"><h4 data-zh="② 雙 y 軸濫用" data-en="② Dual Y-Axis Abuse">② 雙 y 軸濫用</h4>
+<p data-lang="zh">把兩條趨勢「看起來相關」——靠調整 y 軸比例。實際統計可能毫不相關。<strong>解：</strong>用 small multiples 或標準化後同軸。</p>
+<p data-lang="en">Making two trends "look correlated" by tweaking y-axis scales — actually unrelated statistics. <strong>Fix:</strong> small multiples or standardize and overlay on the same axis.</p></div>
+<div class="pitfall-card"><h4 data-zh="③ 長條圖省零點" data-en="③ Bar Chart Without Zero">③ 長條圖省零點</h4>
+<p data-lang="zh">長條圖必須從零開始——不從零會誇大差異。例：65% vs 68% 從 60 開始畫差三倍，從 0 開始差 5%。<strong>解：</strong>長條一律從 0；line chart 才可省。</p>
+<p data-lang="en">Bar charts must start at zero — truncating exaggerates differences. e.g., 65% vs 68% looks 3× when starting at 60, 5% from 0. <strong>Fix:</strong> bars from 0 always; line charts may truncate.</p></div>
+<div class="pitfall-card"><h4 data-zh="④ Rainbow / Jet 色階" data-en="④ Rainbow / Jet Colormap">④ Rainbow / Jet 色階</h4>
+<p data-lang="zh">非感知均勻——同等差異在不同顏色段被視為不同大小。色盲也看不清。<strong>解：</strong>連續用 viridis；發散用 RdBu。</p>
+<p data-lang="en">Not perceptually uniform — equal differences look unequal across color segments. Colorblind users fail. <strong>Fix:</strong> viridis for sequential; RdBu for diverging.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ 沒做色盲檢測" data-en="⑤ No CVD Testing">⑤ 沒做色盲檢測</h4>
+<p data-lang="zh">紅綠色盲約佔男性 8%、女性 0.5%。紅綠對比根本看不見。<strong>解：</strong>Color Oracle / sim_daltonism 工具預檢；或直接用 Okabe-Ito palette。</p>
+<p data-lang="en">~8% of men, 0.5% of women have red-green CVD. Red-green contrast is invisible to them. <strong>Fix:</strong> Color Oracle / sim_daltonism for preview; or use Okabe-Ito palette.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ 切片過度 / p-hacking" data-en="⑥ Over-Faceting / p-Hacking">⑥ 切片過度 / p-hacking</h4>
+<p data-lang="zh">看到資料時「先做 20 個子集」找有效應的那個——multiple comparison 之後 p 值就不可信。<strong>解：</strong>pre-register 你的子組分析；報告所有嘗試。</p>
+<p data-lang="en">Slicing data into 20 subsets and finding the "significant" one — p-values become meaningless after multiple comparisons. <strong>Fix:</strong> pre-register subgroup analyses; report all attempts.</p></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="對比" data-en="CONTRAST">對比</div>
+<h2 data-zh="同一份資料、兩種視覺化決策" data-en="Same Data, Two Visualization Decisions">同一份資料、兩種視覺化決策</h2>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="花俏但失真 (錯誤)" data-en="Pretty but Distorted (Wrong)">花俏但失真 (錯誤)</h4>
+<p data-lang="zh">3D 圓餅圖呈現 5 種癌症類型佔比；rainbow 色階；y 軸從 50% 開始；圖例放右上但顏色太接近——讀者必須來回比對。標題只有「結果」兩字。</p>
+<p data-lang="en">3D pie chart of 5 cancer types; rainbow palette; y-axis starting at 50%; legend top-right but colors too similar — readers ping-pong. Title is just "Results."</p></div>
+<div class="con-card good"><h4 data-zh="清晰精準 (正確)" data-en="Clear and Precise (Right)">清晰精準 (正確)</h4>
+<p data-lang="zh">水平 bar chart 按比例排序；Okabe-Ito palette + 黑白測試通過；y 軸從 0%；直接標數字 (52.3%, 23.1%⋯⋯) 在每根長條尾端；標題明確「2025 Q3 五大癌症類型佔比（n=2,134）」。</p>
+<p data-lang="en">Horizontal bar chart sorted by share; Okabe-Ito + B&amp;W test passes; y-axis from 0%; direct numbers (52.3%, 23.1% …) at each bar end; explicit title "2025 Q3 Cancer-Type Share (n=2,134)."</p></div>
+</div>
+<div class="tip-bar" data-zh="Tufte 法則：「最大化 data-ink ratio，最小化 chart junk。」" data-en="Tufte's law: 'Maximize the data-ink ratio, minimize chartjunk.'">Tufte 法則：「最大化 data-ink ratio，最小化 chart junk。」</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="自我反思" data-en="Reflection Questions">自我反思</h4>
+<ol>
+<li data-lang="zh">你最近的論文 / 報告中，有多少個 boxplot 是針對 N&lt;30 的資料畫的？是否該換成 strip + jitter？</li>
+<li data-lang="en">In your recent papers/reports, how many boxplots were drawn for N&lt;30? Should they be strip + jitter instead?</li>
+<li data-lang="zh">你習慣用什麼色階？是否考慮過色盲讀者？</li>
+<li data-lang="en">What's your default colormap? Have you considered colorblind readers?</li>
+<li data-lang="zh">在 EDA 階段，你會花多少時間在「視覺化」vs「描述統計」？比例是否健康？</li>
+<li data-lang="en">During EDA, how do you split time between "visualization" and "descriptive stats"? Is the ratio healthy?</li>
+<li data-lang="zh">假設你的 histogram bins=10 顯示單峰，bins=50 顯示三峰——你會相信哪個？為什麼？</li>
+<li data-lang="en">Suppose your histogram shows one peak at bins=10 and three peaks at bins=50 — which do you trust? Why?</li>
+<li data-lang="zh">Anscombe's Quartet 之外，你還知道哪些「同統計，不同分佈」的例子？</li>
+<li data-lang="en">Beyond Anscombe's Quartet, what other "same stats, different shape" examples can you name?</li>
+<li data-lang="zh">如果 LLM 自動產出的 EDA 報告與你的人類觀察衝突——你會聽哪一邊？</li>
+<li data-lang="en">If LLM-auto-EDA disagrees with your human observation — which do you trust?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="🌳 進階研究員" data-en="🌳 ADVANCED">🌳 進階研究員</span>
+<h4 data-zh="2024–2026 EDA 工具前沿" data-en="2024–2026 EDA Tooling Frontier">2024–2026 EDA 工具前沿</h4>
+<p data-lang="zh"><strong>marimo + DuckDB (2024–2025)：</strong>marimo notebook 採用 reactive 模型——改一個 cell 自動傳遞下游；併入 DuckDB 後可以即時對 100 GB CSV 做 SQL EDA。取代了 Jupyter 的「重新跑全部」痛點。<a href="https://docs.marimo.io" target="_blank">marimo.io</a>。</p>
+<p data-lang="en"><strong>marimo + DuckDB (2024–2025):</strong> marimo notebook is reactive — changing one cell auto-propagates downstream; embedded DuckDB enables instant SQL EDA on 100 GB CSVs. Replaces Jupyter's "re-run all" pain.</p>
+<p data-lang="zh"><strong>great_tables (Posit 2024)：</strong>R + Python 通用 publication-grade table 工具；支援 LaTeX、HTML、Word 輸出；與 Quarto 整合。終結了「貼到 Word 又跑版」的時代。</p>
+<p data-lang="en"><strong>great_tables (Posit 2024):</strong> publication-grade table tool for R + Python; LaTeX/HTML/Word output; Quarto integration. Ends the "paste-to-Word and watch it explode" era.</p>
+<p data-lang="zh"><strong>lonboard for big-data (2024)：</strong>WebGL-加速地理空間 + 大規模散佈視覺化；可在瀏覽器內顯示 10M+ 點。datashader 的 GPU 版本。</p>
+<p data-lang="en"><strong>lonboard for big-data (2024):</strong> WebGL-accelerated geospatial + large scatter viz; renders 10M+ points in-browser. The GPU counterpart of datashader.</p>
+<p data-lang="zh"><strong>Datasaurus Dozen (Matejka &amp; Fitzmaurice 2017)：</strong>用模擬退火造出 13 組同 stats 但不同形狀的資料集，包含一隻恐龍。後續 2024 Cairo 出版《How Charts Lie》紀念延伸。<a href="https://www.research.autodesk.com/publications/same-stats-different-graphs/" target="_blank">原始 paper</a>。</p>
+<p data-lang="en"><strong>Datasaurus Dozen (Matejka &amp; Fitzmaurice 2017):</strong> simulated annealing crafts 13 datasets with identical stats and wildly different shapes — including a dinosaur. Cairo's 2024 "How Charts Lie" honors this lineage.</p>
+<p data-lang="zh"><strong>2025 不確定性視覺化 (Uncertainty Viz)：</strong>Bayesian posterior 顯示在主圖上而非另開圖；技術：HOPs (Hypothetical Outcome Plots, Hullman 2015)、gradient interval、quantile dotplot。VAST 2024 多個 paper 強調「don't hide the uncertainty」。</p>
+<p data-lang="en"><strong>2025 Uncertainty Viz:</strong> Bayesian posteriors embedded in the main chart, not in a separate panel. Techniques: HOPs (Hullman 2015), gradient intervals, quantile dotplots. Multiple VAST 2024 papers emphasize "don't hide the uncertainty."</p>
+<p data-lang="zh"><strong>Code snippet（marimo + DuckDB EDA）：</strong></p>
+<p data-lang="en"><strong>Code snippet (marimo + DuckDB EDA):</strong></p>
+<p><code>import marimo as mo, duckdb<br>
+df = duckdb.sql("SELECT * FROM 'large_data.parquet' LIMIT 1e6").df()<br>
+mo.ui.altair_chart(alt.Chart(df).mark_point().encode(x='age', y='glucose', color='sex'))<br>
+# Reactive: any change to df flows to chart automatically</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -168,6 +530,11 @@ sns.despine()</pre></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
 
+<div class="history-note">
+<span data-lang="zh"><strong>歷史小故事：</strong>1986 年 NASA 工程師 Roger Boisjoly 在 Challenger 發射前一晚，整夜爭執要不要停止發射。他帶的最後一張圖表是手寫的——溫度 vs 損傷次數，但只畫了有損傷的那 7 次。如果他當時記得 Tukey 的話：「<em>把所有資料都放上去——沒事的數據和有事的一樣重要。</em>」，圖表就會清楚顯示「低於 65°F 全部有損傷」。EDA 哲學的核心是：<strong>有看到的資料和沒看到的資料同樣重要</strong>。</span>
+<span data-lang="en"><strong>History bite:</strong> The night before the Challenger launch in 1986, NASA engineer Roger Boisjoly argued through the night against launching. His final chart was handwritten — temperature vs damage count, showing only the 7 damaged flights. Had he remembered Tukey's dictum, "<em>Put in everything — the absences are as important as the presences,</em>" the chart would have shown clearly "all flights below 65°F had damage." The core EDA philosophy: <strong>what you see and what you don't see matter equally.</strong></span>
+</div>
+
 <nav class="page-nav">
 <a href="data-preparation.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 2: 資料準備與前處理" data-en="Ch 2: Data Preparation &amp; Preprocessing">Ch 2: 資料準備與前處理</span></a>
 <a href="similarity-distance.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 4: 相似度與距離度量" data-en="Ch 4: Similarity &amp; Distance Metrics">Ch 4: 相似度與距離度量</span></a>
@@ -188,6 +555,48 @@ const ansChart=new Chart(document.getElementById('ansChart'),{type:'scatter',dat
  {label:'y = 3 + 0.5x',data:[{x:3,y:4.5},{x:20,y:13}],type:'line',borderColor:'rgba(120,53,15,.8)',backgroundColor:'transparent',borderWidth:2,pointRadius:0}
 ]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:21},y:{min:2,max:14}}}});
 document.querySelectorAll('[data-q]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-q]').forEach(x=>x.classList.remove('active'));b.classList.add('active');ansChart.data.datasets[0].data=ANSC[+b.dataset.q].map(p=>({x:p[0],y:p[1]}));ansChart.update('none');}));
+
+// Bin-width explorer: bimodal Gaussian mixture data
+function rn(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+const BIM_DATA=[];
+(function(){for(let i=0;i<2000;i++){const c=Math.random()<0.5?-2:3;BIM_DATA.push(c+rn()*0.9);}})();
+function ksum(arr,x,h){let s=0;for(const v of arr){const z=(x-v)/h;s+=Math.exp(-0.5*z*z);}return s/(arr.length*h*Math.sqrt(2*Math.PI));}
+let binMode='hist';
+const binChart=new Chart(document.getElementById('binChart'),{type:'bar',data:{labels:[],datasets:[{label:'count',data:[],backgroundColor:'rgba(0,137,123,.55)',borderColor:'#005245',borderWidth:1}]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{title:{display:true,text:'value'}},y:{title:{display:true,text:'count / density'}}}}});
+function refreshBin(){
+ const nb=+document.getElementById('sBin').value;
+ document.getElementById('vBin').textContent=nb;
+ const lo=-6,hi=7,w=(hi-lo)/nb;
+ if(binMode==='hist'){
+  const counts=new Array(nb).fill(0);
+  BIM_DATA.forEach(v=>{const k=Math.min(nb-1,Math.max(0,Math.floor((v-lo)/w)));counts[k]++;});
+  const labs=counts.map((_,i)=>(lo+w*(i+0.5)).toFixed(1));
+  binChart.config.type='bar';
+  binChart.data.labels=labs;
+  binChart.data.datasets[0].data=counts;
+  binChart.data.datasets[0].backgroundColor='rgba(0,137,123,.55)';
+ } else {
+  const xs=[],ys=[];
+  const h=1.06*1.2*Math.pow(BIM_DATA.length,-0.2);
+  for(let i=0;i<200;i++){const x=lo+i*(hi-lo)/199;xs.push(x.toFixed(2));ys.push(ksum(BIM_DATA,x,h));}
+  binChart.config.type='line';
+  binChart.data.labels=xs;
+  binChart.data.datasets[0].data=ys;
+  binChart.data.datasets[0].backgroundColor='rgba(124,58,237,.25)';
+  binChart.data.datasets[0].borderColor='rgba(124,58,237,.9)';
+ }
+ binChart.update('none');
+ const L=I18n.get();
+ let msg='';
+ if(nb<8) msg=L==='zh'?'⚠️ bins 太少：雙峰被合併為單峰':'⚠️ Too few bins: bimodality collapses to unimodal';
+ else if(nb>60) msg=L==='zh'?'⚠️ bins 太多：每 bin 樣本太少，看起來鋸齒狀':'⚠️ Too many bins: too few per bin, looks jagged';
+ else msg=L==='zh'?'✅ bins 合理：雙峰結構清晰':'✅ Reasonable bins: bimodality visible';
+ document.getElementById('binAdv').textContent=msg;
+}
+document.getElementById('sBin').addEventListener('input',refreshBin);
+document.querySelectorAll('[data-vt]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-vt]').forEach(x=>x.classList.remove('active'));b.classList.add('active');binMode=b.dataset.vt;refreshBin();}));
+document.addEventListener('langchange',refreshBin);
+refreshBin();
 
 const QF={zh:{q1_y:'相同統計可對應完全不同分佈——必須畫圖。',q1_n:'B 為正確答案。',q2_y:'Viridis/Cividis 是色盲友善的連續色階首選。',q2_n:'C 為正確答案。',q3_y:'大數據點用 hexbin 或 2D 密度，避免覆蓋。',q3_n:'D 為正確答案。'},
           en:{q1_y:'Identical stats can match very different shapes — always visualize.',q1_n:'Correct answer is B.',q2_y:'Viridis/Cividis are the go-to CVD-safe sequential palettes.',q2_n:'Correct answer is C.',q3_y:'For large N use hexbin or 2D density to avoid overplotting.',q3_n:'Correct answer is D.'}};

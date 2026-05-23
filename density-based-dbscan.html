@@ -18,6 +18,187 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽（閱讀時間 ~24 分）" data-en="Chapter map (reading time ~24 min)">本章導覽（閱讀時間 ~24 分）</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="初學者" data-en="Beginner">初學者</span>
+<span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+<span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+<span class="pill teal">DBSCAN</span><span class="pill amber">HDBSCAN</span><span class="pill violet">GMM</span><span class="pill rose">Spectral</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場故事：犯罪熱區跟著街道走" data-en="Story: crime hotspots follow streets">開場故事：犯罪熱區跟著街道走</a></li>
+<li><a href="#glossary" data-zh="核心詞彙表（雙語）" data-en="Glossary (bilingual)">核心詞彙表（雙語）</a></li>
+<li><a href="#history" data-zh="演算法簡史 1977–2024" data-en="Algorithm timeline 1977–2024">演算法簡史 1977–2024</a></li>
+<li><a href="#walkthrough" data-zh="手算 DBSCAN：8 點" data-en="Hand walkthrough: 8 points">手算 DBSCAN：8 點</a></li>
+<li><a href="#discussion" data-zh="討論：HDBSCAN 真的比 DBSCAN 好嗎？" data-en="Discussion: is HDBSCAN strictly better?">討論：HDBSCAN 真的比 DBSCAN 好嗎？</a></li>
+<li><a href="#pitfalls" data-zh="常見陷阱" data-en="Common pitfalls">常見陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題" data-en="Reflection questions">反思題</a></li>
+<li><a href="#advanced" data-zh="進階：2024–2026 SOTA" data-en="Advanced: 2024–2026 SOTA">進階：2024–2026 SOTA</a></li>
+</ol>
+</div>
+
+<section id="story" class="section">
+<div class="section-label" data-zh="故事開場" data-en="OPENING STORY">故事開場</div>
+<h2 data-zh="場景：城市犯罪熱點" data-en="Scene: City Crime Hotspots">場景：城市犯罪熱點</h2>
+<div class="story-block">
+<span class="story-tag">SCENE · LAPD 2017</span>
+<h3 data-zh="街道是線性的，K-Means 卻畫圓" data-en="Streets are linear, K-Means draws circles">街道是線性的，K-Means 卻畫圓</h3>
+<div data-lang="zh">
+<p>洛杉磯警察分析部的 Officer Jiménez 接到任務：找出市區的犯罪「熱區」以重新部署巡邏。她拿到 18,000 個過去半年的搶劫地點 (lat, lon)，先試 K-Means K=10——產生 10 個圓形熱區，每個都跨越多條街、包含大量低犯罪格子。指揮官搖頭：「巡警不會在圓裡跑，會沿街跑。」</p>
+<p>她改用 DBSCAN：ε = 100 m、minPts = 8。結果驚人——找到 7 條沿街道分布的「線狀」熱區，與夜市、地鐵站出口、停車場入口完全吻合。剩下 2,300 個點被標為 noise，正是真正的孤立事件。</p>
+<p>但問題沒結束。市中心有些區段是「擁擠熱區」（minPts 應該高一點），郊區又有「稀疏但確實是熱區」的點——同一個 ε 無法兩全。她升級到 <strong>HDBSCAN</strong>：不用固定 ε，自動找不同密度的群。最後 14 個熱區、其中 3 個是「巢狀」（大熱區內含小熱區）。指揮官這次點頭了。</p>
+</div>
+<div data-lang="en">
+<p>Officer Jiménez at LAPD analytics gets a brief: find crime "hotspots" downtown to redeploy patrols. She has 18,000 robbery locations (lat, lon) from the past six months. K-Means K=10 first — gives 10 round blobs, each crossing many streets and including lots of low-crime cells. The commander shakes his head: "Cops don't patrol in circles. They patrol along streets."</p>
+<p>She switches to DBSCAN: ε = 100 m, minPts = 8. Stunning — 7 linear hotspots aligned with night markets, subway exits, parking-garage entrances. 2,300 points end up as noise — true isolated incidents.</p>
+<p>But it's not done. Downtown has "packed hotspots" (higher minPts needed); the suburbs have "sparse but real hotspots". One ε can't fit both. She upgrades to <strong>HDBSCAN</strong>: no fixed ε, varying-density clusters. Final result: 14 hotspots, 3 of them nested (big hotspot contains small ones). This time the commander nods.</p>
+</div>
+</div>
+</section>
+
+<section id="glossary" class="section">
+<div class="section-label" data-zh="核心詞彙" data-en="GLOSSARY">核心詞彙</div>
+<h2 data-zh="12 個關鍵術語（給每一種讀者）" data-en="12 Key Terms (for every reader)">12 個關鍵術語</h2>
+<div class="glossary-grid">
+<div class="glossary-card">
+<div class="term-en">Density-based clustering</div><div class="term-zh">密度型分群</div>
+<div class="term-kid" data-lang="zh">把擠在一起的點視為一群，散散的點當「沒朋友」。</div>
+<div class="term-kid" data-lang="en">Treat packed points as a cluster, lonely points as "no friends".</div>
+<div class="term-tech" data-lang="zh">群定義為高密度連通分量；密度可由 kernel density estimate 或 ε-鄰域點數量度。代表：DBSCAN、OPTICS、HDBSCAN、Mean-Shift。</div>
+<div class="term-tech" data-lang="en">A cluster = a connected high-density region; density via kernel density estimate or ε-neighborhood count. Examples: DBSCAN, OPTICS, HDBSCAN, Mean-Shift.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Core point</div><div class="term-zh">核心點</div>
+<div class="term-kid" data-lang="zh">在自己周圍 ε 內有很多朋友（≥ minPts）的點——他是「群的種子」。</div>
+<div class="term-kid" data-lang="en">A point with lots of friends (≥ minPts) within ε — the cluster seed.</div>
+<div class="term-tech" data-lang="zh">|N_ε(p)| ≥ minPts；DBSCAN 從 core 出發，藉 density-reachable 擴張群。</div>
+<div class="term-tech" data-lang="en">|N_ε(p)| ≥ minPts; DBSCAN expands clusters from cores via density-reachability.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Border point</div><div class="term-zh">邊界點</div>
+<div class="term-kid" data-lang="zh">朋友不夠多，但住在某個 core 附近——被拉進群但不能繼續介紹新朋友。</div>
+<div class="term-kid" data-lang="en">Not enough friends, but lives near a core — joins the cluster but can't recruit further.</div>
+<div class="term-tech" data-lang="zh">|N_ε(p)| &lt; minPts 但存在 core q 使 p ∈ N_ε(q)；被吸入群但不再擴張。</div>
+<div class="term-tech" data-lang="en">|N_ε(p)| &lt; minPts but a core q exists with p ∈ N_ε(q); absorbed without extending.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Noise point</div><div class="term-zh">雜訊點</div>
+<div class="term-kid" data-lang="zh">既沒朋友、又不靠近任何熱鬧地——獨來獨往。標為 −1。</div>
+<div class="term-kid" data-lang="en">No friends, doesn't live near any busy spot — solo. Labeled −1.</div>
+<div class="term-tech" data-lang="zh">既非 core 也非任何 core 的 ε 鄰域成員；DBSCAN 的 unique 功能——其他演算法（K-Means、GMM）強制每點入群。</div>
+<div class="term-tech" data-lang="en">Neither core nor in any core's ε-neighborhood; DBSCAN's unique feature — K-Means and GMM force every point into a cluster.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">ε (eps)</div><div class="term-zh">鄰域半徑</div>
+<div class="term-kid" data-lang="zh">畫圓時用的半徑——多大算「附近」。</div>
+<div class="term-kid" data-lang="en">The radius of the circle — how close counts as "nearby".</div>
+<div class="term-tech" data-lang="zh">用 k-distance plot 找肘部選擇；k = minPts，將 k-NN 距離降序排序，肘部即建議 ε（Ester et al. 1996 KDD）。</div>
+<div class="term-tech" data-lang="en">Choose by k-distance plot knee; with k = minPts, sort k-NN distances descending, knee is suggested ε (Ester et al. 1996 KDD).</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">MinPts</div><div class="term-zh">最少鄰居數</div>
+<div class="term-kid" data-lang="zh">要算「熱鬧」至少幾個朋友？通常 2 × 維度。</div>
+<div class="term-kid" data-lang="en">How many friends count as "busy"? Usually 2 × dimensionality.</div>
+<div class="term-tech" data-lang="zh">經驗法則 minPts ≥ 2·dim；越大越保守、抑制雜訊但可能漏小群。可由 OPTICS 一次掃過多個值。</div>
+<div class="term-tech" data-lang="en">Rule of thumb minPts ≥ 2·dim; larger = more conservative, suppresses noise but may miss small clusters. OPTICS can sweep multiple values at once.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Density-reachability</div><div class="term-zh">密度可達</div>
+<div class="term-kid" data-lang="zh">如果可以一步一步從一個 core 跳到你（每步都不超過 ε），你就「可達」。</div>
+<div class="term-kid" data-lang="en">If we can hop core-to-core to you with each step ≤ ε, you're "reachable".</div>
+<div class="term-tech" data-lang="zh">直接密度可達：p ∈ N_ε(q) 且 q is core。密度可達：直接可達鏈。DBSCAN 的群 = 密度可達閉包。</div>
+<div class="term-tech" data-lang="en">Directly density-reachable: p ∈ N_ε(q) and q is core. Density-reachable: chain of direct steps. A DBSCAN cluster = closure under density-reachability.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">OPTICS</div><div class="term-zh">OPTICS</div>
+<div class="term-kid" data-lang="zh">DBSCAN 的「多解析度」版本——不固定 ε，給你一張可達距離圖，自己挑高度。</div>
+<div class="term-kid" data-lang="en">DBSCAN's "multi-resolution" cousin — no fixed ε, gives a reachability plot to cut at any height.</div>
+<div class="term-tech" data-lang="zh">Ankerst et al. 1999；不直接分群，輸出 reachability plot（順序 vs 可達距離），由 ξ 或手動切山谷得到群。</div>
+<div class="term-tech" data-lang="en">Ankerst et al. 1999; doesn't cluster directly — outputs a reachability plot (order vs reachability distance); valleys cut by ξ or manually give clusters.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">HDBSCAN</div><div class="term-zh">HDBSCAN</div>
+<div class="term-kid" data-lang="zh">DBSCAN 升級版：自動處理「不同密度」的群，還會給你每點的成員機率。</div>
+<div class="term-kid" data-lang="en">DBSCAN's upgrade: handles varying density automatically, plus gives a membership probability per point.</div>
+<div class="term-tech" data-lang="zh">Campello, Moulavi, Sander 2013：mutual reachability distance + condensed cluster tree；以 cluster stability (excess of mass) 自動選最佳分割。</div>
+<div class="term-tech" data-lang="en">Campello, Moulavi, Sander 2013: mutual reachability distance + condensed cluster tree; selects the optimal cut by cluster stability (excess of mass).</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Mutual reachability</div><div class="term-zh">互可達距離</div>
+<div class="term-kid" data-lang="zh">兩點的距離，但要 max(原距離, 各自的 k-NN 距離)——讓稀疏區的點變「遠」。</div>
+<div class="term-kid" data-lang="en">A pair's distance, but using max(actual distance, each point's k-NN distance) — points in sparse regions look farther apart.</div>
+<div class="term-tech" data-lang="zh">d_mreach(a,b) = max{core_k(a), core_k(b), d(a,b)}；讓稀疏邊界被自動「拉開」，使 HDBSCAN 對密度變化不敏感。</div>
+<div class="term-tech" data-lang="en">d_mreach(a,b) = max{core_k(a), core_k(b), d(a,b)}; pulls sparse borders apart so HDBSCAN becomes density-invariant.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">GMM</div><div class="term-zh">高斯混合模型</div>
+<div class="term-kid" data-lang="zh">把資料當成 K 個高斯山疊起來；每點來自哪座山是「機率」。</div>
+<div class="term-kid" data-lang="en">Treat data as a sum of K Gaussian bumps; each point's membership is a probability.</div>
+<div class="term-tech" data-lang="zh">p(x) = Σ π_k 𝒩(x|μ_k, Σ_k)；用 EM 演算法迭代估參。covariance type: full/diag/tied/spherical。以 BIC 選 K。</div>
+<div class="term-tech" data-lang="en">p(x) = Σ π_k 𝒩(x|μ_k, Σ_k); estimated by EM. Covariance types: full/diag/tied/spherical. Choose K by BIC.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Spectral clustering</div><div class="term-zh">譜分群</div>
+<div class="term-kid" data-lang="zh">把點連成圖，看圖的「振動模式」（特徵向量），就能切出非凸的群。</div>
+<div class="term-kid" data-lang="en">Connect points into a graph, look at its "vibration modes" (eigenvectors) — non-convex clusters fall out.</div>
+<div class="term-tech" data-lang="zh">Ng-Jordan-Weiss 2002；取 normalized Laplacian L = I − D^{-1/2}AD^{-1/2} 的前 K 個小特徵向量，再 K-Means。處理流形結構。</div>
+<div class="term-tech" data-lang="en">Ng-Jordan-Weiss 2002; take the K smallest eigenvectors of the normalized Laplacian L = I − D^{-1/2}AD^{-1/2}, then K-Means. Handles manifold structure.</div>
+</div>
+</div>
+</section>
+
+<section id="history" class="section">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="密度型 + 機率型分群簡史" data-en="A Short History of Density / Probabilistic Clustering">密度型 + 機率型分群簡史</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1977</span><span class="tl-title" data-zh="Dempster–Laird–Rubin：EM 演算法" data-en="Dempster–Laird–Rubin: EM algorithm">Dempster–Laird–Rubin：EM 演算法</span><span class="tl-desc" data-zh="JRSS-B；通用框架，後成為 GMM 分群的引擎。" data-en="JRSS-B; general framework, later the engine of GMM clustering."></span></div>
+<div class="timeline-item"><span class="tl-year">1990</span><span class="tl-title" data-zh="Banfield–Raftery：GMM 用於分群" data-en="Banfield–Raftery: GMM for clustering">Banfield–Raftery：GMM 用於分群</span><span class="tl-desc" data-zh="JASA；引入 covariance type 系統，R 的 mclust 由此而生。" data-en="JASA; introduced the covariance type system that R's mclust builds on."></span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="Ester–Kriegel–Sander–Xu：DBSCAN" data-en="Ester–Kriegel–Sander–Xu: DBSCAN">Ester–Kriegel–Sander–Xu：DBSCAN</span><span class="tl-desc" data-zh="KDD 1996；獲 2014 KDD Test of Time Award，是密度型分群開山之作。" data-en="KDD 1996; won 2014 KDD Test of Time Award, founding paper of density-based clustering."></span></div>
+<div class="timeline-item"><span class="tl-year">1999</span><span class="tl-title" data-zh="Ankerst et al.：OPTICS" data-en="Ankerst et al.: OPTICS">Ankerst et al.：OPTICS</span><span class="tl-desc" data-zh="SIGMOD；不固定 ε、輸出 reachability plot——多解析度分群。" data-en="SIGMOD; no fixed ε, outputs reachability plot — multi-resolution clustering."></span></div>
+<div class="timeline-item"><span class="tl-year">2002</span><span class="tl-title" data-zh="Ng–Jordan–Weiss：spectral clustering" data-en="Ng–Jordan–Weiss: spectral clustering">Ng–Jordan–Weiss：spectral clustering</span><span class="tl-desc" data-zh="NIPS；normalized Laplacian 特徵向量法成為現代標準。" data-en="NIPS; normalized Laplacian eigenvector method became the modern standard."></span></div>
+<div class="timeline-item"><span class="tl-year">2013</span><span class="tl-title" data-zh="Campello–Moulavi–Sander：HDBSCAN" data-en="Campello–Moulavi–Sander: HDBSCAN">Campello–Moulavi–Sander：HDBSCAN</span><span class="tl-desc" data-zh="PAKDD；mutual reachability + condensed tree，處理變化密度。" data-en="PAKDD; mutual reachability + condensed tree, handles varying density."></span></div>
+<div class="timeline-item"><span class="tl-year">2017</span><span class="tl-title" data-zh="McInnes：hdbscan Python 套件" data-en="McInnes: hdbscan Python package">McInnes：hdbscan Python 套件</span><span class="tl-desc" data-zh="JOSS；後成為 UMAP 作者的雙生套件，被 Seurat、Scanpy 採用。" data-en="JOSS; UMAP author's sibling package, adopted by Seurat and Scanpy."></span></div>
+<div class="timeline-item"><span class="tl-year">2020</span><span class="tl-title" data-zh="sklearn 加入原生 HDBSCAN" data-en="sklearn adds native HDBSCAN">sklearn 加入原生 HDBSCAN</span><span class="tl-desc" data-zh="sklearn 1.3 (2023) 正式收錄 cluster.HDBSCAN，C++ 後端加速。" data-en="sklearn 1.3 (2023) ships cluster.HDBSCAN with a C++ backend."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="cuML fast HDBSCAN（GPU）" data-en="cuML fast HDBSCAN (GPU)">cuML fast HDBSCAN（GPU）</span><span class="tl-desc" data-zh="NVIDIA RAPIDS 2024 釋出 GPU-HDBSCAN，10M+ 點數分鐘內完成。" data-en="NVIDIA RAPIDS 2024 ships GPU-HDBSCAN, 10M+ points in minutes."></span></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="比喻" data-en="ANALOGY">比喻</div>
+<h2 data-zh="一句話講清楚密度型分群" data-en="One-Sentence Analogy">一句話講清楚密度型分群</h2>
+<div class="analogy-box">
+<div class="ana-icon">🏘️</div>
+<div class="ana-body">
+<span class="ana-tag">CITY-MAP ANALOGY</span>
+<h4 data-zh="DBSCAN：在城市地圖上標出「鄰里」" data-en="DBSCAN: mark out neighborhoods on a city map">DBSCAN：在城市地圖上標出「鄰里」</h4>
+<p data-lang="zh"><strong>DBSCAN</strong> 像是拿出城市地圖，挑一個半徑（ε，例如 100 公尺）和最少房子數（minPts，例如 8）。每棟房子畫個半徑圓，圓內房子夠多——這就是「核心房」(core)。從 core 出發、半徑內可達的房子組成一個「鄰里」(cluster)。孤立的房子標為「郊野」(noise)。<br><strong>HDBSCAN</strong> 是升級版：城市裡市區與郊區密度不同，HDBSCAN 不用固定半徑，自動找各種大小的鄰里。</p>
+<p data-lang="en"><strong>DBSCAN</strong> is like pulling out a city map, picking a radius (ε, say 100 m) and a minimum house count (minPts, say 8). Draw a circle around each house; if enough houses fit inside, it's a "core house". Houses reachable from cores form a "neighborhood" (cluster). Isolated houses are "wilderness" (noise).<br><strong>HDBSCAN</strong> is the upgrade: downtown and suburbs differ in density, so it doesn't fix a radius — it finds neighborhoods of all sizes.</p>
+</div>
+</div>
+
+<details class="detail-toggle">
+<summary data-zh="點開看：DBSCAN 在高維為何失靈？" data-en="Click: why does DBSCAN fail in high dimensions?">點開看：DBSCAN 在高維為何失靈？</summary>
+<div class="detail-body">
+<div data-lang="zh">維度詛咒：在 d 維單位立方體中，隨機兩點的距離幾乎都集中在 √(d/6)。當 d &gt; 20，所有點距離都差不多——ε 無法區分「附近」與「遠處」。對策：(1) 先 PCA / UMAP 降維（但這違反 DBSCAN 的「無監督」精神）、(2) 用 cosine 距離（高維分隔較佳）、(3) 改用 HDBSCAN（mutual reachability 緩解了，但沒完全解決）、(4) 直接放棄密度型，用 GMM。</div>
+<div data-lang="en">Curse of dimensionality: in a d-dim unit hypercube, pairwise distances all concentrate around √(d/6). When d &gt; 20, all distances look the same — ε can't distinguish "near" from "far". Fixes: (1) reduce with PCA / UMAP first (but this dilutes DBSCAN's unsupervised spirit), (2) use cosine distance (better separation in high-d), (3) HDBSCAN's mutual reachability helps but doesn't fully solve it, (4) abandon density-based and use GMM.</div>
+</div>
+</details>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動 KPI" data-en="KPI BOARD">互動 KPI</div>
+<h2 data-zh="關鍵指標一覽" data-en="Key Numbers at a Glance">關鍵指標一覽</h2>
+<div class="kpi-grid">
+<div class="kpi-card"><span class="kpi-num">2·dim</span><span class="kpi-label" data-zh="minPts 經驗法則" data-en="minPts rule of thumb">minPts 經驗法則</span></div>
+<div class="kpi-card"><span class="kpi-num">−1</span><span class="kpi-label" data-zh="DBSCAN 雜訊標籤" data-en="DBSCAN noise label">雜訊標籤</span></div>
+<div class="kpi-card"><span class="kpi-num">O(N log N)</span><span class="kpi-label" data-zh="DBSCAN 加索引" data-en="DBSCAN with index">DBSCAN+R-tree</span></div>
+<div class="kpi-card"><span class="kpi-num">EM</span><span class="kpi-label" data-zh="GMM 解法" data-en="GMM solver">GMM 解法</span></div>
+<div class="kpi-card"><span class="kpi-num">BIC</span><span class="kpi-label" data-zh="GMM 選 K" data-en="GMM choose K">GMM 選 K</span></div>
+<div class="kpi-card"><span class="kpi-num">2014</span><span class="kpi-label" data-zh="DBSCAN 拿 KDD Test of Time" data-en="DBSCAN wins KDD Test of Time">KDD Test of Time</span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="為什麼需要密度型分群？" data-en="Why Density-Based Clustering?">為什麼需要密度型分群？</h2>
@@ -182,6 +363,183 @@ sc = <span class="func">SpectralClustering</span>(n_clusters=<span class="num">3
 </div>
 </section>
 
+<section id="walkthrough" class="section">
+<div class="section-label" data-zh="逐步演算" data-en="WALKTHROUGH">逐步演算</div>
+<h2 data-zh="DBSCAN 手算：8 個點、ε = 1.5、minPts = 3" data-en="DBSCAN By Hand: 8 points, ε = 1.5, minPts = 3">DBSCAN 手算：8 個點、ε = 1.5、minPts = 3</h2>
+<div class="walkthrough">
+<div class="walkthrough-header">
+<div class="wt-num">6</div>
+<h3 data-zh="點集 P1(1,1) P2(1.5,1.2) P3(1.3,1.8) P4(2,1.5) P5(5,5) P6(5.3,5.1) P7(5,5.6) P8(8,2)" data-en="Points P1(1,1) P2(1.5,1.2) P3(1.3,1.8) P4(2,1.5) P5(5,5) P6(5.3,5.1) P7(5,5.6) P8(8,2)">P1–P8（座標如下）</h3>
+<span class="wt-tag">ε=1.5 · minPts=3</span>
+</div>
+<div class="wt-step"><span class="wt-label">Step 1</span><div class="wt-body">
+<span data-lang="zh"><strong>選一個尚未訪問的點。</strong>從 P1 開始。計算 P1 的 ε 鄰居：P2 (d=0.54)、P3 (d=0.85)、P4 (d=1.12)，共 3 個（不含自己） + 1 (P1 自己) = 4 ≥ minPts=3。<strong>P1 = core。</strong></span>
+<span data-lang="en"><strong>Pick an unvisited point.</strong> Start with P1. ε-neighbors of P1: P2 (d=0.54), P3 (d=0.85), P4 (d=1.12) — 3 plus P1 = 4 ≥ minPts=3. <strong>P1 = core.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 2</span><div class="wt-body">
+<span data-lang="zh"><strong>建立群 C1，BFS 擴張。</strong>C1 ← {P1}。把 P2, P3, P4 加入 queue。處理 P2：鄰居 P1, P3, P4 — count = 4 ≥ minPts → P2 = core，加入未訪問者。處理 P3：鄰居 P1, P2, P4 — core。處理 P4：鄰居 P1, P2, P3 — core。<strong>C1 = {P1, P2, P3, P4}，皆為 core。</strong></span>
+<span data-lang="en"><strong>Form cluster C1, BFS-expand.</strong> C1 ← {P1}. Queue P2, P3, P4. Process P2: neighbors P1, P3, P4 — count = 4 ≥ minPts → P2 = core, enqueue unvisited. P3: neighbors P1, P2, P4 — core. P4: neighbors P1, P2, P3 — core. <strong>C1 = {P1, P2, P3, P4}, all cores.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 3</span><div class="wt-body">
+<span data-lang="zh"><strong>下一個未訪問點 P5。</strong>鄰居：P6 (d=0.32)、P7 (d=0.60)。count = 3 ≥ minPts → <strong>P5 = core，開新群 C2。</strong></span>
+<span data-lang="en"><strong>Next unvisited: P5.</strong> Neighbors: P6 (d=0.32), P7 (d=0.60). count = 3 ≥ minPts → <strong>P5 = core, start new cluster C2.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 4</span><div class="wt-body">
+<span data-lang="zh"><strong>擴張 C2。</strong>處理 P6：鄰居 P5, P7 — count = 3 → core。處理 P7：鄰居 P5, P6 — count = 3 → core。<strong>C2 = {P5, P6, P7}。</strong></span>
+<span data-lang="en"><strong>Expand C2.</strong> P6: neighbors P5, P7 — count = 3 → core. P7: neighbors P5, P6 — count = 3 → core. <strong>C2 = {P5, P6, P7}.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 5</span><div class="wt-body">
+<span data-lang="zh"><strong>下一個未訪問點 P8 = (8, 2)。</strong>鄰居：無人在 1.5 內。count = 1 &lt; minPts → <strong>P8 = noise (label = −1)。</strong></span>
+<span data-lang="en"><strong>Next unvisited: P8 = (8, 2).</strong> Neighbors: none within 1.5. count = 1 &lt; minPts → <strong>P8 = noise (label = −1).</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 6</span><div class="wt-body">
+<span data-lang="zh"><strong>最終結果。</strong>C1 = {P1, P2, P3, P4} (4 cores)；C2 = {P5, P6, P7} (3 cores)；noise = {P8}。<strong>2 群 + 1 個雜訊點。</strong>若改 ε = 5.0、minPts = 3：P8 仍無鄰居（最近 P5 距離 ≈ 4.24）——仍是 noise。但 ε = 6.0 時，P8 變 border 加入 C2，凸顯參數的敏感性。</span>
+<span data-lang="en"><strong>Final result.</strong> C1 = {P1, P2, P3, P4} (4 cores); C2 = {P5, P6, P7} (3 cores); noise = {P8}. <strong>2 clusters + 1 noise.</strong> If we relax to ε = 5.0, minPts = 3: P8 still has no neighbor (nearest P5 is 4.24). But at ε = 6.0, P8 becomes a border absorbed by C2 — parameters matter!</span>
+</div></div>
+</div>
+<div class="tip-bar"><span data-zh="關鍵觀察：core / border 的差別決定群是否能繼續擴張——只有 core 能「介紹新朋友」。" data-en="Key takeaway: only core points can extend a cluster — borders join but can't recruit further.">關鍵觀察：core / border 的差別決定群是否能繼續擴張——只有 core 能「介紹新朋友」。</span></div>
+</section>
+
+<section id="discussion" class="section">
+<div class="section-label" data-zh="思辨" data-en="DISCUSSION">思辨</div>
+<h2 data-zh="三個常被爭辯的問題" data-en="Three Hotly Debated Questions">三個常被爭辯的問題</h2>
+
+<div class="discussion-card">
+<span class="disc-label">Q · UPGRADE</span>
+<h3 data-zh="HDBSCAN 真的比 DBSCAN 嚴格更好嗎？" data-en="Is HDBSCAN strictly better than DBSCAN?">HDBSCAN 真的比 DBSCAN 嚴格更好嗎？</h3>
+<p class="disc-q" data-lang="zh">官方倡導者（McInnes 2017）說「是」——HDBSCAN 不需 ε、處理密度變化、給軟成員機率。但實務不一定。</p>
+<p class="disc-q" data-lang="en">The official advocate (McInnes 2017) says "yes" — no ε, varying-density, soft membership. But practice is more nuanced.</p>
+<div class="disc-pov">
+<strong data-zh="正方：" data-en="Pro:">正方：</strong>
+<span data-lang="zh">「在 OpenStreetMap、Twitter 地理資料、scRNA-seq 上，HDBSCAN 都贏。Seurat v5 也預設用它。」</span>
+<span data-lang="en">"On OpenStreetMap, Twitter geo, scRNA-seq — HDBSCAN wins. Seurat v5 uses it by default."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="反方：" data-en="Con:">反方：</strong>
+<span data-lang="zh">「HDBSCAN 的 <code>min_cluster_size</code> 比 ε 更難解釋，新使用者完全猜不準。在密度均勻的資料上，DBSCAN 反而結果更可控。」</span>
+<span data-lang="en">"HDBSCAN's <code>min_cluster_size</code> is harder to interpret than ε; newcomers can't guess it. On uniform-density data, DBSCAN gives more controllable results."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="折衷：" data-en="Middle ground:">折衷：</strong>
+<span data-lang="zh">「兩個都跑——若結果一致，DBSCAN 更簡單；若 HDBSCAN 找出更細的群、且該細粒度符合領域知識，就用 HDBSCAN。」</span>
+<span data-lang="en">"Run both — if they agree, DBSCAN is simpler; if HDBSCAN finds finer clusters that match domain knowledge, use HDBSCAN."</span>
+</div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · SPECTRAL</span>
+<h3 data-zh="Spectral clustering 何時打敗 K-Means？" data-en="When does spectral clustering beat K-Means?">Spectral clustering 何時打敗 K-Means？</h3>
+<p class="disc-q" data-lang="zh">當群為「流形結構」——非凸、彎曲、糾纏。經典範例：瑞士卷、兩個交織的環。Spectral 在 normalized Laplacian 的特徵空間中，這些群<em>變成</em>球狀，K-Means 就可以正確分。但代價：O(N³) 特徵分解，N &gt; 10,000 就吃不消。</p>
+<p class="disc-q" data-lang="en">When clusters are <strong>manifolds</strong> — non-convex, curved, intertwined. Classic: Swiss roll, two interlocked rings. In the normalized Laplacian's eigenspace, those clusters <em>become</em> spherical and K-Means works. Cost: O(N³) eigendecomp; N &gt; 10,000 chokes.</p>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · GMM</span>
+<h3 data-zh="GMM 用 BIC 選 K 在高維可靠嗎？" data-en="Is BIC reliable for GMM K-selection in high-D?">GMM 用 BIC 選 K 在高維可靠嗎？</h3>
+<p class="disc-q" data-lang="zh">公式 BIC = k·log(N) − 2·log L，當 d 大時 full covariance 每多一群多 d(d+1)/2 個參數——BIC 重重懲罰。實務上：d &gt; 50 時用 diagonal Σ；或先 PCA 降到 ~20 維再 GMM。AIC 比 BIC 寬鬆，但常選 K 太多。<strong>正規化版</strong>：variational Bayesian GMM（sklearn <code>BayesianGaussianMixture</code>），自動「關掉」不需要的群。</p>
+<p class="disc-q" data-lang="en">BIC = k·log(N) − 2·log L. In high-D, full covariance adds d(d+1)/2 params per cluster — BIC penalizes hard. In practice: d &gt; 50 → diagonal Σ; or PCA to ~20 first. AIC is more lenient but often over-fits K. <strong>Regularized</strong>: variational Bayesian GMM (sklearn <code>BayesianGaussianMixture</code>) automatically prunes unneeded components.</p>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🗺️</div>
+<div class="sp-body">
+<span class="sp-tag">SPOTLIGHT · 2019</span>
+<h4 data-zh="OpenStreetMap 的 1.2M 個錯置 POI" data-en="OpenStreetMap's 1.2M misplaced POIs">OpenStreetMap 的 1.2M 個錯置 POI</h4>
+<p data-lang="zh">2019 年 OpenStreetMap 社群用 HDBSCAN 對全球 2.5 億個 POI（興趣點）跑空間分群——找出「不該獨立存在」的離群 POI（如標在海中央的餐廳）。<strong>方法</strong>：以 (lat, lon) 計算 haversine 距離、min_cluster_size = 5，HDBSCAN 標出 1.2M 個 noise 點，再由志願者人工確認約 60% 確實是貼錯位置，自動修正流程節省了估計 8,000 人時。<strong>關鍵</strong>：DBSCAN 一個全域 ε 無法兼顧東京（極密）與蒙古（極疏）；HDBSCAN 自動處理。</p>
+<p data-lang="en">In 2019 OpenStreetMap volunteers ran HDBSCAN over 250M global POIs to spot "shouldn't-be-alone" points (e.g., a restaurant in the middle of the ocean). <strong>Method</strong>: haversine distance on (lat, lon), min_cluster_size = 5. HDBSCAN flagged 1.2M noise points; volunteers manually confirmed ~60% were genuine misplacements. Estimated 8,000 person-hours saved. <strong>Key</strong>: a single global ε can't handle both Tokyo (ultra-dense) and Mongolia (ultra-sparse); HDBSCAN handles both.</p>
+</div>
+</div>
+
+<section id="pitfalls" class="section">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="密度型 / 機率型分群 五大常見錯誤" data-en="Five Common Mistakes">密度型 / 機率型分群 五大常見錯誤</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card">
+<h4 data-zh="ε 隨便挑" data-en="Picking ε at random">ε 隨便挑</h4>
+<p data-lang="zh">「ε=0.5 因為例子裡看過」——不同尺度的特徵需要完全不同的 ε。<strong>對策：</strong>畫 k-distance plot（k = minPts），找 knee。</p>
+<p data-lang="en">"ε=0.5 because the example used it" — different feature scales need very different ε. <strong>Fix:</strong> k-distance plot (k = minPts), find the knee.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="高維直上 DBSCAN" data-en="DBSCAN in high-D">高維直上 DBSCAN</h4>
+<p data-lang="zh">d &gt; 20 時 ε 失去意義（維度詛咒）。<strong>對策：</strong>先 PCA / UMAP；或改用 cosine 距離；或乾脆 GMM。</p>
+<p data-lang="en">d &gt; 20: ε loses meaning (curse of dimensionality). <strong>Fix:</strong> PCA / UMAP first; use cosine; or switch to GMM.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="GMM 群數太多" data-en="GMM with too many components">GMM 群數太多</h4>
+<p data-lang="zh">不掃 BIC 就 K=20，得到一堆 1–2 點的「群」。<strong>對策：</strong>掃 K=1–10，看 BIC 拐點；或用 Variational Bayes GMM 自動 prune。</p>
+<p data-lang="en">K=20 without scanning BIC gives tiny 1–2-point "clusters". <strong>Fix:</strong> sweep K=1–10 with BIC; or use Variational Bayes GMM that auto-prunes.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="Mean-Shift bandwidth 錯" data-en="Wrong Mean-Shift bandwidth">Mean-Shift bandwidth 錯</h4>
+<p data-lang="zh">bandwidth 太小 → 太多群；太大 → 全併一群。<strong>對策：</strong>sklearn 的 <code>estimate_bandwidth</code> 或從 k-distance plot 估。</p>
+<p data-lang="en">Too small → too many clusters; too large → one giant cluster. <strong>Fix:</strong> sklearn's <code>estimate_bandwidth</code> or k-distance heuristic.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="Spectral 對 disconnected 圖" data-en="Spectral on disconnected graphs">Spectral 對 disconnected 圖</h4>
+<p data-lang="zh">若 KNN 圖斷成多個元件，Laplacian 第 2 個特徵值 = 0，spectral 結果不穩。<strong>對策：</strong>確保連通（增加 n_neighbors），或先 connected_components。</p>
+<p data-lang="en">If the KNN graph splits into components, the Laplacian's second eigenvalue = 0 and spectral becomes unstable. <strong>Fix:</strong> ensure connectivity (increase n_neighbors) or pre-process with connected_components.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="把雜訊強制歸群" data-en="Forcing noise into clusters">把雜訊強制歸群</h4>
+<p data-lang="zh">某些報告把 DBSCAN noise (−1) 當第 K+1 群——錯！它們不是同類，只是「都是異類」。<strong>對策：</strong>分開分析 noise 點（可能是 outlier、罕見群或錯誤）。</p>
+<p data-lang="en">Some reports treat DBSCAN noise (−1) as the K+1th cluster — wrong! They're not similar, just "all dissimilar". <strong>Fix:</strong> analyze noise points separately (could be outliers, rare clusters, or errors).</p>
+</div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="不好的做法" data-en="Bad practice">不好的做法</h4>
+<p data-lang="zh"><code>DBSCAN(eps=0.5, min_samples=5).fit(raw_geno_matrix)</code>——50000 個 SNP 特徵直接灌入，ε 用預設。結果：1 個巨大群 + 5000 個 noise。</p>
+<p data-lang="en"><code>DBSCAN(eps=0.5, min_samples=5).fit(raw_geno_matrix)</code> — 50000-SNP matrix straight in, default ε. Result: 1 giant cluster + 5000 noise.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好的做法" data-en="Good practice">好的做法</h4>
+<p data-lang="zh">(1) PCA 降到 20 維；(2) StandardScaler；(3) <code>kNNdistplot(k=2·dim)</code> 找 ε；(4) HDBSCAN <code>min_cluster_size=15, min_samples=5</code>；(5) 檢視 cluster persistence；(6) 用 hdbscan.approximate_predict 給軟成員機率。</p>
+<p data-lang="en">(1) PCA to 20D; (2) StandardScaler; (3) k-distance plot (k=2·dim) for ε; (4) HDBSCAN <code>min_cluster_size=15, min_samples=5</code>; (5) inspect cluster persistence; (6) use hdbscan.approximate_predict for soft probabilities.</p>
+</div>
+</div>
+
+<section id="reflection" class="section">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<h2 data-zh="留下來想想" data-en="Take a Minute, Think">留下來想想</h2>
+<div class="reflection-q">
+<h4 data-zh="動筆寫下你的回答（或心裡想 30 秒也好）" data-en="Write your answer (or just think 30 seconds)">動筆寫下你的回答（或心裡想 30 秒也好）</h4>
+<ol>
+<li data-lang="zh">DBSCAN 不需事先指定群數——這是優點還是缺點？</li>
+<li data-lang="en">DBSCAN needs no pre-specified K — is that a feature or a limitation?</li>
+<li data-lang="zh">為什麼 DBSCAN 在「兩個密度差距很大的群」上會失敗？</li>
+<li data-lang="en">Why does DBSCAN fail on "two clusters with very different densities"?</li>
+<li data-lang="zh">GMM with spherical Σ 與 K-Means 在什麼極限下等價？</li>
+<li data-lang="en">When does GMM with spherical Σ become equivalent to K-Means?</li>
+<li data-lang="zh">如果你有 100 萬個地理點要分群，會選 DBSCAN、HDBSCAN 還是 GMM？為什麼？</li>
+<li data-lang="en">If you had 1M geo-points to cluster, would you pick DBSCAN, HDBSCAN, or GMM? Why?</li>
+<li data-lang="zh">為什麼「Spectral + K-Means」可以分非凸群，但「直接 K-Means」不行？</li>
+<li data-lang="en">Why does "Spectral + K-Means" handle non-convex clusters when "K-Means alone" doesn't?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced" class="section">
+<div class="section-label" data-zh="進階" data-en="ADVANCED">進階</div>
+<h2 data-zh="2024–2026 最前沿" data-en="2024–2026 Frontier">2024–2026 最前沿</h2>
+<div class="advanced-note">
+<span class="adv-label">SOTA · 2024–2026</span>
+<h4 data-zh="從 HDBSCAN 到 deep clustering 與對比學習" data-en="From HDBSCAN to deep clustering and contrastive">從 HDBSCAN 到 deep clustering 與對比學習</h4>
+<p data-lang="zh"><strong>HDBSCAN 軟分群（2024）。</strong>除了 hard labels，<code>hdbscan.all_points_membership_vectors()</code> 給每點對每群的機率向量。配合 <code>approximate_predict</code> 可在新資料上 zero-shot 推論——這是 Seurat v5 接受 HDBSCAN 為預設的原因。</p>
+<p data-lang="en"><strong>HDBSCAN soft clustering (2024).</strong> Beyond hard labels, <code>hdbscan.all_points_membership_vectors()</code> gives per-point probability vectors over clusters. Combined with <code>approximate_predict</code> you get zero-shot inference on new data — the reason Seurat v5 adopted HDBSCAN by default.</p>
+<p data-lang="zh"><strong>Deep clustering 路線。</strong>DEC (Xie et al. 2016)、IDEC (Guo 2017)、DCEC——用 autoencoder 學表徵、同時優化分群目標。2024 SCDeepCluster (Cell Sys.) 為 scRNA-seq 客製化，整合 ZINB 損失。但「比 HDBSCAN 好多少」仍有爭議，且需大量訓練。</p>
+<p data-lang="en"><strong>Deep clustering line.</strong> DEC (Xie et al. 2016), IDEC (Guo 2017), DCEC — learn representations via autoencoder + cluster loss jointly. 2024 SCDeepCluster (Cell Sys.) customized for scRNA-seq with ZINB loss. But "how much better than HDBSCAN" remains debated, and training is expensive.</p>
+<p data-lang="zh"><strong>對比分群（2025）。</strong>受 SimCLR / DINO 啟發，先用對比學習 (contrastive) 把資料映到「同類點靠近、異類遠離」的嵌入空間，再 K-Means 或 HDBSCAN。SCAN (Van Gansbeke 2020 ECCV) 在 CIFAR-10 上達 89% 準確（無監督）——但生醫資料還在驗證中。</p>
+<p data-lang="en"><strong>Contrastive clustering (2025).</strong> Inspired by SimCLR / DINO, first learn an embedding where same-class points are pulled together (contrastively), then K-Means or HDBSCAN. SCAN (Van Gansbeke 2020 ECCV) hits 89% unsupervised on CIFAR-10 — but biomedical validation is still ongoing.</p>
+<p data-lang="zh"><strong>變分 GMM（VBGMM）。</strong>不挑 K、自動 prune 不需要的群（sklearn <code>BayesianGaussianMixture</code>）。weight_concentration_prior 控制 sparsity。原理：Dirichlet process prior，理論上支援無限混合 (Blei & Jordan 2006)。</p>
+<p data-lang="en"><strong>Variational GMM (VBGMM).</strong> No K to pick; auto-prunes unneeded components (sklearn <code>BayesianGaussianMixture</code>). weight_concentration_prior controls sparsity. Theory: Dirichlet process prior, infinite mixture in principle (Blei & Jordan 2006).</p>
+<p data-lang="zh"><strong>論文路徑。</strong>Ester 1996 (KDD); Ankerst 1999 (SIGMOD); Ng-Jordan-Weiss 2002 (NIPS); Campello 2013 (PAKDD); McInnes 2017 (JOSS); Xie 2016 (ICML, DEC); Van Gansbeke 2020 (ECCV, SCAN); Blei & Jordan 2006 (Bayes Anal); Stuart 2019 (Cell, Seurat v3)。</p>
+<p data-lang="en"><strong>Paper trail.</strong> Ester 1996 (KDD); Ankerst 1999 (SIGMOD); Ng-Jordan-Weiss 2002 (NIPS); Campello 2013 (PAKDD); McInnes 2017 (JOSS); Xie 2016 (ICML, DEC); Van Gansbeke 2020 (ECCV, SCAN); Blei & Jordan 2006 (Bayes Anal); Stuart 2019 (Cell, Seurat v3).</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -214,6 +572,12 @@ sc = <span class="func">SpectralClustering</span>(n_clusters=<span class="num">3
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Naive Bayes 的分群版（特徵獨立的高斯）</span><span data-lang="en">D. A clustering analog of Naive Bayes (independent Gaussians)</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="歷史小註：" data-en="Historical note:">歷史小註：</strong>
+<span data-lang="zh">DBSCAN 由四位德國學者 Martin Ester、Hans-Peter Kriegel、Jörg Sander、Xiaowei Xu 於 1996 年 KDD 發表（KDD 96 paper #226），但在後續 15 年沒有獲得 mainstream 關注——直到 2008 sklearn 收錄。2014 年該論文獲得 KDD <em>Test of Time Award</em>，授獎詞特別強調：「30 年來最被廣泛引用的分群論文之一」。至 2024 年 Google Scholar 引用 50,000+。Hans-Peter Kriegel 因此 paper 與後續 LOF 異常偵測等獲得 ACM SIGKDD Innovation Award。</span>
+<span data-lang="en">DBSCAN was published by four German authors — Martin Ester, Hans-Peter Kriegel, Jörg Sander, Xiaowei Xu — at KDD 1996 (paper #226), but for 15 years it didn't get mainstream attention — until sklearn shipped it in 2008. In 2014 the paper won the KDD <em>Test of Time Award</em>, the citation noting "one of the most-cited clustering papers in 30 years". By 2024 it had 50,000+ Google Scholar citations. Hans-Peter Kriegel won the ACM SIGKDD Innovation Award partly for this paper and subsequent work like LOF anomaly detection.</span>
+</div>
 
 <nav class="page-nav">
 <a href="clustering-kmeans-hierarchical.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 9: K-Means 與階層式分群" data-en="Ch 9: K-Means &amp; Hierarchical Clustering">Ch 9: K-Means 與階層式分群</span></a>

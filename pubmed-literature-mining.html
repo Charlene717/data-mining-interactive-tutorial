@@ -18,6 +18,169 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+  <strong data-zh="本章學習地圖" data-en="Chapter Roadmap">本章學習地圖</strong>
+  <div class="pill-row">
+    <span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+    <span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+    <span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+    <span class="pill teal">⏱ ~50 min</span>
+    <span class="pill amber">📖 19 / 20</span>
+    <span class="pill violet">📚 Module E</span>
+  </div>
+  <ol>
+    <li><a href="#story" data-zh="開場：8,234 篇 metformin × 癌症" data-en="Story: 8,234 Metformin × Cancer Papers">開場故事</a></li>
+    <li><a href="#glossary" data-zh="術語小卡：MeSH 到 BioGPT" data-en="Glossary: MeSH to BioGPT">術語小卡</a></li>
+    <li><a href="#history" data-zh="時間軸：1879 Index Medicus → 2026 LLM agent" data-en="Timeline: 1879 → 2026 LLM Agents">時間軸</a></li>
+    <li><a href="#walkthrough" data-zh="完整實例：Ibuprofen → Alzheimer 藥物再利用" data-en="Worked Example: Ibuprofen → Alzheimer Repurposing">完整實例</a></li>
+    <li><a href="#discussion" data-zh="爭論：LLM vs 專門 NER、開源 vs 封閉" data-en="Debates: LLM vs NER, Open vs Closed">爭論</a></li>
+    <li><a href="#pitfalls" data-zh="陷阱：5 個常見錯誤" data-en="Pitfalls: 5 Common Mistakes">陷阱</a></li>
+    <li><a href="#reflection" data-zh="反思題" data-en="Reflection Questions">反思題</a></li>
+    <li><a href="#advanced" data-zh="進階：Med-Gemini、OpenEvidence、RAG agent" data-en="Advanced: Med-Gemini, OpenEvidence, RAG Agents">進階</a></li>
+  </ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="故事" data-en="STORY">故事</div>
+<h2 data-zh="開場：8,234 篇文獻能在 3 小時讀完嗎？" data-en="Opening: Can You Read 8,234 Papers in 3 Hours?">開場：8,234 篇文獻能在 3 小時讀完嗎？</h2>
+<div class="story-block">
+<span class="story-tag" data-zh="情境" data-en="SCENARIO">情境</span>
+<h3 data-zh="💊 Dr Lin 的 metformin × 癌症 系統性回顧" data-en="💊 Dr Lin's Metformin × Cancer Systematic Review">💊 Dr Lin 的 metformin × 癌症 系統性回顧</h3>
+<div data-lang="zh">
+<p>藥理學家林教授接到衛福部委託：「請整理 metformin 與所有癌症的關聯，三個月後給臨床建議。」她輸入 PubMed：<code>"metformin"[MeSH] AND "Neoplasms"[MeSH]</code>，蹦出 <strong>8,234 篇</strong>。一篇花 15 分鐘讀，等於 <strong>2,058 小時</strong>，約一年。她決定改走<strong>文獻探勘</strong>路線。</p>
+<p>她寫了 50 行 Python：<code>Entrez E-utilities</code> 下 ESearch + EFetch 抓 abstract、<code>BERN2</code> 跑 NER 取得 (gene/drug/disease) 實體、<code>PubTator 3.0 API</code> 拿到 36M 篇預標註好的關聯、用 <code>networkx</code> 建知識圖譜、Open Targets API 比對藥物-疾病關聯分數。<strong>3 小時跑完</strong>，得到 metformin 與 16 種癌症的證據強度排序（colorectal 最強，hepatocellular 中等，pancreatic 證據混雜）。她把每個 claim 都連回原始 PMID，<strong>避免 LLM 幻覺</strong>。最後她用 <em>BMC Cancer</em> 投稿了這份「半自動 systematic review」，並把 Snakemake workflow 公開。</p>
+<p>這就是現代文獻探勘的承諾：不取代閱讀，而是把<strong>讀到對的東西</strong>的時間壓到原來的 1%。</p>
+</div>
+<div data-lang="en">
+<p>Pharmacologist Prof. Lin gets a ministry brief: "Synthesize everything on metformin and any cancer in 3 months." She queries PubMed <code>"metformin"[MeSH] AND "Neoplasms"[MeSH]</code> → <strong>8,234 hits</strong>. At 15 min/paper that's <strong>2,058 hours</strong> — about a year. She switches to <strong>literature mining</strong>.</p>
+<p>50 lines of Python: <code>Entrez E-utilities</code> for ESearch + EFetch, <code>BERN2</code> NER on (gene / drug / disease), <code>PubTator 3.0 API</code> for 36M pre-annotated abstracts, <code>networkx</code> for a KG, Open Targets API for drug-disease scores. <strong>3 hours later</strong> she has metformin vs 16 cancers, ranked by evidence (colorectal strongest, hepatocellular middle, pancreatic mixed). Every claim links back to the original PMID — <strong>no LLM hallucinations</strong>. She publishes the "semi-automated systematic review" in <em>BMC Cancer</em>, with Snakemake workflow public.</p>
+<p>The promise of literature mining is not to replace reading — it is to compress the time to <strong>read the right things</strong> to 1% of the original.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="術語" data-en="GLOSSARY">術語</div>
+<h2 data-zh="術語小卡：MeSH 到 BioGPT" data-en="Glossary: MeSH to BioGPT">術語小卡：MeSH 到 BioGPT</h2>
+<div class="glossary-grid">
+  <div class="glossary-card">
+    <div class="term-en">PubMed / MEDLINE</div>
+    <div class="term-zh">生醫文獻資料庫</div>
+    <div class="term-kid" data-lang="zh">全世界的生醫論文「總圖書館」，38,000,000 本以上。</div>
+    <div class="term-kid" data-lang="en">The world's "main library" of biomedical papers — 38,000,000+.</div>
+    <div class="term-tech" data-lang="zh">NLM (US National Library of Medicine) 維護；MEDLINE 為核心子集 (~30M)；PMC 為全文 open-access 子集 (~9M)。</div>
+    <div class="term-tech" data-lang="en">Maintained by NLM (US National Library of Medicine); MEDLINE core (~30M); PMC open-access full-text (~9M).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Entrez E-utilities</div>
+    <div class="term-zh">NCBI 程式化 API</div>
+    <div class="term-kid" data-lang="zh">寫程式去問 NCBI：「給我這些 PMID 的摘要！」</div>
+    <div class="term-kid" data-lang="en">Programmatic API to ask NCBI "give me the abstracts for these PMIDs."</div>
+    <div class="term-tech" data-lang="zh">ESearch (query → PMID) / EFetch (PMID → XML) / ELink / EPost / ESummary；含 batch history WebEnv；速率 3 req/s (no key) → 10 (with key)。</div>
+    <div class="term-tech" data-lang="en">ESearch (query → PMID) / EFetch (PMID → XML) / ELink / EPost / ESummary; supports batch history WebEnv; 3 req/s without key → 10 with key.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">MeSH</div>
+    <div class="term-zh">受控詞彙樹</div>
+    <div class="term-kid" data-lang="zh">把所有醫學概念用一棵樹整理：「Drugs → Antineoplastic Agents → Metformin」。</div>
+    <div class="term-kid" data-lang="en">All medical concepts arranged as a tree: "Drugs → Antineoplastic Agents → Metformin."</div>
+    <div class="term-tech" data-lang="zh">Medical Subject Headings；~30k descriptor；hierarchical "tree number"；自動 explosion (sub-terms 一起查)；NLM Indexer 平均每篇加 10–15 個。</div>
+    <div class="term-tech" data-lang="en">Medical Subject Headings; ~30k descriptors; hierarchical "tree numbers"; auto-explosion; NLM indexers add 10–15 per paper.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">NER</div>
+    <div class="term-zh">命名實體辨識</div>
+    <div class="term-kid" data-lang="zh">電腦讀文章，把「EGFR (基因)」「Tarceva (藥)」「肺癌 (病)」一一標出來。</div>
+    <div class="term-kid" data-lang="en">A computer reads text and labels "EGFR (gene), Tarceva (drug), lung cancer (disease)."</div>
+    <div class="term-tech" data-lang="zh">Named Entity Recognition；BERT-based (BioBERT, PubMedBERT) 為 SOTA；F1 在 BC5CDR 0.90+；BERN2 為 multi-type tagger。</div>
+    <div class="term-tech" data-lang="en">Named Entity Recognition; BERT-based (BioBERT, PubMedBERT) SOTA; F1 ~0.90 on BC5CDR; BERN2 multi-type tagger.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">RE / BioRED</div>
+    <div class="term-zh">關係抽取</div>
+    <div class="term-kid" data-lang="zh">不只找出實體，還判斷它們之間的關係：「EGFR<strong>抑制</strong>於 Erlotinib」。</div>
+    <div class="term-kid" data-lang="en">Beyond entities — classify their relations: "EGFR <strong>inhibited by</strong> Erlotinib."</div>
+    <div class="term-tech" data-lang="zh">Relation Extraction；datasets BC5CDR、CHEMPROT、DDI、GDA；BioRED (Luo 2022) 含 6,000+ 摘要、8 relation types；2024 SOTA 用 GPT-4 in-context F1 0.55。</div>
+    <div class="term-tech" data-lang="en">Relation Extraction; datasets BC5CDR, CHEMPROT, DDI, GDA; BioRED (Luo 2022) 6,000+ abstracts, 8 relation types; 2024 SOTA GPT-4 in-context F1 ~0.55.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">PubTator 3.0</div>
+    <div class="term-zh">預標註語料庫</div>
+    <div class="term-kid" data-lang="zh">NCBI 已經幫你把 36M 篇文章上的實體都標好了！</div>
+    <div class="term-kid" data-lang="en">NCBI has pre-tagged entities for 36M abstracts — ready to use!</div>
+    <div class="term-tech" data-lang="zh">Wei 2024 NAR Database issue；含 36M+ MEDLINE abstracts + 6+ entity types + 7+ relation types + API access。</div>
+    <div class="term-tech" data-lang="en">Wei 2024 NAR Database issue; 36M+ MEDLINE abstracts, 6+ entity types, 7+ relation types, API access.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">UMLS</div>
+    <div class="term-zh">統一醫學語言系統</div>
+    <div class="term-kid" data-lang="zh">把同一個東西的不同名字 (Tylenol, acetaminophen, paracetamol) 全對到同一個 ID。</div>
+    <div class="term-kid" data-lang="en">Maps different names of the same thing (Tylenol, acetaminophen, paracetamol) to one CUI.</div>
+    <div class="term-tech" data-lang="zh">NLM；含 200+ 詞彙來源、4.5M+ CUI；MetaMap / cTAKES / SciSpacy linker 為主要 entity linking 工具。</div>
+    <div class="term-tech" data-lang="en">NLM; 200+ source vocabularies, 4.5M+ CUIs; entity-linking tools: MetaMap, cTAKES, SciSpacy linker.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Knowledge Graph</div>
+    <div class="term-zh">知識圖譜</div>
+    <div class="term-kid" data-lang="zh">把基因、藥物、疾病都當<strong>節點</strong>，關係當<strong>線</strong>，畫成一張<strong>網</strong>。</div>
+    <div class="term-kid" data-lang="en">Genes / drugs / diseases as <strong>nodes</strong>, relations as <strong>edges</strong> — one giant <strong>network</strong>.</div>
+    <div class="term-tech" data-lang="zh">Hetionet (47k nodes / 2.25M edges, Himmelstein 2017 eLife)、DRKG、BioKG、PrimeKG (Chandak 2023 Sci Data, 4M edges)、Open Targets (2024)。</div>
+    <div class="term-tech" data-lang="en">Hetionet (47k nodes / 2.25M edges, Himmelstein 2017 eLife), DRKG, BioKG, PrimeKG (Chandak 2023 Sci Data, 4M edges), Open Targets (2024).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Drug Repurposing</div>
+    <div class="term-zh">藥物再利用</div>
+    <div class="term-kid" data-lang="zh">已上市的藥物找新用途，比從零開發省錢省時。</div>
+    <div class="term-kid" data-lang="en">Finding new uses for approved drugs — much cheaper and faster than de novo discovery.</div>
+    <div class="term-tech" data-lang="zh">經典案例 sildenafil (angina → ED → PAH)、thalidomide (鎮靜 → multiple myeloma)；KG link prediction (TransE, RotatE, ComplEx, HGNN) 為主流。</div>
+    <div class="term-tech" data-lang="en">Classics: sildenafil (angina → ED → PAH), thalidomide (sedative → multiple myeloma); KG link prediction (TransE, RotatE, ComplEx, HGNN) is mainstream.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">BioBERT / PubMedBERT</div>
+    <div class="term-zh">領域 BERT</div>
+    <div class="term-kid" data-lang="zh">一般 BERT 看不太懂醫學，這些是「上過醫學院」的 BERT。</div>
+    <div class="term-kid" data-lang="en">Generic BERT struggles on medicine — these have "gone to med school."</div>
+    <div class="term-tech" data-lang="zh">BioBERT (Lee 2019, PubMed+PMC pretrained)；PubMedBERT (Gu 2020, from scratch on PubMed, ACM HEALTH 2021)；MedBERT、ClinicalBERT 為臨床特化。</div>
+    <div class="term-tech" data-lang="en">BioBERT (Lee 2019, PubMed+PMC pretrained); PubMedBERT (Gu 2020, from-scratch PubMed, ACM HEALTH 2021); MedBERT, ClinicalBERT for clinical text.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">RAG (Retrieval-Augmented Generation)</div>
+    <div class="term-zh">檢索增強生成</div>
+    <div class="term-kid" data-lang="zh">LLM 回答前先去查資料庫，<strong>有引用</strong>才回答，減少幻覺。</div>
+    <div class="term-kid" data-lang="en">LLMs that retrieve from a corpus before answering — only respond with <strong>citations</strong>, less hallucination.</div>
+    <div class="term-tech" data-lang="zh">Lewis 2020 RAG paper；應用：OpenEvidence (2024)、Glass.health、PubMed-MedRAG (Xiong 2024)；BM25 / dense retrieval + LLM generator。</div>
+    <div class="term-tech" data-lang="en">Lewis 2020 RAG paper; applications: OpenEvidence (2024), Glass.health, PubMed-MedRAG (Xiong 2024); BM25 / dense retrieval + LLM generator.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Open Targets</div>
+    <div class="term-zh">目標證據整合平台</div>
+    <div class="term-kid" data-lang="zh">把基因 - 疾病 - 藥物的所有證據打分數，告訴你哪個關聯最強。</div>
+    <div class="term-kid" data-lang="en">Scores every gene-disease-drug association by evidence strength.</div>
+    <div class="term-tech" data-lang="zh">EMBL-EBI + GSK + pharma；整合 GWAS、文獻、藥物、臨床試驗；2024 v25.06 release；REST + GraphQL API。</div>
+    <div class="term-tech" data-lang="en">EMBL-EBI + GSK + pharma; integrates GWAS, literature, drugs, trials; 2024 v25.06 release; REST + GraphQL API.</div>
+  </div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間軸" data-en="TIMELINE">時間軸</div>
+<h2 data-zh="從紙本 Index Medicus 到 LLM agent" data-en="From Paper Index Medicus to LLM Agents">從紙本 Index Medicus 到 LLM agent</h2>
+<div class="timeline">
+  <div class="timeline-item"><span class="tl-year">1879</span><span class="tl-title">Index Medicus</span><span class="tl-desc" data-zh="John Shaw Billings 創立紙本月刊；US Surgeon-General Library。" data-en="John Shaw Billings founds the paper monthly; US Surgeon-General Library."></span></div>
+  <div class="timeline-item"><span class="tl-year">1965</span><span class="tl-title">MEDLINE</span><span class="tl-desc" data-zh="NLM 啟動 MEDLARS 電子化檢索系統。" data-en="NLM launches MEDLARS electronic search."></span></div>
+  <div class="timeline-item"><span class="tl-year">1986</span><span class="tl-title" data-zh="Swanson ABC 假說" data-en="Swanson's ABC Hypothesis">Swanson ABC 假說</span><span class="tl-desc" data-zh="Don Swanson 從文獻提出 Raynaud × fish oil 假說，首次「以文獻探勘啟發實驗」。" data-en="Don Swanson proposes Raynaud × fish oil from literature — first 'literature-mining hypothesis.'"></span></div>
+  <div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title">MeSH 標準化</span><span class="tl-desc" data-zh="MeSH 已完整覆蓋 PubMed 索引；自動 explosion 啟用。" data-en="MeSH fully covers PubMed indexing; auto-explosion enabled."></span></div>
+  <div class="timeline-item"><span class="tl-year">2007</span><span class="tl-title">BioCreative II</span><span class="tl-desc" data-zh="生醫 NER / RE 共享任務正式化；NLP 模型開始競爭。" data-en="Biomedical NER / RE shared tasks formalized; NLP models start competing."></span></div>
+  <div class="timeline-item"><span class="tl-year">2017</span><span class="tl-title" data-zh="Hetionet (Himmelstein)" data-en="Hetionet (Himmelstein)">Hetionet (Himmelstein)</span><span class="tl-desc" data-zh="eLife paper；47k nodes / 2.25M edges + drug repurposing prediction (DWPC)。" data-en="eLife paper; 47k nodes / 2.25M edges + DWPC drug-repurposing prediction."></span></div>
+  <div class="timeline-item"><span class="tl-year">2019</span><span class="tl-title">BioBERT</span><span class="tl-desc" data-zh="Lee et al. Bioinformatics；首個在 PubMed+PMC 預訓練的 BERT。" data-en="Lee et al. Bioinformatics; first BERT pretrained on PubMed+PMC."></span></div>
+  <div class="timeline-item"><span class="tl-year">2020</span><span class="tl-title">PubMedBERT</span><span class="tl-desc" data-zh="Gu et al. ACM HEALTH (2021)；from-scratch PubMed 預訓練，刷新 BC5CDR。" data-en="Gu et al. ACM HEALTH (2021); from-scratch PubMed pretrain, new SOTA on BC5CDR."></span></div>
+  <div class="timeline-item"><span class="tl-year">2022</span><span class="tl-title">BERN2 / BioRED / BioGPT</span><span class="tl-desc" data-zh="Sung 2022 BERN2 (multi-type tagger), Luo BioRED, Luo BioGPT (生成式)。" data-en="Sung 2022 BERN2 (multi-type tagger), Luo BioRED, Luo BioGPT (generative)."></span></div>
+  <div class="timeline-item"><span class="tl-year">2023</span><span class="tl-title">PrimeKG</span><span class="tl-desc" data-zh="Chandak et al. Sci Data；4M edges、17 個資料來源、面向藥物再利用。" data-en="Chandak et al. Sci Data; 4M edges, 17 sources, drug-repurposing oriented."></span></div>
+  <div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title">PubTator 3.0 + Med-Gemini</span><span class="tl-desc" data-zh="Wei NAR；36M+ annotated abstracts API。Saab NEJM AI；多模態 medical LLM。" data-en="Wei NAR; 36M+ annotated abstracts API. Saab NEJM AI; multimodal medical LLM."></span></div>
+  <div class="timeline-item"><span class="tl-year">2025–2026</span><span class="tl-title" data-zh="RAG-based 醫療 agent" data-en="RAG-based Clinical Agents">RAG-based 醫療 agent</span><span class="tl-desc" data-zh="OpenEvidence、Glass.health、BioMistral 7B、MedRAG 引導 evidence-cited 回答；多 agent 互審。" data-en="OpenEvidence, Glass.health, BioMistral 7B, MedRAG drive evidence-cited answering; multi-agent review."></span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="從關鍵字查詢到知識圖譜" data-en="From Keyword Search to Knowledge Graph">從關鍵字查詢到知識圖譜</h2>
@@ -33,6 +196,25 @@
 <span data-lang="zh"><strong>NCBI API 速率限制：</strong>未申請 API key = 3 req/sec；申請後可至 10 req/sec。違反限制會被臨時封 IP。</span>
 <span data-lang="en"><strong>NCBI API rate limit:</strong> 3 req/sec without API key, 10 req/sec with key. Abuse leads to temporary IP block.</span>
 </div></div>
+
+<div class="analogy-box">
+  <div class="ana-icon">🔎</div>
+  <div class="ana-body">
+    <span class="ana-tag" data-zh="比喻" data-en="ANALOGY">比喻</span>
+    <h4 data-zh="文獻探勘 = 生醫專用 Google" data-en="Literature Mining = Biomedical Google">文獻探勘 = 生醫專用 Google</h4>
+    <p data-lang="zh">一般 Google 看到 "EGFR" 可能想到「Engineering Field Geological Report」、看到 "AD" 可能搜尋出 "advertisement"。生醫文獻探勘工具<strong>知道</strong>：EGFR 是一個基因、Tarceva 是一個藥、肺腺癌是一個疾病，且它們之間有 <em>inhibits</em>、<em>treats</em>、<em>causes</em> 等關係。這不只是 Google，是<strong>領域知識化</strong>的搜尋引擎。</p>
+    <p data-lang="en">Generic Google might read "EGFR" as "Engineering Field Geological Report" or "AD" as "advertisement." Biomedical mining tools <strong>know</strong> EGFR is a gene, Tarceva is a drug, lung adenocarcinoma is a disease, and that relations like <em>inhibits</em>, <em>treats</em>, <em>causes</em> link them. It's not Google — it's a <strong>domain-aware</strong> search engine.</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card"><span class="kpi-num">38M+</span><span class="kpi-label" data-zh="PubMed 引用" data-en="PubMed citations">PubMed</span></div>
+  <div class="kpi-card"><span class="kpi-num">~1M</span><span class="kpi-label" data-zh="每年新加文獻" data-en="New citations/year">新增/年</span></div>
+  <div class="kpi-card"><span class="kpi-num">30k</span><span class="kpi-label" data-zh="MeSH descriptors" data-en="MeSH descriptors">MeSH</span></div>
+  <div class="kpi-card"><span class="kpi-num">36M</span><span class="kpi-label" data-zh="PubTator 3.0 標註" data-en="PubTator 3.0 annotated">PubTator</span></div>
+  <div class="kpi-card"><span class="kpi-num">4M</span><span class="kpi-label" data-zh="PrimeKG edges" data-en="PrimeKG edges">PrimeKG</span></div>
+  <div class="kpi-card"><span class="kpi-num">10/s</span><span class="kpi-label" data-zh="NCBI API 速率 (含 key)" data-en="NCBI rate (with key)">API rate</span></div>
+</div>
 </section>
 
 <section class="section">
@@ -159,6 +341,264 @@ re = pipeline(<span class="str">"text-classification"</span>, model=<span class=
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="完整實例" data-en="WALKTHROUGH">完整實例</div>
+<h2 data-zh="Ibuprofen → Alzheimer 藥物再利用 (Step-by-Step)" data-en="Ibuprofen → Alzheimer Drug Repurposing (Step-by-Step)">Ibuprofen → Alzheimer 藥物再利用 (Step-by-Step)</h2>
+<div class="walkthrough">
+  <div class="walkthrough-header">
+    <div class="wt-num">RP</div>
+    <h3 data-zh="從 PubMed 查詢到 Open Targets 驗證" data-en="From PubMed Query to Open Targets Validation">從 PubMed 查詢到 Open Targets 驗證</h3>
+    <span class="wt-tag" data-zh="假說：NSAIDs 預防 AD" data-en="Hypothesis: NSAIDs prevent AD">假說：NSAIDs 預防 AD</span>
+  </div>
+  <div class="wt-step"><div class="wt-label">Step 1</div><div class="wt-body" data-lang="zh"><strong>PubMed 查詢：</strong>Entrez E-utilities <code>ESearch</code>，term = <code>"ibuprofen"[MeSH] AND ("Alzheimer Disease"[MeSH] OR "Cognitive Dysfunction"[MeSH])</code>，加 <code>2015[PDAT]:2024[PDAT]</code> 限時間窗 → <strong>1,247 篇 PMID</strong>。記得 ELink 抓 related articles 增加 recall。</div><div class="wt-body" data-lang="en"><strong>PubMed query:</strong> Entrez E-utilities <code>ESearch</code>, term <code>"ibuprofen"[MeSH] AND ("Alzheimer Disease"[MeSH] OR "Cognitive Dysfunction"[MeSH])</code> + <code>2015[PDAT]:2024[PDAT]</code> → <strong>1,247 PMIDs</strong>. Use ELink for related articles to boost recall.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 2</div><div class="wt-body" data-lang="zh"><strong>批次抓 abstract：</strong>用 EPost + WebEnv 把 1247 PMID 分 5 批 <code>EFetch</code>，rate-limit 10/s（有 API key）。XML 解析後得到 title + abstract + MeSH terms + publication type (RCT, observational, review)。</div><div class="wt-body" data-lang="en"><strong>Batch-fetch abstracts:</strong> EPost + WebEnv splits 1247 PMIDs into 5 batches of <code>EFetch</code>, rate-limited at 10/s (with API key). XML parse → title + abstract + MeSH + publication type (RCT, observational, review).</div></div>
+  <div class="wt-step"><div class="wt-label">Step 3</div><div class="wt-body" data-lang="zh"><strong>BERN2 NER：</strong>對每篇 title + abstract 跑 BERN2 (HTTP API)，得到 (gene, disease, drug, chemical, species) 標註 + UMLS CUI linking。<strong>~12,000 entity mentions</strong>，去重後 ~860 unique entities。</div><div class="wt-body" data-lang="en"><strong>BERN2 NER:</strong> run BERN2 (HTTP API) on title + abstract → (gene, disease, drug, chemical, species) tags + UMLS CUI linking. <strong>~12,000 entity mentions</strong>; ~860 unique after dedup.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 4</div><div class="wt-body" data-lang="zh"><strong>建 co-occurrence 圖：</strong>對每個 sentence 抽出 entity pairs，用 <code>networkx</code> 累加 edge weight。Node = entity，edge weight = co-occurrence count。共 ~3,200 nodes, ~24,000 edges。</div><div class="wt-body" data-lang="en"><strong>Build co-occurrence graph:</strong> per sentence, extract entity pairs, accumulate edge weight with <code>networkx</code>. ~3,200 nodes, ~24,000 edges.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 5</div><div class="wt-body" data-lang="zh"><strong>篩 "ibuprofen × cognitive" pairs：</strong>過濾 source/target 至少一個是 NSAID-related (UMLS CUI C0020740, C0007792)、另一個是 cognitive-related (C0002395, C0023895, C0020538) → <strong>87 個候選 pairs</strong>。</div><div class="wt-body" data-lang="en"><strong>Filter "ibuprofen × cognitive" pairs:</strong> at least one endpoint NSAID-related (UMLS C0020740, C0007792) and the other cognitive-related (C0002395, C0023895, C0020538) → <strong>87 candidate pairs</strong>.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 6</div><div class="wt-body" data-lang="zh"><strong>關係抽取：</strong>每個 candidate pair 找回 PMID + sentence context，餵入 <strong>BioRED-pretrained PubMedBERT</strong> RE 模型；輸出 8 relation labels：positive_correlation, negative_correlation, association, drug_interaction…。聚合每 pair 的 relation distribution。</div><div class="wt-body" data-lang="en"><strong>Relation extraction:</strong> retrieve PMID + sentence for each candidate pair, feed to <strong>BioRED-pretrained PubMedBERT</strong> RE; outputs 8 labels: positive_correlation, negative_correlation, association, drug_interaction…. Aggregate per-pair distribution.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 7</div><div class="wt-body" data-lang="zh"><strong>排序：</strong>每個 pair 計算 support (PMID 數) × lift (P(co)/P(co|null)) × confidence (RE 預測信心)。Top: ibuprofen ↔ COX-2 ↔ Aβ plaque clearance；ibuprofen ↔ microglial activation；ibuprofen ↔ MCI risk。</div><div class="wt-body" data-lang="en"><strong>Rank:</strong> each pair scored by support (#PMIDs) × lift (P(co)/P(co|null)) × RE confidence. Top: ibuprofen ↔ COX-2 ↔ Aβ plaque clearance; ibuprofen ↔ microglial activation; ibuprofen ↔ MCI risk.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 8</div><div class="wt-body" data-lang="zh"><strong>外部驗證：</strong>把 top-10 候選送 Open Targets GraphQL API 查 evidence score (ENSG-EFO pair)；4/10 有 ≥ 0.5 整體分數。其中 ibuprofen × Alzheimer 的 Open Targets 證據強度 0.32，主要來自 GWAS (PTGS2 locus) + 文獻；提醒讀者：<strong>literature signal ≠ causation</strong>，需 RCT 驗證 (見 ADAPT trial 2007 的失敗教訓)。</div><div class="wt-body" data-lang="en"><strong>External validation:</strong> top-10 candidates queried via Open Targets GraphQL for evidence score (ENSG-EFO); 4/10 score ≥ 0.5. Ibuprofen × Alzheimer overall score 0.32, mostly GWAS (PTGS2 locus) + literature. Caveat: <strong>literature signal ≠ causation</strong>; RCTs needed (cf. ADAPT trial 2007 negative result).</div></div>
+</div>
+
+<details class="detail-toggle">
+  <summary data-zh="🔬 進階：LLM RAG 的引用驗證" data-en="🔬 Advanced: validating LLM-RAG citations">🔬 進階：LLM RAG 的引用驗證</summary>
+  <div class="detail-body" data-lang="zh"><p>OpenEvidence、Glass.health、MedRAG 等臨床 RAG 系統會給 evidence-cited answer，但 2024 Stanford study (Magesh et al.) 發現 <strong>1/3 LLM-生成引用為「不存在」或「不支持結論」</strong>。對策：(1) 引用必須由<strong>檢索器</strong>產生 (BM25 / dense)、再由 LLM 引用，不能由 LLM 憑空生成；(2) 跑 citation verifier (Bohnet 2022 attributed QA)；(3) UI 強制顯示<strong>每個 claim 的證據句</strong>+ PMID。</p></div>
+  <div class="detail-body" data-lang="en"><p>OpenEvidence, Glass.health, MedRAG produce evidence-cited answers, but Stanford's 2024 audit (Magesh et al.) found <strong>1/3 of LLM-generated citations were non-existent or did not support the claim</strong>. Fix: (1) citations must come from a <strong>retriever</strong> (BM25 / dense), then quoted by the LLM — never invented; (2) run a citation verifier (Bohnet 2022 attributed QA); (3) UI forces showing <strong>the evidence sentence + PMID</strong> for every claim.</p></div>
+</details>
+</section>
+
+<section class="section">
+<div class="spotlight">
+  <div class="sp-icon">🕸️</div>
+  <div class="sp-body">
+    <span class="sp-tag" data-zh="案例" data-en="CASE STUDY">案例</span>
+    <h4 data-zh="2017 Hetionet — 把 PubMed 變成預測機器" data-en="2017 Hetionet — Turning PubMed into a Prediction Engine">2017 Hetionet — 把 PubMed 變成預測機器</h4>
+    <p data-lang="zh">Daniel Himmelstein 與 Casey Greene (2017 <em>eLife</em>) 把 <strong>29 個生醫資料庫</strong>整合成 Hetionet：47k nodes、2.25M edges、11 種節點類型。他們開發 <strong>DWPC (Degree-Weighted Path Count)</strong> 演算法找候選 drug repurposing，預測「nicotine 可能預防 Alzheimer」。實驗 (Newhouse 2012) 與後續流行病學研究確實支持這個關聯。其他 top 預測（如 imatinib for asthma）也陸續有實驗 evidence。</p>
+    <p data-lang="zh">Hetionet 的意義是<strong>知識圖譜可以推理</strong>：A-B-C 串在一起，A → C 就有可能。這成為現代 PrimeKG、DRKG、BioKG 等所有生醫 KG 的藍圖。</p>
+    <p data-lang="en">Himmelstein & Greene (2017 <em>eLife</em>) merged <strong>29 biomedical sources</strong> into Hetionet: 47k nodes, 2.25M edges, 11 node types. Their <strong>DWPC (Degree-Weighted Path Count)</strong> algorithm predicted candidate drug repurposings — including "nicotine may prevent Alzheimer," which Newhouse 2012 + later epidemiology supported. Other top hits (e.g., imatinib for asthma) also gained experimental backing.</p>
+    <p data-lang="en">Hetionet's lesson: <strong>knowledge graphs can reason</strong>. A-B-C means A → C is plausible. This became the blueprint for PrimeKG, DRKG, BioKG, and all modern biomedical KGs.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論" data-en="DEBATES">爭論</div>
+<h2 data-zh="三個正在燒的爭論" data-en="Three Debates Burning Now">三個正在燒的爭論</h2>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+  <h3 data-zh="LLM 會取代專門 NER 模型嗎？" data-en="Will LLMs Replace Specialized NER Models?">LLM 會取代專門 NER 模型嗎？</h3>
+  <div class="disc-q" data-lang="zh">2024–2025 不少論文用 GPT-4 / Claude / Gemini 做 in-context biomedical NER，F1 在某些任務逼近 BERN2、PubMedBERT。但<strong>成本、速度、可重現性</strong>遠不如專門模型。Tinn et al. 2023 <em>Patterns</em> 證實領域 BERT 在 F1 仍贏 GPT-4 5–10%。</div>
+  <div class="disc-q" data-lang="en">Many 2024–2025 papers use GPT-4 / Claude / Gemini for in-context biomedical NER, approaching BERN2 / PubMedBERT on some tasks. But <strong>cost, speed, reproducibility</strong> trail far behind specialized models. Tinn et al. 2023 <em>Patterns</em> showed domain BERTs still beat GPT-4 by 5–10% F1.</div>
+  <div class="disc-pov" data-lang="zh"><strong>2026 折衷：</strong>大型語料用 BERN2 / PubMedBERT 做主力標註；LLM 用於低資源實體 (rare disease, novel target) 與後驗證 (judge confidence)。</div>
+  <div class="disc-pov" data-lang="en"><strong>2026 compromise:</strong> BERN2 / PubMedBERT for high-volume annotation; LLMs reserved for low-resource entities (rare diseases, novel targets) and post-hoc judging.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+  <h3 data-zh="開源 vs 封閉醫療 LLM" data-en="Open vs Closed Medical LLMs">開源 vs 封閉醫療 LLM</h3>
+  <div class="disc-q" data-lang="zh">封閉模型：Med-PaLM 2 (Google)、Med-Gemini (2024 NEJM AI)、GPT-4-Medicine。<strong>USMLE 表現超人</strong>但模型參數、訓練資料、後處理皆不公開。開源：BioMistral 7B (2024)、Meditron 70B、BioGPT 2022、PMC-LLaMA — 表現次一級但可<strong>本地部署</strong>+<strong>稽核</strong>。</div>
+  <div class="disc-q" data-lang="en">Closed: Med-PaLM 2 (Google), Med-Gemini (2024 NEJM AI), GPT-4-Medicine — <strong>superhuman USMLE</strong> but weights/data/post-processing closed. Open: BioMistral 7B (2024), Meditron 70B, BioGPT 2022, PMC-LLaMA — slightly weaker but <strong>locally deployable + auditable</strong>.</div>
+  <div class="disc-pov" data-lang="zh"><strong>監管含義：</strong>EU AI Act 對 GPAI 要求透明度報告；高風險 AI 還需 risk-management + 技術文件。封閉模型若用於臨床決策，<strong>合規難度高</strong>。</div>
+  <div class="disc-pov" data-lang="en"><strong>Regulatory:</strong> EU AI Act requires GPAI transparency reports; high-risk AI further needs risk-management + technical docs. Closed models in clinical decision-support face a <strong>steep compliance hill</strong>.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+  <h3 data-zh="KG 預測藥物再利用是真發現還是事後印證？" data-en="Is KG-Based Drug Repurposing Real Discovery or Hindsight?">KG 預測藥物再利用是真發現還是事後印證？</h3>
+  <div class="disc-q" data-lang="zh">Hetionet, PrimeKG, DRKG 都展示了「成功預測」案例 — 但這些案例往往<strong>已經有部分文獻證據</strong>。批評者說：KG 只是把已知的關聯重排，沒有真正「新發現」；Wang et al. 2024 <em>Nat Commun</em> 也指出 link prediction benchmark 在<strong>真實前瞻性試驗</strong>上 hit rate 不到 5%。</div>
+  <div class="disc-q" data-lang="en">Hetionet, PrimeKG, DRKG showcase "successful predictions" — but cases typically had <strong>partial prior literature</strong>. Critics say KGs reshuffle known associations rather than discover. Wang et al. 2024 <em>Nat Commun</em> show link-prediction benchmarks have a <strong>&lt;5% hit rate in true prospective trials</strong>.</div>
+  <div class="disc-pov" data-lang="zh"><strong>建設性立場：</strong>KG 是 hypothesis-generation 工具，不是發現本身；發現一定要在實驗或臨床試驗中發生。</div>
+  <div class="disc-pov" data-lang="en"><strong>Constructive view:</strong> KGs are hypothesis-generators, not discoveries themselves; discoveries happen only in lab or trial.</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="五個文獻探勘的常見陷阱" data-en="Five Common Literature-Mining Pitfalls">五個文獻探勘的常見陷阱</h2>
+<div class="pitfall-grid">
+  <div class="pitfall-card">
+    <h4 data-zh="未處理同義詞" data-en="Synonyms unhandled">未處理同義詞</h4>
+    <p data-lang="zh">"acetaminophen" / "paracetamol" / "Tylenol" 都是同一藥物；如果不做 UMLS linking，會把同一概念分成三個 node，KG 全亂。<strong>必用</strong> SciSpacy linker 或 PubTator 標準化。</p>
+    <p data-lang="en">"acetaminophen" / "paracetamol" / "Tylenol" all the same drug. Without UMLS linking, you split one concept into three nodes — KG falls apart. <strong>Always</strong> use SciSpacy linker or PubTator normalization.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="引用偏差" data-en="Citation bias">引用偏差</h4>
+    <p data-lang="zh">熱門藥物 (metformin, aspirin) 文章數萬篇，冷門新藥可能只有幾十篇。Co-occurrence count 高 ≠ 證據強，要 normalize by paper count 或用 lift / TF-IDF。</p>
+    <p data-lang="en">Popular drugs (metformin, aspirin) have tens of thousands of papers; novel drugs may have dozens. High co-occurrence ≠ strong evidence — normalize by paper count, or use lift / TF-IDF.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="縮寫 false positive" data-en="Abbreviation false positives">縮寫 false positive</h4>
+    <p data-lang="zh">"AD" 可能是 Alzheimer's Disease，也可能是 "average daily"、"adjusted dose"。"CA" 是鈣或加州或 "carcinoma"。<strong>必用</strong> scispacy <code>resolve_abbreviations=True</code> + 上下文消歧。</p>
+    <p data-lang="en">"AD" might be Alzheimer's, "average daily," or "adjusted dose." "CA" is calcium, California, or "carcinoma." <strong>Always</strong> use scispacy <code>resolve_abbreviations=True</code> + context disambiguation.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="MeSH inflation" data-en="MeSH inflation">MeSH inflation</h4>
+    <p data-lang="zh">過度依賴 MeSH explosion 會把無關 sub-terms 全包括進來。對 specific entity 用 <code>[Mesh:NoExp]</code> 或 <code>[tw]</code> (text word) 來精準查詢。</p>
+    <p data-lang="en">Over-relying on MeSH explosion sweeps in unrelated sub-terms. For specific entities use <code>[Mesh:NoExp]</code> or <code>[tw]</code> (text word) for precise queries.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="LLM 偽造引用" data-en="LLM hallucinated citations">LLM 偽造引用</h4>
+    <p data-lang="zh">2024 Stanford 研究 (Magesh et al.) 發現 1/3 LLM 生成的醫療引用根本不存在或不支持結論。<strong>必須</strong>用 RAG：先檢索 → 再生成，並對每個 claim 驗證 PMID 與引用句。</p>
+    <p data-lang="en">Stanford 2024 (Magesh et al.) found 1/3 of LLM-generated medical citations were non-existent or unsupportive. <strong>Always</strong> use RAG: retrieve first → generate, verify every claim with PMID and the evidence sentence.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="把語料偏差當共識" data-en="Mistaking corpus bias for consensus">把語料偏差當共識</h4>
+    <p data-lang="zh">PubMed 偏 Western, English、新藥物多有 industry-sponsored；對發展中國家、非英語、negative results 嚴重不足。文獻探勘的「主流意見」≠ 真實生物事實。</p>
+    <p data-lang="en">PubMed skews Western, English, industry-sponsored; under-represents developing-country research, non-English, and negative results. "Literature consensus" ≠ biological truth.</p>
+  </div>
+</div>
+
+<div class="contrast-2col">
+  <div class="con-card bad">
+    <h4 data-zh="壞範例" data-en="Bad Practice">壞範例</h4>
+    <p data-lang="zh">問 GPT-4「列出 5 篇支持 metformin × pancreatic cancer 的論文」，得到 5 個 PMID 與摘要，貼進論文 supplementary。3 個 PMID 不存在、1 個是別的主題、1 個結論相反。Reviewer 沒抓到，論文發表後被讀者投書揭穿。</p>
+    <p data-lang="en">Ask GPT-4 to "list 5 papers supporting metformin × pancreatic cancer," paste 5 PMIDs + abstracts into supplementary. 3 PMIDs don't exist, 1 is off-topic, 1 contradicts. Reviewer misses it; reader correspondence exposes after publication.</p>
+  </div>
+  <div class="con-card good">
+    <h4 data-zh="好範例" data-en="Good Practice">好範例</h4>
+    <p data-lang="zh">用 PubTator 3.0 API 取得已驗證 NER+RE 標註，用 networkx 建 KG，PMID + sentence 全部 reproducible 在 Snakemake workflow + Docker，發表時公開 GitHub repo + DOI'd dataset。</p>
+    <p data-lang="en">Use PubTator 3.0 API for vetted NER+RE annotations, build KG with networkx, every PMID + sentence reproducible in Snakemake + Docker; release GitHub repo + DOI'd dataset.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+  <h4 data-zh="反思題（讀完想 5 分鐘）" data-en="Reflection (think for 5 minutes)">反思題（讀完想 5 分鐘）</h4>
+  <ol data-lang="zh">
+    <li>你要為一份系統性回顧抓 5000 篇 PubMed 文章——你會選擇 (a) 純 LLM 摘要、(b) PubTator 3.0 + 手動審、(c) ASReview active learning？為什麼？</li>
+    <li>你的 KG 預測 nicotine → Alzheimer 預防，但流行病學研究與臨床試驗結果不一致。你還相信這個 KG 嗎？</li>
+    <li>PubMed 的 Western / English / industry bias 對你的研究結論有什麼影響？如何補強？</li>
+    <li>你要在臨床決策支援系統中用 LLM，最關鍵的 3 個 governance 是什麼？</li>
+    <li>你閱讀一篇 systematic review 時，如何分辨它是手動完成的、半自動的、還是 LLM 生成的？</li>
+  </ol>
+  <ol data-lang="en">
+    <li>You need to triage 5000 PubMed papers for a systematic review. Pick (a) pure LLM summarize, (b) PubTator 3.0 + manual review, (c) ASReview active learning. Why?</li>
+    <li>Your KG predicts nicotine → Alzheimer prevention, but epidemiology and trials disagree. Do you still trust the KG?</li>
+    <li>How do PubMed's Western / English / industry biases affect your conclusions? How to mitigate?</li>
+    <li>If you deploy an LLM in clinical decision support, what 3 governance pieces are most critical?</li>
+    <li>Reading a systematic review, how do you tell if it was manual, semi-automated, or LLM-generated?</li>
+  </ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+  <span class="adv-label" data-zh="進階 / 2024–2026 前沿" data-en="ADVANCED / 2024–2026 FRONTIERS">進階 / 2024–2026 前沿</span>
+  <h4 data-zh="文獻探勘的下一個五年" data-en="The Next Five Years of Literature Mining">文獻探勘的下一個五年</h4>
+  <p data-lang="zh"><strong>Med-Gemini (2024 NEJM AI, Saab et al.)：</strong>Google DeepMind 的多模態 medical LLM，整合 text + image + audio + video；在 14 個 medical benchmark 平均超越 GPT-4。Med-Gemini-2.5 預計 2026 H1。</p>
+  <p data-lang="zh"><strong>PubMedBERT-Large 2024：</strong>Microsoft 推出 1.4B 參數版；BioRED + BC5CDR F1 創新高；2025 完全開源。</p>
+  <p data-lang="zh"><strong>RAG 進化：</strong>OpenEvidence (2024) + Glass.health 把 LLM + PubMed retrieval 帶入臨床；MedRAG (Xiong 2024) 開源 evaluation framework；BioMistral 7B + Meditron 70B (2024) 開源 fine-tuned。</p>
+  <p data-lang="zh"><strong>多 agent 系統：</strong>2025–2026 興起 multi-agent research assistant（如 SCIRIS 2025、Sakana AI Scientist 2024、AutoGPT-style 醫療 agent）：分工 query / NER / KG / 報告，互審。</p>
+  <p data-lang="zh"><strong>PubTator 3.0 (Wei 2024 NAR)：</strong>36M+ MEDLINE abstracts 預標註；6 entity types (gene, disease, drug, mutation, species, chemical) + 7 relation types；REST API + bulk download。</p>
+  <p data-lang="zh"><strong>監管：</strong>ICMJE 2025 AI policy 要求每個 AI 使用聲明；EU AI Act 2026 GPAI 透明度報告必要；FDA 對 LLM 臨床決策支援 ongoing 指引 2024–2026。</p>
+  <p data-lang="en"><strong>Med-Gemini (2024 NEJM AI, Saab et al.):</strong> Google DeepMind's multimodal medical LLM — text + image + audio + video; outperforms GPT-4 on 14 medical benchmarks. Med-Gemini-2.5 expected 1H 2026.</p>
+  <p data-lang="en"><strong>PubMedBERT-Large 2024:</strong> Microsoft's 1.4B-parameter version; new highs on BioRED + BC5CDR; 2025 fully open-sourced.</p>
+  <p data-lang="en"><strong>RAG evolves:</strong> OpenEvidence (2024) + Glass.health put LLM + PubMed retrieval into clinics; MedRAG (Xiong 2024) open-sources the evaluation framework; BioMistral 7B + Meditron 70B (2024) are open-source fine-tunes.</p>
+  <p data-lang="en"><strong>Multi-agent systems:</strong> 2025–2026 sees multi-agent research assistants (SCIRIS 2025, Sakana AI Scientist 2024, AutoGPT-style medical agents) splitting query / NER / KG / report work with mutual review.</p>
+  <p data-lang="en"><strong>PubTator 3.0 (Wei 2024 NAR):</strong> 36M+ pre-annotated MEDLINE abstracts; 6 entity types (gene, disease, drug, mutation, species, chemical) + 7 relation types; REST API + bulk download.</p>
+  <p data-lang="en"><strong>Regulation:</strong> ICMJE 2025 AI policy requires per-paper AI declarations; EU AI Act 2026 mandates GPAI transparency reports; FDA ongoing 2024–2026 guidance on LLM-driven clinical decision support.</p>
+</div>
+</section>
+
+<section id="pitfalls">
+<h2><span data-zh="常見錯誤陷阱" data-en="Common Pitfalls">常見錯誤陷阱</span> / <span data-zh="Common Pitfalls" data-en="常見錯誤陷阱">Common Pitfalls</span></h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="沒有處理同義詞 (link to UMLS CUI)" data-en="Not handling synonyms (link to UMLS CUIs)"></h4><div data-lang="zh"><p><strong>症狀：</strong>"NSCLC"、"non-small cell lung cancer"、"非小細胞肺癌" 被當成不同實體；KG 出現 3 個分離節點，下游 evidence count 嚴重低估。<strong>修正：</strong>用 UMLS Metathesaurus 將所有實體 normalize 到 CUI；scispaCy + UMLSEntityLinker，或 PubTator 3.0 已預作。</p></div><div data-lang="en"><p><strong>Symptom:</strong> "NSCLC", "non-small cell lung cancer", and the Chinese term get treated as different entities — three disjoint nodes in the KG, downstream evidence counts undercounted. <strong>Fix:</strong> normalize all entities to UMLS Metathesaurus CUIs via scispaCy + UMLSEntityLinker, or use PubTator 3.0 (already linked).</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="引用偏差偏向著名藥物" data-en="Citation bias toward famous drugs"></h4><div data-lang="zh"><p><strong>症狀：</strong>共現分析顯示「aspirin → cancer」連結比「lesser-known drug → cancer」強——但其實只反映 aspirin 被研究得更多。<strong>修正：</strong>正規化（PMI、Jaccard、TF-IDF over time），或用 Open Targets 整合多源 evidence。</p></div><div data-lang="en"><p><strong>Symptom:</strong> co-occurrence analysis shows a stronger "aspirin → cancer" link than "lesser-known drug → cancer" — but it just reflects that aspirin gets studied more. <strong>Fix:</strong> normalize via PMI, Jaccard, or TF-IDF over time; or use Open Targets to integrate multi-source evidence.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="縮寫 NER 假陽性" data-en="False-positive NER on abbreviations"></h4><div data-lang="zh"><p><strong>症狀：</strong>"AD" 既是 Alzheimer's Disease，也是 "average daily" 或 "Anno Domini"；NER 模型若無 abbreviation disambiguation，5–15% 假陽性。<strong>修正：</strong>用 BioBERT/PubMedBERT 已 fine-tune 的 abbreviation 偵測；或 Schwartz-Hearst 算法找定義；或 PubTator 已處理。</p></div><div data-lang="en"><p><strong>Symptom:</strong> "AD" can be Alzheimer's Disease, "average daily" or "Anno Domini"; without abbreviation disambiguation, NER hits 5–15% false positives. <strong>Fix:</strong> fine-tuned abbreviation detection from BioBERT/PubMedBERT; Schwartz-Hearst algorithm for definitions; or use PubTator (already handled).</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="MeSH 標註隨時間不均" data-en="MeSH term inflation in older papers"></h4><div data-lang="zh"><p><strong>症狀：</strong>1990 年代 MeSH 標註粒度比 2020 年代細很多——時間序列趨勢分析會看到「假性下降」。<strong>修正：</strong>計入「文章總數」做 normalization；或限制研究時段。</p></div><div data-lang="en"><p><strong>Symptom:</strong> 1990s MeSH was tagged more granularly than 2020s — time-series trend analyses see "phantom declines". <strong>Fix:</strong> normalize by total article count per year; or restrict the study window.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="LLM 幻覺引用" data-en="Hallucinated citations from LLM lit review"></h4><div data-lang="zh"><p><strong>症狀：</strong>ChatGPT / Claude 給出格式正確但不存在的論文（作者 + 期刊 + 年份都對，DOI 是亂造的）。<strong>修正：</strong>用 retrieval-augmented generation（RAG）；每一個引用都用 NCBI E-utilities API 驗證 PMID；或用 OpenEvidence / Med-Gemini 等 verifiable cite 架構。</p></div><div data-lang="en"><p><strong>Symptom:</strong> ChatGPT / Claude returns plausibly formatted but non-existent papers (correct authors + journals + years, but a fabricated DOI). <strong>Fix:</strong> use retrieval-augmented generation (RAG); verify every citation via NCBI E-utilities by PMID; or use OpenEvidence / Med-Gemini-style verifiable-cite architectures.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="未在 BioRED 等 gold standard 上驗證 NER" data-en="No validation against BioRED-style gold standards"></h4><div data-lang="zh"><p><strong>症狀：</strong>下游 KG 出 5,000 個新邊但實際只有 60% precision；研究者卻只報「edges = 5000」。<strong>修正：</strong>在 BioRED (Luo 2022) / NCBI Disease / BC5CDR 上算 precision / recall / F1；報告下游 KG 的 evidence threshold。</p></div><div data-lang="en"><p><strong>Symptom:</strong> downstream KG yields 5,000 new edges but only 60% precision; the paper still reports "edges = 5000". <strong>Fix:</strong> compute precision / recall / F1 on BioRED (Luo 2022), NCBI Disease, BC5CDR; report the downstream KG's evidence threshold.</p></div></div>
+</div>
+</section>
+
+<section>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="錯誤做法：直接讓 LLM 寫文獻回顧" data-en="Wrong: ask the LLM to write the literature review"></h4><div data-lang="zh"><pre><code class="language-python">prompt = "ChatGPT, summarize the literature on metformin and cancer."
+review = llm.chat(prompt)
+# 結果含 7 個格式完美但不存在的引用
+# 1 個 DOI 對到一篇完全無關的 paper</code></pre></div><div data-lang="en"><pre><code class="language-python">prompt = "ChatGPT, summarize the literature on metformin and cancer."
+review = llm.chat(prompt)
+# Output contains 7 plausibly-formatted but non-existent citations
+# 1 DOI links to a completely unrelated paper</code></pre></div></div>
+<div class="con-card good"><h4 data-zh="正確做法：PubMed → NER → RE → 排序 → 人工確認" data-en="Correct: PubMed -> NER -> RE -> ranking -> human verification"></h4><div data-lang="zh"><pre><code class="language-python">from Bio import Entrez
+# 1. PubMed E-utilities 取得 PMID
+Entrez.email = "you@uni.edu"
+handle = Entrez.esearch(db="pubmed", term="metformin cancer", retmax=500)
+pmids = Entrez.read(handle)["IdList"]
+
+# 2. BERN2 NER + BioRED RE 抽取 drug-disease 關係
+edges = bern2_extract(pmids)
+
+# 3. Open Targets 排序 (genetic + clinical evidence)
+ranked = open_targets_score(edges)
+
+# 4. 人工驗證前 10 名（每筆都附 PMID）
+for hit in ranked[:10]:
+    print(hit['drug'], hit['disease'], hit['score'], hit['pmids'])</code></pre></div><div data-lang="en"><pre><code class="language-python">from Bio import Entrez
+# 1. PubMed E-utilities -> PMIDs
+Entrez.email = "you@uni.edu"
+handle = Entrez.esearch(db="pubmed", term="metformin cancer", retmax=500)
+pmids = Entrez.read(handle)["IdList"]
+
+# 2. BERN2 NER + BioRED RE for drug-disease relations
+edges = bern2_extract(pmids)
+
+# 3. Open Targets ranking (genetic + clinical evidence)
+ranked = open_targets_score(edges)
+
+# 4. Human verification of the top 10 (each with PMID provenance)
+for hit in ranked[:10]:
+    print(hit['drug'], hit['disease'], hit['score'], hit['pmids'])</code></pre></div></div>
+</div>
+</section>
+
+<section id="discussion">
+<h2><span data-zh="引人入勝的討論點" data-en="Engaging Discussion Points">引人入勝的討論點</span> / <span data-zh="Engaging Discussion Points" data-en="引人入勝的討論點">Engaging Discussion Points</span></h2>
+
+<div class="discussion-card"><span class="disc-label">DEBATE</span><h3 data-zh="LLM 會取代專用 biomedical NER 嗎？" data-en="Will LLMs replace specialized biomedical NER?"></h3><div class="disc-q" data-lang="zh">2026 年，我們還需要 BERN2、PubMedBERT、scispaCy 等專用 NER 工具嗎？</div><div class="disc-q" data-lang="en">In 2026 do we still need specialized NER tools like BERN2, PubMedBERT, scispaCy?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">不會取代——LLM 幻覺風險在醫療領域無法接受；PubMedBERT + spaCy 在 BC5CDR / BioRED 上仍是 SOTA。</span><span data-lang="en">Will not replace — LLM hallucination is unacceptable in medicine; PubMedBERT + spaCy remain SOTA on BC5CDR / BioRED.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">會混合——2026 多採用 hybrid 架構：LLM 做 context disambiguation + relation extraction，專用 NER 做 entity normalization。</span><span data-lang="en">Will hybridize — 2026 mainstream is hybrid: LLM for context disambiguation + relation extraction, specialized NER for entity normalization.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">OPEN vs CLOSED</span><h3 data-zh="醫療 LLM：開源 vs 私有？" data-en="Open-source vs proprietary medical LLMs?"></h3><div class="disc-q" data-lang="zh">處理臨床文本時，BioMistral / ClinicalBERT 等開源模型，與 GPT-4 Med / Med-Gemini 等私有模型，該選哪一個？</div><div class="disc-q" data-lang="en">For clinical text, do you pick open-source (BioMistral / ClinicalBERT) or proprietary (GPT-4 Med / Med-Gemini)?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">開源——HIPAA 合規偏好 on-premise（資料不出醫院）；2024 BioMistral 7B、OpenLLaMA-Med、ClinicalBERT 適合自託管。</span><span data-lang="en">Open-source — HIPAA prefers on-premise (data stays in-hospital); 2024 BioMistral 7B, OpenLLaMA-Med, ClinicalBERT suit self-hosting.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">私有 (BAA)——研究等級表現仍以 GPT-4 Med、Med-Gemini 領先；走 BAA + Azure HIPAA / Google HealthLake 可合規使用。</span><span data-lang="en">Proprietary (BAA) — research-grade performance still leads with GPT-4 Med, Med-Gemini; use them HIPAA-compliantly via BAAs (Azure HIPAA, Google HealthLake).</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">DRUG REPURPOSING</span><h3 data-zh="KG 驅動的藥物再定位真的在找新藥嗎？" data-en="Is KG-based drug repurposing finding new drugs?"></h3><div class="disc-q" data-lang="zh">Hetionet、Open Targets 等 KG 預測，到底是在發現新假說，還是只是確認既有直覺？</div><div class="disc-q" data-lang="en">Are Hetionet / Open Targets predictions discovering novel hypotheses or just confirming intuition?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">混合——Hetionet 的 metformin → Alzheimer's 預測在 2017 算新穎；但多數預測仍排到既有 hypothesis 前 5%。</span><span data-lang="en">Mixed — Hetionet's metformin → Alzheimer prediction was novel in 2017; but most predictions still rank in the top 5% of existing hypotheses.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">仍有價值——即使「確認」既有直覺，也能提供量化排序、優先級分配；對 budget-constrained drug discovery 有實用意義。</span><span data-lang="en">Still valuable — even "confirming" intuition provides quantitative ranking + prioritization; useful for budget-constrained drug discovery.</span></div></div>
+</section>
+
+<section>
+<div class="spotlight"><div class="sp-icon">🌟</div><div class="sp-body"><span class="sp-tag">CASE STUDY</span><h4 data-zh="2017 Hetionet — KG 驅動藥物再定位的藍圖" data-en="2017 Hetionet — the blueprint for KG-driven drug repurposing"></h4><div data-lang="zh"><p>2017 年 Himmelstein 與 Greene 在 <em>eLife</em> 發表 Hetionet：一個整合了 47,031 個節點（化合物、疾病、基因、解剖部位…）與 2,250,197 條邊的知識圖。他們用 DistMult-style embeddings 對邊做 link prediction，並預測「nicotine 可能預防阿茲海默症」。</p><p>2018 Newhouse 等在 <em>Neurology</em> 發表臨床試驗 (n=74)：透過 transdermal nicotine 治療輕度認知障礙 (MCI)，顯著改善認知功能。從圖探勘到臨床試驗發表，僅 <strong>不到一年</strong>。Hetionet 後來成為 KG-based drug repurposing 的範本，影響了今日 Open Targets、PrimeKG、Hetionet 2.0 的設計。所有資料 + 程式碼開放於 GitHub，是「open science + KG mining」的代表作。</p></div><div data-lang="en"><p>In 2017 Himmelstein & Greene published Hetionet in <em>eLife</em>: a knowledge graph integrating 47,031 nodes (compounds, diseases, genes, anatomy, etc.) and 2,250,197 edges. They applied DistMult-style embeddings for link prediction and predicted "nicotine may prevent Alzheimer's".</p><p>The 2018 Newhouse trial in <em>Neurology</em> (n=74) showed transdermal nicotine significantly improved cognition in MCI patients. From graph mining to a published clinical trial in <strong>under a year</strong>. Hetionet became the template for KG-based drug repurposing, shaping Open Targets, PrimeKG, and Hetionet 2.0. All data + code on GitHub — a flagship of "open science + KG mining".</p></div></div></div>
+</section>
+
+<section id="reflection">
+<h2><span data-zh="延伸思考題" data-en="Reflection Questions">延伸思考題</span> / <span data-zh="Reflection Questions" data-en="延伸思考題">Reflection Questions</span></h2>
+<div class="reflection-q"><h4 data-zh="自我檢測" data-en="Self-test"></h4>
+<ol data-lang="zh">
+<li>MeSH 受控詞彙與 free-text 搜尋在 recall / precision 上有什麼差別？</li>
+<li>NER 與 Relation Extraction 的目的不同在哪？為什麼通常分兩階段？</li>
+<li>為什麼 LLM 的幻覺引用在 biomedical literature review 是致命問題？</li>
+<li>稀疏檢索 (BM25) 在 biomedical Q&A 上能勝過 dense retrieval (DPR) 嗎？哪些條件下？</li>
+<li>BioBERT 與 PubMedBERT 在預訓練資料上的差別？對下游 NER 任務有何影響？</li>
+</ol>
+<ol data-lang="en">
+<li>How does MeSH controlled vocabulary differ from free-text search in terms of recall / precision?</li>
+<li>What is the purpose difference between NER and Relation Extraction? Why are they usually two-stage?</li>
+<li>Why are LLM hallucinated citations a fatal problem in biomedical literature review?</li>
+<li>Can sparse retrieval (BM25) beat dense retrieval (DPR) for biomedical Q&A? Under what conditions?</li>
+<li>What is the pre-training data difference between BioBERT and PubMedBERT? How does it affect downstream NER?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced">
+<h2><span data-zh="進階研究員筆記" data-en="Advanced Researcher Notes">進階研究員筆記</span> / <span data-zh="Advanced Researcher Notes" data-en="進階研究員筆記">Advanced Researcher Notes</span></h2>
+<div class="advanced-note"><span class="adv-label">2024–2026 SOTA</span><h4 data-zh="文獻探勘的 2024–2026 前沿" data-en="Literature mining at the 2024–2026 frontier"></h4><div data-lang="zh"><p><strong>Medical LLM：</strong>2024 Med-Gemini（Saab）— medical-grade LLM with reasoning；PubMedBERT-Large (Gu 2024) 在大多 BC5CDR / BioRED NER 任務領先；BioMistral 7B (Labrak 2024) 是當前 SOTA 開源選擇。</p><p><strong>RAG 與可驗證引用：</strong>2025 OpenEvidence + clinical RAG（retrieval-then-cite 架構，每個 claim 對應到 PMID）；MedScape AI、UpToDate AI 都採用此設計。</p><p><strong>多代理人系統：</strong>2026 multi-agent biomedical research assistants（如 BioGPT + KG + simulation co-agents）能自動完成「lit review → hypothesis → in-silico test」。</p><p><strong>PubTator 3.0 (Wei 2024 NAR)：</strong>36M+ 預標註 MEDLINE 摘要；6 entity types + 7 relation types；REST API + bulk download。</p></div><div data-lang="en"><p><strong>Medical LLMs:</strong> 2024 Med-Gemini (Saab) — medical-grade LLM with reasoning; PubMedBERT-Large (Gu 2024) leads on BC5CDR / BioRED NER; BioMistral 7B (Labrak 2024) is the current SOTA open-source choice.</p><p><strong>RAG + verifiable citations:</strong> 2025 OpenEvidence + clinical RAG — retrieval-then-cite architecture, every claim maps to a PMID; adopted by MedScape AI, UpToDate AI.</p><p><strong>Multi-agent systems:</strong> 2026 multi-agent biomedical research assistants (e.g., BioGPT + KG + simulation co-agents) automate "lit review → hypothesis → in-silico test".</p><p><strong>PubTator 3.0 (Wei 2024 NAR):</strong> 36M+ pre-annotated MEDLINE abstracts; 6 entity types + 7 relation types; REST API + bulk download.</p></div></div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -191,6 +631,8 @@ re = pipeline(<span class="str">"text-classification"</span>, model=<span class=
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. SQL JOIN</span><span data-lang="en">D. SQL JOIN</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note"><strong data-zh="歷史小故事：" data-en="History Note:">歷史小故事：</strong><span data-lang="zh">1879 年 — 第一部系統性的醫學書目《Index Medicus》由 John Shaw Billings 於 U.S. Army Medical Library（後來的 NLM）出版。每一條紀錄都是手抄。Billings 後來還設計了 New York Public Library 的館舍。《Index Medicus》運作了 125 年，2004 年停刊——被 MEDLINE 取代，MEDLINE 又於 1997 年化身為 PubMed。從手寫卡片到 36M+ 數位摘要，只花了 140 年。1986 年 Don Swanson 在 <em>Perspect Biol Med</em> 發表「Fish oil → Raynaud's」假說（A→B→C 連接不同學科文獻），三年後 DiGiacomo RCT 證實——文獻探勘領域自此誕生，今日 PubTator 3.0 + LLM RAG 是 Swanson 思路的工業化版本。</span><span data-lang="en">1879 — Index Medicus, the first systematic medical bibliography, was published by John Shaw Billings at the U.S. Army Medical Library (now NLM). Every entry was hand-indexed. Billings later designed the New York Public Library's building. Index Medicus ran for 125 years and ceased publication in 2004 — replaced by MEDLINE, which became PubMed in 1997. From handwritten cards to 36M+ digital abstracts in just 140 years. In 1986 Don Swanson's "fish oil → Raynaud's" hypothesis (chaining A→B→C across disjoint literatures) was confirmed three years later by DiGiacomo's RCT — birthing the field of literature mining. PubTator 3.0 + LLM RAG today is the industrialized version of Swanson's hunch.</span></div>
 
 <nav class="page-nav">
 <a href="omics-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 18: 組學資料探勘" data-en="Ch 18: Omics Data Mining">Ch 18: 組學資料探勘</span></a>

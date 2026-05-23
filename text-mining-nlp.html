@@ -18,6 +18,46 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽 · 約 40 分鐘" data-en="In This Chapter · ~40 min">本章導覽</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+<span class="level-badge l-mid" data-zh="進階" data-en="Intermediate">進階</span>
+<span class="level-badge l-adv" data-zh="研究" data-en="Research">研究</span>
+<span class="pill teal" data-zh="⏱ 40 分鐘閱讀" data-en="⏱ 40-min read">⏱ 40 分鐘閱讀</span>
+<span class="pill amber" data-zh="🧪 1 互動模擬" data-en="🧪 1 interactive sim">🧪 1 互動模擬</span>
+<span class="pill violet" data-zh="📝 3 測驗題" data-en="📝 3 quiz Qs">📝 3 測驗題</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="📚 故事：5 萬篇 COVID-19 摘要 vs 3 個人類" data-en="📚 Story: 50k abstracts vs 3 humans">📚 故事：5 萬篇 COVID-19 摘要 vs 3 個人類</a></li>
+<li><a href="#glossary" data-zh="📖 名詞地圖（兒童版＋技術版）" data-en="📖 Glossary (kid + tech)">📖 名詞地圖</a></li>
+<li><a href="#history" data-zh="📜 時間線：從 Luhn TF 到 PubMed RAG" data-en="📜 Timeline: Luhn TF to PubMed RAG">📜 時間線</a></li>
+<li><a href="#walkthrough" data-zh="🧮 手算 TF-IDF + cosine（3 篇病歷）" data-en="🧮 Hand-trace TF-IDF + cosine">🧮 手算 TF-IDF + cosine</a></li>
+<li><a href="#discussion" data-zh="💬 三大研究議題討論" data-en="💬 3 research discussions">💬 三大研究議題討論</a></li>
+<li><a href="#pitfalls" data-zh="🚧 常見地雷與修正" data-en="🚧 Pitfalls & fixes">🚧 常見地雷與修正</a></li>
+<li><a href="#reflection" data-zh="💭 反思問題" data-en="💭 Reflection questions">💭 反思問題</a></li>
+<li><a href="#advanced" data-zh="🔬 進階：2025-2026 RAG / BGE / MedRAG" data-en="🔬 Advanced: RAG / BGE / MedRAG">🔬 進階：2025-2026 RAG / BGE / MedRAG</a></li>
+</ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="案例" data-en="CASE">案例</span>
+<h3 data-zh="📚 5 萬篇 COVID-19 摘要 vs 3 個人類" data-en="📚 50k COVID-19 Abstracts vs 3 Humans">📚 5 萬篇 COVID-19 摘要 vs 3 個人類</h3>
+<div data-lang="zh">
+<p>2021 年初，某學術中心的疫苗安全小組接到任務：兩週內完成「mRNA 疫苗副作用相關文獻」回顧。PubMed 撈出來 <strong>50,000 篇</strong>。三位 PI 看了一眼直接放棄：人類每篇 5 分鐘看完，10 個人連續工作 8 小時也要 21 天——根本來不及。</p>
+<p>研究助理 K 拿出 <strong>PubMedBERT + TF-IDF + LDA</strong> 流水線：先用 PubMedBERT 把每篇摘要轉成 768 維向量，TF-IDF 過濾「無關內容」（如純細胞實驗），LDA 找出 20 個主題，再對「心肌炎」「血栓」「過敏反應」等關鍵字做精確 NER。<strong>72 小時</strong>內，K 已經把 50,000 篇縮到 380 篇高關聯文獻，並繪出主題-時間趨勢圖。最重要的——他在 <strong>第 113 篇</strong>找到一條極罕見的「<strong>免疫性血小板減少 + 大腦靜脈竇血栓</strong>」訊號，比 EMA 官方公告早了 9 天提交給中心臨床藥學部。</p>
+<p>文字探勘並非取代專家，而是把專家從「先看 50,000 篇」解放出來，專注於 380 篇——和那 1 個罕見訊號。</p>
+</div>
+<div data-lang="en">
+<p>Early 2021. A vaccine-safety team gets two weeks to review the mRNA-vaccine adverse-event literature. PubMed returns <strong>50,000</strong> hits. Three PIs glance at it and give up: 5 min/abstract × 10 people × 8 h = 21 days. Impossible.</p>
+<p>Research assistant K spins up a <strong>PubMedBERT + TF-IDF + LDA</strong> pipeline: PubMedBERT embeds each abstract to 768-D; TF-IDF filters off-topic (pure cell experiments); LDA surfaces 20 latent topics; precision NER for "myocarditis", "thrombosis", "anaphylaxis". In <strong>72 hours</strong>, K narrows 50,000 to 380 high-relevance abstracts and plots topic-vs-time. On <strong>paper #113</strong>, K finds an ultra-rare "<strong>immune thrombocytopenia + cerebral venous sinus thrombosis</strong>" co-occurrence signal — 9 days before EMA's official notice.</p>
+<p>Text mining doesn't replace the expert; it frees the expert from "first read all 50,000" to focus on 380 — and the 1 rare signal.</p>
+</div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="為什麼要做文字探勘？" data-en="Why Text Mining?">為什麼要做文字探勘？</h2>
@@ -28,6 +68,58 @@
 <div data-lang="en">
 <p>About <strong>80% of medical data is unstructured text</strong>: clinical notes, radiology reports, discharge summaries, drug labels, literature. Turning text into learnable vectors needs (1) <strong>preprocessing</strong> (tokenize → stopwords → stem/lemma), (2) <strong>representation</strong> (BoW → TF-IDF → word/sentence vectors), (3) <strong>modeling</strong> (classification, topics, summarization, NER).</p>
 <p>After BERT (2018), NLP shifted from "feature engineering" to "pretrain + fine-tune". Biomedical domain-pretrained models include <strong>BioBERT</strong> (2019, PubMed/PMC), <strong>PubMedBERT</strong> (2020, scratch on PubMed), <strong>SciBERT</strong> (sci. literature), <strong>BlueBERT</strong> (PubMed+MIMIC-III) — often SOTA on BC5CDR, NCBI-disease, ChemProt.</p>
+</div>
+
+<div class="analogy-box">
+<div class="ana-icon">📚</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="文字探勘像「圖書館員 + 偵探」" data-en="Text mining = librarian + detective">文字探勘像「圖書館員 + 偵探」</h4>
+<p data-lang="zh"><strong>TF-IDF</strong> 是圖書館員整理「索引」：每篇文件最具代表性的詞是什麼？常見詞 "the"、"病人" 不算。<strong>Word2Vec / GloVe</strong> 像給每個詞畫人格側寫——每個詞在「活潑度／正式度／情緒」等維度上各有座標，「醫生」「醫師」很近，「醫生」和「警察」較遠。<strong>BERT</strong> 是會看上下文的偵探——"bank" 在 "river bank" 和 "bank account" 知道是不同意思。<strong>BioBERT / PubMedBERT</strong> 是讀過 PubMed 整套的偵探，懂得 "PD-L1" 是免疫檢查點不是「個人助理」。</p>
+<p data-lang="en"><strong>TF-IDF</strong> is the librarian's index: which words are distinctive for this document? "the" / "patient" don't count. <strong>Word2Vec / GloVe</strong> sketch a personality profile per word — "doctor" and "physician" sit close; "doctor" and "police" far. <strong>BERT</strong> is the detective with context — "bank" near "river" ≠ "bank" near "account". <strong>BioBERT / PubMedBERT</strong> is the detective who has read all of PubMed — knows "PD-L1" is an immune checkpoint, not "personal assistant".</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞地圖" data-en="GLOSSARY">名詞地圖</div>
+<h2 data-zh="關鍵名詞（小孩版 + 技術版）" data-en="Key Terms (Kid + Tech)">關鍵名詞（小孩版 + 技術版）</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Corpus / Document / Token</div><div class="term-zh">語料／文件／詞元</div><div class="term-kid" data-lang="zh">整本書是 corpus、每頁是 document、每個字詞是 token。</div><div class="term-kid" data-lang="en">A book = corpus, each page = document, each word = token.</div><div class="term-tech" data-lang="zh">處理單位：corpus → docs → tokens。BPE / WordPiece 把字切成子詞。</div><div class="term-tech" data-lang="en">Hierarchy: corpus → docs → tokens. BPE / WordPiece split into subword units.</div></div>
+<div class="glossary-card"><div class="term-en">n-gram</div><div class="term-zh">n 連詞</div><div class="term-kid" data-lang="zh">把連續 n 個字當一個 "詞" 看：bigram = 兩個一組。</div><div class="term-kid" data-lang="en">Treat n consecutive tokens as one "term": bigram = 2 in a row.</div><div class="term-tech" data-lang="zh">捕捉短距搭配；高 n 維度爆炸；TF-IDF 常配 (1,2)。</div><div class="term-tech" data-lang="en">Captures short-range collocations; high n explodes dim; TF-IDF often uses (1,2).</div></div>
+<div class="glossary-card"><div class="term-en">Stopword</div><div class="term-zh">停用字</div><div class="term-kid" data-lang="zh">"the"、"的"、"和" 這種「沒什麼意義但出現超多」的字。</div><div class="term-kid" data-lang="en">"the", "and", "of" — common but uninformative.</div><div class="term-tech" data-lang="zh">高頻低資訊；但醫學情境保留否定詞 "no", "not"！</div><div class="term-tech" data-lang="en">High frequency, low info; but medical text MUST keep "no" / "not".</div></div>
+<div class="glossary-card"><div class="term-en">Stemming / Lemmatization</div><div class="term-zh">詞幹化 / 詞形還原</div><div class="term-kid" data-lang="zh">把 "running / ran / runs" 通通變回 "run"。Stem 是快但粗暴、Lemma 是查字典。</div><div class="term-kid" data-lang="en">"running / ran / runs" → "run". Stem = fast & crude, Lemma = dictionary-based.</div><div class="term-tech" data-lang="zh">Porter/Snowball vs spaCy/WordNet；醫學詞 "universal→univers" 失敗，建議 Lemma。</div><div class="term-tech" data-lang="en">Porter/Snowball vs spaCy/WordNet; "universal→univers" fails in medical text — prefer Lemma.</div></div>
+<div class="glossary-card"><div class="term-en">BoW / TF / IDF / TF-IDF</div><div class="term-zh">詞袋 / 詞頻 / 逆文件頻率</div><div class="term-kid" data-lang="zh">把文件當成裝詞的「袋子」；常見詞 IDF 低，獨特詞 IDF 高。</div><div class="term-kid" data-lang="en">A document is a "bag of words"; common terms get low IDF, unique terms high.</div><div class="term-tech" data-lang="zh">TF=count / |doc|；IDF=log(N/df)；TF-IDF=TF·IDF。Sparse、interpretable。</div><div class="term-tech" data-lang="en">TF=count/|doc|; IDF=log(N/df); TF-IDF=TF·IDF. Sparse and interpretable.</div></div>
+<div class="glossary-card"><div class="term-en">Cosine similarity</div><div class="term-zh">餘弦相似度</div><div class="term-kid" data-lang="zh">看兩支箭頭夾的「角度」——同向＝1，正交＝0。</div><div class="term-kid" data-lang="en">Angle between two arrows — same dir = 1, perpendicular = 0.</div><div class="term-tech" data-lang="zh">cos(θ) = u·v / (‖u‖·‖v‖)；無視長度只看方向，TF-IDF 標配。</div><div class="term-tech" data-lang="en">cos(θ) = u·v / (‖u‖·‖v‖); length-invariant; the standard for TF-IDF.</div></div>
+<div class="glossary-card"><div class="term-en">Word2Vec (CBOW, Skip-gram)</div><div class="term-zh">Word2Vec</div><div class="term-kid" data-lang="zh">透過「上下文猜中間字」學出每個詞的座標。</div><div class="term-kid" data-lang="en">"Predict middle word from context" learns each word's coordinates.</div><div class="term-tech" data-lang="zh">Mikolov 2013；CBOW 用上下文預測中心，Skip-gram 反之；負採樣加速。</div><div class="term-tech" data-lang="en">Mikolov 2013; CBOW context→centre, Skip-gram centre→context; negative sampling for speed.</div></div>
+<div class="glossary-card"><div class="term-en">GloVe</div><div class="term-zh">GloVe 全域向量</div><div class="term-kid" data-lang="zh">用「兩字共同出現次數」推每個詞的座標。</div><div class="term-kid" data-lang="en">Coordinates from "how often each pair co-occurs".</div><div class="term-tech" data-lang="zh">Pennington 2014；矩陣分解觀點，cost = Σ f(X_ij)·(wᵢᵀwⱼ + b − log X_ij)²。</div><div class="term-tech" data-lang="en">Pennington 2014; matrix-factorisation view, cost = Σ f(X_ij)·(wᵢᵀwⱼ + b − log X_ij)².</div></div>
+<div class="glossary-card"><div class="term-en">FastText (subword)</div><div class="term-zh">FastText 子詞</div><div class="term-kid" data-lang="zh">把每個詞拆成「字母片段」，沒見過的新詞也能拼出向量。</div><div class="term-kid" data-lang="en">Split each word into character n-grams; works for unseen words too.</div><div class="term-tech" data-lang="zh">Bojanowski 2017；vec(word) = Σ vec(char n-gram)；OOV-robust。</div><div class="term-tech" data-lang="en">Bojanowski 2017; vec(word) = Σ vec(char n-gram); robust to OOV.</div></div>
+<div class="glossary-card"><div class="term-en">Transformer / Attention</div><div class="term-zh">Transformer 自注意力</div><div class="term-kid" data-lang="zh">每個字「同時看」句子裡所有其他字，重要的多看一點。</div><div class="term-kid" data-lang="en">Every word "looks at" all others simultaneously, weighting the important ones.</div><div class="term-tech" data-lang="zh">Vaswani 2017；Attention(Q,K,V) = softmax(QKᵀ/√d)·V；O(n²) 為瓶頸。</div><div class="term-tech" data-lang="en">Vaswani 2017; Attention(Q,K,V) = softmax(QKᵀ/√d)·V; O(n²) bottleneck.</div></div>
+<div class="glossary-card"><div class="term-en">BERT / BioBERT / PubMedBERT</div><div class="term-zh">BERT 系列</div><div class="term-kid" data-lang="zh">會看「前後文」的雙向 Transformer；BioBERT/PubMedBERT 看過很多醫學文獻。</div><div class="term-kid" data-lang="en">Bidirectional Transformer; BioBERT/PubMedBERT trained on biomedical text.</div><div class="term-tech" data-lang="zh">Devlin 2018；MLM + NSP；BioBERT (Lee 2019) 續訓 PubMed，PubMedBERT (Gu 2020) 從零訓 PubMed。</div><div class="term-tech" data-lang="en">Devlin 2018; MLM + NSP; BioBERT (Lee 2019) continues from BERT on PubMed; PubMedBERT (Gu 2020) trains from scratch on PubMed.</div></div>
+<div class="glossary-card"><div class="term-en">LDA (Latent Dirichlet Allocation)</div><div class="term-zh">潛在 Dirichlet 配置</div><div class="term-kid" data-lang="zh">每篇文件是「幾種主題的混合」，每個主題是「幾組字的混合」。</div><div class="term-kid" data-lang="en">Each doc is a mix of topics; each topic is a mix of words.</div><div class="term-tech" data-lang="zh">Blei 2003；θ_d ~ Dir(α)、φ_k ~ Dir(β)；Gibbs / variational 推論。</div><div class="term-tech" data-lang="en">Blei 2003; θ_d ~ Dir(α), φ_k ~ Dir(β); inference via Gibbs / variational.</div></div>
+<div class="glossary-card"><div class="term-en">NER / Relation Extraction</div><div class="term-zh">命名實體 / 關係抽取</div><div class="term-kid" data-lang="zh">找出文章裡的「疾病」「藥物」「基因」並判斷它們的關係。</div><div class="term-kid" data-lang="en">Find "disease / drug / gene" entities and how they relate.</div><div class="term-tech" data-lang="zh">scispaCy + UMLS linker；BioBERT-NER；ChemProt / BC5CDR benchmark。</div><div class="term-tech" data-lang="en">scispaCy + UMLS linker; BioBERT-NER; ChemProt / BC5CDR benchmarks.</div></div>
+<div class="glossary-card"><div class="term-en">RAG (Retrieval-Augmented Generation)</div><div class="term-zh">檢索增強生成</div><div class="term-kid" data-lang="zh">LLM 回答前，先「翻字典」找正確資料再回答——比較不會亂編。</div><div class="term-kid" data-lang="en">LLM looks up real documents first, then answers — less hallucination.</div><div class="term-tech" data-lang="zh">Lewis 2020 NeurIPS；BGE / Voyage embedding + 向量資料庫 → LLM context；醫療 MedRAG (2024)。</div><div class="term-tech" data-lang="en">Lewis 2020 NeurIPS; BGE / Voyage embeddings + vector DB → LLM context; MedRAG (2024) for medicine.</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間線" data-en="TIMELINE">時間線</div>
+<h2 data-zh="從 1957 Luhn TF 到 2026 PubMed RAG" data-en="From Luhn TF (1957) to PubMed RAG (2026)">從 1957 Luhn TF 到 2026 PubMed RAG</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1957</span> <span class="tl-title" data-zh="Luhn 引入 TF 概念" data-en="Luhn introduces TF">Luhn 引入 TF 概念</span><span class="tl-desc" data-lang="zh">IBM Journal；用詞頻為文件「自動摘要」打分，現代資訊檢索的奠基。</span><span class="tl-desc" data-lang="en">IBM Journal; word-frequency scoring for auto-summary — foundation of modern IR.</span></div>
+<div class="timeline-item"><span class="tl-year">1972</span> <span class="tl-title" data-zh="Salton 引入 IDF" data-en="Salton introduces IDF">Salton 引入 IDF</span><span class="tl-desc" data-lang="zh">SMART 系統把「在多少文件出現」加入加權，誕生 TF-IDF；至今仍是基準。</span><span class="tl-desc" data-lang="en">SMART system adds "how many docs contain it" — TF-IDF is born; still a baseline today.</span></div>
+<div class="timeline-item"><span class="tl-year">1990</span> <span class="tl-title" data-zh="LSA (Deerwester)" data-en="LSA (Deerwester)">LSA (Deerwester)</span><span class="tl-desc" data-lang="zh">SVD-based 潛在語意分析，首度把「同義詞」放進向量空間。</span><span class="tl-desc" data-lang="en">SVD-based latent semantic analysis — first to place synonyms close in vector space.</span></div>
+<div class="timeline-item"><span class="tl-year">2003</span> <span class="tl-title" data-zh="Blei LDA" data-en="Blei LDA">Blei LDA</span><span class="tl-desc" data-lang="zh">JMLR；Dirichlet 先驗的機率主題模型，主導 2003-2018 主題建模。</span><span class="tl-desc" data-lang="en">JMLR; Dirichlet-prior probabilistic topic model — dominated topic modelling 2003-2018.</span></div>
+<div class="timeline-item"><span class="tl-year">2013</span> <span class="tl-title" data-zh="Mikolov Word2Vec" data-en="Mikolov Word2Vec">Mikolov Word2Vec</span><span class="tl-desc" data-lang="zh">"king − man + woman = queen" 震驚學界；分布語意向量化的革命起點。</span><span class="tl-desc" data-lang="en">"king − man + woman = queen" stuns the field; distributional semantics goes vector.</span></div>
+<div class="timeline-item"><span class="tl-year">2014</span> <span class="tl-title" data-zh="Pennington GloVe" data-en="Pennington GloVe">Pennington GloVe</span><span class="tl-desc" data-lang="zh">用全域共現矩陣分解，向量同樣優雅、訓練更穩定。</span><span class="tl-desc" data-lang="en">Global co-occurrence matrix factorisation; elegant vectors, more stable training.</span></div>
+<div class="timeline-item"><span class="tl-year">2018</span> <span class="tl-title" data-zh="Devlin BERT" data-en="Devlin BERT">Devlin BERT</span><span class="tl-desc" data-lang="zh">NAACL；雙向 Transformer + MLM 預訓練——NLP 進入「預訓練 + 微調」時代。</span><span class="tl-desc" data-lang="en">NAACL; bidirectional Transformer + MLM — "pretrain + fine-tune" era begins.</span></div>
+<div class="timeline-item"><span class="tl-year">2019</span> <span class="tl-title" data-zh="Lee BioBERT" data-en="Lee BioBERT">Lee BioBERT</span><span class="tl-desc" data-lang="zh">Bioinformatics；在 BERT 之上續訓 PubMed/PMC，生醫 NER F1 +3-5%。</span><span class="tl-desc" data-lang="en">Bioinformatics; continues BERT on PubMed/PMC — biomedical NER F1 +3-5%.</span></div>
+<div class="timeline-item"><span class="tl-year">2020</span> <span class="tl-title" data-zh="Gu PubMedBERT" data-en="Gu PubMedBERT">Gu PubMedBERT</span><span class="tl-desc" data-lang="zh">ACM HEALTH；從零開始在 PubMed 預訓——專屬詞表，多項 SOTA。</span><span class="tl-desc" data-lang="en">ACM HEALTH; pre-trained from scratch on PubMed — dedicated vocab, multiple SOTA.</span></div>
+<div class="timeline-item"><span class="tl-year">2022</span> <span class="tl-title" data-zh="Luo BioGPT" data-en="Luo BioGPT">Luo BioGPT</span><span class="tl-desc" data-lang="zh">Briefings in Bioinf；首個 PubMed scratch 訓練的生成 LM——生醫摘要、問答。</span><span class="tl-desc" data-lang="en">Briefings in Bioinf; first generative LM trained from scratch on PubMed — biomedical summarisation, QA.</span></div>
+<div class="timeline-item"><span class="tl-year">2023</span> <span class="tl-title" data-zh="GPT-4 進入醫療" data-en="GPT-4 enters medicine">GPT-4 進入醫療</span><span class="tl-desc" data-lang="zh">通過 USMLE Step 1/2/3，引爆「LLM 能否做醫療」全球辯論。</span><span class="tl-desc" data-lang="en">Passes USMLE 1/2/3 — global debate over "can LLMs do medicine?"</span></div>
+<div class="timeline-item"><span class="tl-year">2024</span> <span class="tl-title" data-zh="Med-Gemini + MedRAG" data-en="Med-Gemini + MedRAG">Med-Gemini + MedRAG</span><span class="tl-desc" data-lang="zh">Google Med-Gemini 在 MedQA 91%+；MedRAG (Xiong 2024) 統一基準衡量檢索增強。</span><span class="tl-desc" data-lang="en">Med-Gemini hits 91%+ on MedQA; MedRAG (Xiong 2024) unifies retrieval-augmented benchmarks.</span></div>
+<div class="timeline-item"><span class="tl-year">2025</span> <span class="tl-title" data-zh="ChatGPT 臨床助理 + BGE-Large" data-en="ChatGPT clinical assistant + BGE-Large">ChatGPT 臨床助理 + BGE-Large</span><span class="tl-desc" data-lang="zh">Epic / Mayo 部署 LLM 寫醫師備註；BGE-Large embedding 在 MTEB 連 6 個月榜首。</span><span class="tl-desc" data-lang="en">Epic / Mayo deploy LLM for clinician notes; BGE-Large tops MTEB leaderboard 6 months running.</span></div>
+<div class="timeline-item"><span class="tl-year">2026</span> <span class="tl-title" data-zh="PubMed RAG 子秒檢索" data-en="PubMed RAG sub-second retrieval">PubMed RAG 子秒檢索</span><span class="tl-desc" data-lang="zh">PubMed 全集 3,600 萬篇 + Voyage-3 embedding + DuckDB-vec，&lt; 800ms 端到端問答。</span><span class="tl-desc" data-lang="en">Full PubMed 36 M abstracts + Voyage-3 embeddings + DuckDB-vec; &lt; 800 ms end-to-end QA.</span></div>
 </div>
 </section>
 
@@ -182,6 +274,144 @@ inp = tok(docs, padding=<span class="kw">True</span>, return_tensors=<span class
 </div></div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算演練" data-en="HAND-TRACE">手算演練</div>
+<h2 data-zh="TF-IDF + cosine：3 篇病歷摘要 5 步走完" data-en="TF-IDF + cosine in 5 Steps on 3 Notes">TF-IDF + cosine：3 篇病歷摘要 5 步走完</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">TF</div><h3 data-zh="情境：3 篇臨床短文，找 D1 與 D2 的相似度" data-en="Setup: 3 clinical snippets, similarity of D1 vs D2">情境：3 篇臨床短文，找 D1 與 D2 的相似度</h3><span class="wt-tag">N=3 · vocab=6</span></div>
+<div class="wt-step"><div class="wt-label">DATA</div><div class="wt-body" data-lang="zh"><strong>三篇文件：</strong><br>D1: "diabetes glucose insulin"<br>D2: "insulin pump diabetes"<br>D3: "glucose blood sugar"</div><div class="wt-body" data-lang="en"><strong>Three docs:</strong><br>D1: "diabetes glucose insulin"<br>D2: "insulin pump diabetes"<br>D3: "glucose blood sugar"</div></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>Tokenize、lowercase。</strong>每篇 3 個 token；建立詞彙 {diabetes, glucose, insulin, pump, blood, sugar}（6 詞）。</div><div class="wt-body" data-lang="en"><strong>Tokenise & lowercase.</strong> 3 tokens each; vocab {diabetes, glucose, insulin, pump, blood, sugar} (6 terms).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>計算 TF（這裡用 count／|doc|）：</strong>D1: diabetes=1/3, glucose=1/3, insulin=1/3 ; D2: diabetes=1/3, insulin=1/3, pump=1/3 ; D3: glucose=1/3, blood=1/3, sugar=1/3。</div><div class="wt-body" data-lang="en"><strong>Compute TF (count/|doc|):</strong> D1: diabetes=1/3, glucose=1/3, insulin=1/3 ; D2: diabetes=1/3, insulin=1/3, pump=1/3 ; D3: glucose=1/3, blood=1/3, sugar=1/3.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>計算 IDF = log(N/df)，N=3：</strong>diabetes df=2 → log(3/2) = <code>0.405</code> ; glucose df=2 → <code>0.405</code> ; insulin df=2 → <code>0.405</code> ; pump df=1 → <code>1.099</code> ; blood df=1 → <code>1.099</code> ; sugar df=1 → <code>1.099</code>。</div><div class="wt-body" data-lang="en"><strong>IDF = log(N/df), N=3:</strong> diabetes df=2 → log(3/2) = <code>0.405</code> ; glucose df=2 → <code>0.405</code> ; insulin df=2 → <code>0.405</code> ; pump df=1 → <code>1.099</code> ; blood df=1 → <code>1.099</code> ; sugar df=1 → <code>1.099</code>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>TF-IDF = TF × IDF：</strong>D1 = [diabetes 0.135, glucose 0.135, insulin 0.135, 0, 0, 0] ; D2 = [diabetes 0.135, 0, insulin 0.135, pump 0.366, 0, 0] ; D3 = [0, glucose 0.135, 0, 0, blood 0.366, sugar 0.366]。</div><div class="wt-body" data-lang="en"><strong>TF-IDF = TF × IDF:</strong> D1 = [diabetes 0.135, glucose 0.135, insulin 0.135, 0, 0, 0] ; D2 = [diabetes 0.135, 0, insulin 0.135, pump 0.366, 0, 0] ; D3 = [0, glucose 0.135, 0, 0, blood 0.366, sugar 0.366].</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>Cosine similarity D1 vs D2：</strong><br>分子 = 0.135·0.135 + 0·0 + 0.135·0.135 + 0·0.366 = <code>0.0365</code><br>‖D1‖ = √(3·0.135²) = <code>0.234</code> ; ‖D2‖ = √(0.135²+0.135²+0.366²) = <code>0.426</code><br>cos = 0.0365 / (0.234·0.426) = <strong><code>0.366</code></strong>。（注意：D1 ↔ D3 cos = 0.135·0.135 / (0.234·0.541) = 0.144，明顯較低。）</div><div class="wt-body" data-lang="en"><strong>Cosine D1 vs D2:</strong><br>numerator = 0.135·0.135 + 0 + 0.135·0.135 + 0·0.366 = <code>0.0365</code><br>‖D1‖ = √(3·0.135²) = <code>0.234</code> ; ‖D2‖ = √(0.135²+0.135²+0.366²) = <code>0.426</code><br>cos = 0.0365 / (0.234·0.426) = <strong><code>0.366</code></strong>. (D1 ↔ D3 cos = 0.144, much lower.)</div></div>
+</div>
+<div class="formula-box">
+TF-IDF(t, d) = TF(t,d) × log(N / df(t))   ·   cos(u, v) = u·v / (‖u‖·‖v‖)<span class="f-where" data-lang="zh">N = 文件總數，df(t) = 含 t 的文件數。TF-IDF 把「全部都有的詞」壓低、把「少數高頻的詞」推高。</span><span class="f-where" data-lang="en">N = total docs, df(t) = docs containing t. TF-IDF down-weights ubiquitous terms and lifts terms frequent in few docs.</span>
+</div>
+<details class="detail-toggle"><summary data-zh="🔬 為什麼用 log，而不是 1/df？" data-en="🔬 Why log instead of 1/df?">🔬 為什麼用 log，而不是 1/df？</summary>
+<div class="detail-body">
+<p data-lang="zh">原始 IDF = N/df 在低 df 端會劇烈放大（df=1 vs df=2 差 50%），把超罕見詞權重炸高。<strong>log 變形</strong>讓 IDF 在 df 增大時逐漸飽和，避免噪音詞主導。理論上對應「資訊量」(Shannon)：詞 t 出現的「資訊」 = −log P(t)，而 P(t) ≈ df/N。Robertson 2004 給出 BM25 / IDF 變體更完整的機率化推導。</p>
+<p data-lang="en">Raw IDF = N/df explodes at low df (df=1 vs df=2 differs by 50%), making ultra-rare words dominate. <strong>log-IDF</strong> saturates as df grows, suppressing noise. Theoretically it matches Shannon information: I(t) = −log P(t) with P(t) ≈ df/N. Robertson 2004 derives BM25 / IDF variants more rigorously.</p>
+</div></details>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="研究討論" data-en="DISCUSSION">研究討論</div>
+<h2 data-zh="三個值得思考的真問題" data-en="Three Real Questions Worth Pondering">三個值得思考的真問題</h2>
+<div class="discussion-card">
+<span class="disc-label">Q1</span>
+<h3 data-zh="LLM 會徹底取代 TF-IDF 嗎？" data-en="Will LLMs replace TF-IDF entirely?">LLM 會徹底取代 TF-IDF 嗎？</h3>
+<p class="disc-q" data-lang="zh">2024 年起 dense embedding 在 MTEB benchmark 大殺四方——但 BM25 (TF-IDF 的進化版) 仍在某些任務硬撐 SOTA。</p>
+<p class="disc-q" data-lang="en">Dense embeddings dominate MTEB since 2024 — yet BM25 (TF-IDF's grown-up cousin) still tops some tasks.</p>
+<div class="disc-pov" data-lang="zh"><strong>支持取代：</strong>BGE / Voyage-3 / E5 在 MTEB 平均超越 BM25 6-12 分；長文件、跨語言、需要語意對齊時 dense 完勝。</div>
+<div class="disc-pov" data-lang="en"><strong>Replacement camp:</strong> BGE / Voyage-3 / E5 beat BM25 by 6-12 points on MTEB; dense wins on long docs, cross-lingual, semantic alignment.</div>
+<div class="disc-pov" data-lang="zh"><strong>反方：</strong>BEIR 18 個檢索任務上 BM25 在 6 個仍是冠軍；對短查詢、長尾詞、低資源語言、可解釋性要求高的場景，TF-IDF / BM25 不死。Thakur 2021 NeurIPS。實務做 <em>hybrid (dense + sparse)</em> 通常最穩。</div>
+<div class="disc-pov" data-lang="en"><strong>Counter:</strong> Across 18 BEIR retrieval tasks, BM25 wins 6 of them; for short queries, long-tail terms, low-resource languages, and explainability, TF-IDF/BM25 stays alive (Thakur 2021 NeurIPS). In practice, <em>hybrid (dense + sparse)</em> beats either alone.</div>
+</div>
+<div class="discussion-card">
+<span class="disc-label">Q2</span>
+<h3 data-zh="GPT-4 懂醫學文本，還需要 BioBERT 微調嗎？" data-en="GPT-4 already gets medical text — still need to fine-tune BioBERT?">GPT-4 懂醫學文本，還需要 BioBERT 微調嗎？</h3>
+<p class="disc-q" data-lang="zh">GPT-4 USMLE Step 1 過 90 分，醫學論文摘要寫得似模似樣。BioBERT 的時代結束了嗎？</p>
+<p class="disc-q" data-lang="en">GPT-4 hits &gt;90 on USMLE Step 1 and drafts medical-sounding abstracts. Is BioBERT's era over?</p>
+<div class="disc-pov" data-lang="zh"><strong>Pro-LLM：</strong>少樣本 in-context learning、prompt engineering 就能達到 90% BioBERT 微調效能（Singhal 2023, Med-PaLM 2）；不需要訓練資料、不需要 GPU 部署。</div>
+<div class="disc-pov" data-lang="en"><strong>Pro-LLM:</strong> Few-shot in-context learning + prompts hits 90% of fine-tuned BioBERT (Singhal 2023, Med-PaLM 2) — no training data, no on-prem GPU.</div>
+<div class="disc-pov" data-lang="zh"><strong>BioBERT 仍重要：</strong>(1) 隱私敏感資料無法傳給 OpenAI；(2) 結構化 NER（精確 span）BioBERT 仍勝；(3) 推論成本 BioBERT 110M params 比 GPT-4 便宜千倍；(4) 可重現性、可審計性高得多。</div>
+<div class="disc-pov" data-lang="en"><strong>BioBERT still matters:</strong> (1) privacy-sensitive data cannot leave the hospital; (2) span-exact NER still favours BioBERT; (3) BioBERT-110M inference is ~1000× cheaper than GPT-4; (4) far more reproducible and auditable.</div>
+</div>
+<div class="discussion-card">
+<span class="disc-label">Q3</span>
+<h3 data-zh="開源 vs 專有 LLM 處理臨床文字？" data-en="Open-source vs proprietary LLMs for clinical text?">開源 vs 專有 LLM 處理臨床文字？</h3>
+<p class="disc-q" data-lang="zh">Llama 3 70B、Mistral Large 2、Qwen 2.5 都在快速追趕 GPT-4；醫院該選哪邊？</p>
+<p class="disc-q" data-lang="en">Llama 3 70B, Mistral Large 2, Qwen 2.5 close in on GPT-4 fast. Which should a hospital choose?</p>
+<div class="disc-pov" data-lang="zh"><strong>專有 (GPT-4o / Claude)：</strong>能力天花板高、整合好、Azure HIPAA-compliant；缺點是 token 成本、資料離開機構、API 政策變動。</div>
+<div class="disc-pov" data-lang="en"><strong>Proprietary (GPT-4o / Claude):</strong> Highest ceiling, smooth integration, Azure HIPAA-compliant; cons: token cost, data leaves the institution, vendor lock-in.</div>
+<div class="disc-pov" data-lang="zh"><strong>開源 (Llama 3 / Mistral)：</strong>本機部署、零外傳、可微調；缺點是運維成本、能力略遜、需自行驗證。<strong>2026 共識：</strong>敏感資料用開源（本地 LoRA 微調），非敏感前端用專有 API。</div>
+<div class="disc-pov" data-lang="en"><strong>Open (Llama 3 / Mistral):</strong> On-prem, no leakage, fine-tunable; cons: ops cost, slightly weaker, validation on you. <strong>2026 consensus:</strong> sensitive data → open with LoRA; non-sensitive front-end → proprietary API.</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="實戰案例" data-en="SPOTLIGHT">實戰案例</div>
+<div class="spotlight">
+<div class="sp-icon">🦠</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="案例" data-en="CASE">案例</span>
+<h4 data-zh="CORD-19 挑戰賽 (2020)：兩週內把 20 萬篇 COVID-19 文獻分類完" data-en="CORD-19 Challenge (2020): 200k COVID-19 papers indexed in 2 weeks">CORD-19 挑戰賽 (2020)：兩週內把 20 萬篇 COVID-19 文獻分類完</h4>
+<p data-lang="zh">2020 年 3 月，White House 聯合 Allen Institute、Microsoft、Kaggle 發起 <strong>COVID-19 Open Research Dataset (CORD-19)</strong>：200,000+ 篇 COVID-19 / SARS / coronavirus 文獻，要求社群在兩週內建立可用的檢索與摘要系統。</p>
+<p data-lang="en">March 2020. The White House + Allen Institute + Microsoft + Kaggle launch <strong>CORD-19</strong>: 200,000+ papers on COVID-19/SARS/coronavirus, with the community asked to build retrieval + summarisation systems in two weeks.</p>
+<p data-lang="zh">獲勝方案的核心是 <strong>PubMedBERT + Elasticsearch + BM25 hybrid</strong>：用 PubMedBERT 做語意檢索、BM25 做關鍵字檢索，re-rank 取最佳結果。50 多支隊伍將管線開源——這是定義「pandemic NLP」的時刻。直到今日，BioASQ、TREC-COVID 仍用 CORD-19 為基準。</p>
+<p data-lang="en">The winning recipe: <strong>PubMedBERT + Elasticsearch + BM25 hybrid</strong> — PubMedBERT for semantic retrieval, BM25 for keyword, re-rank for best results. 50+ teams open-sourced pipelines — the moment that defined "pandemic NLP". BioASQ and TREC-COVID still use CORD-19 as a benchmark.</p>
+<p data-lang="zh">教訓：(1) 危機驅動的 open dataset 比五年規劃的 benchmark 更能催化研究；(2) <em>dense + sparse hybrid</em> 是高效檢索的關鍵；(3) 領域預訓練模型（PubMedBERT）在 zero-shot 與微調都比通用 BERT 強。</p>
+<p data-lang="en">Lessons: (1) crisis-driven open datasets catalyse research more than 5-year-planned benchmarks; (2) <em>dense + sparse hybrid</em> is the retrieval workhorse; (3) domain-pretrained models (PubMedBERT) beat general BERT in zero-shot and fine-tuned.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="常見陷阱" data-en="PITFALLS">常見陷阱</div>
+<h2 data-zh="六個地雷與修正" data-en="Six Pitfalls & Fixes">六個地雷與修正</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① LDA 沒移除停用字" data-en="① Stopwords kept in LDA">① LDA 沒移除停用字</h4><p data-lang="zh">"the / and / of" 會主導每個主題 → 看不到真正內容詞。<strong>修正：</strong>用 sklearn 的 ENGLISH_STOP_WORDS + 自訂醫學停用字 (patient, the, etc.)；也可用 max_df=0.95 過濾。</p><p data-lang="en">"the / and / of" dominate every topic → real terms hidden. <strong>Fix:</strong> sklearn ENGLISH_STOP_WORDS + custom medical stopwords; or max_df=0.95.</p></div>
+<div class="pitfall-card"><h4 data-zh="② Word2Vec 訓練在小語料" data-en="② Word2Vec on a tiny corpus">② Word2Vec 訓練在小語料</h4><p data-lang="zh">3,000 篇病歷訓 Word2Vec 結果一片噪音；word2vec 需要 &gt; 1M tokens 才穩定。<strong>修正：</strong>用 PubMedBERT 預訓向量；或 FastText subword 在小語料表現較好。</p><p data-lang="en">Training Word2Vec on 3,000 notes is mostly noise; Word2Vec needs &gt; 1M tokens. <strong>Fix:</strong> use PubMedBERT pretrained vectors; or FastText subword (more sample-efficient).</p></div>
+<div class="pitfall-card"><h4 data-zh="③ cosine 用在原始 count" data-en="③ Cosine on raw counts">③ cosine 用在原始 count</h4><p data-lang="zh">兩篇都有很多 "the"，cosine 會錯誤地給高相似度。<strong>修正：</strong>cosine 應該在 TF-IDF 或 embedding 上計算，<em>不是</em> raw count。</p><p data-lang="en">Both docs contain many "the" → cosine wrongly high. <strong>Fix:</strong> compute cosine on TF-IDF or embeddings — <em>not</em> raw counts.</p></div>
+<div class="pitfall-card"><h4 data-zh="④ LDA 主題數 K 拍腦袋" data-en="④ Picking LDA K by guesswork">④ LDA 主題數 K 拍腦袋</h4><p data-lang="zh">K 太小 → 主題糊；K 太大 → 重複碎裂。<strong>修正：</strong>用 perplexity / topic coherence (Cv, UMass)；或改用 BERTopic / HDP 自動定 K。</p><p data-lang="en">K too small → blurry topics; too large → redundant fragments. <strong>Fix:</strong> use perplexity / topic coherence (Cv, UMass); or switch to BERTopic / HDP for auto-K.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ LLM 幻覺引用" data-en="⑤ LLM hallucinated citations">⑤ LLM 幻覺引用</h4><p data-lang="zh">GPT-4 可能編造 "PMID 12345678 — Smith 2019" 完全不存在的論文。<strong>修正：</strong>所有引用必須走 RAG 驗證真實 PubMed PMID；MedRAG 框架可降低 80% 幻覺。</p><p data-lang="en">GPT-4 may invent "PMID 12345678 — Smith 2019" that doesn't exist. <strong>Fix:</strong> every citation routed through RAG against real PubMed PMIDs; MedRAG cuts hallucination by 80%.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ BioBERT 直接用，沒驗證" data-en="⑥ Using BioBERT without validation">⑥ BioBERT 直接用，沒驗證</h4><p data-lang="zh">BioBERT NER 可能把 "Cold" 誤標為疾病而非「感冒」；領域漂移（病歷 vs PubMed）。<strong>修正：</strong>用自己領域 500 筆人工標註驗證；必要時做 domain adaptation 或 ClinicalBERT。</p><p data-lang="en">BioBERT may mistag "Cold" as a disease vs the common cold; domain shift (notes vs PubMed). <strong>Fix:</strong> validate on 500 own-domain manual labels; consider domain adaptation or ClinicalBERT.</p></div>
+</div>
+
+<h3 data-zh="壞做法 vs 好做法" data-en="Bad vs Good Practice">壞做法 vs 好做法</h3>
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞做法" data-en="Bad practice">壞做法</h4>
+<p data-lang="zh">直接餵 GPT-4 100 個病歷段落，用 prompt "幫我找心肌炎相關"，輸出貼進論文當證據——沒有驗證引用、沒有 ground truth 對照、沒有領域專家複檢。</p>
+<p data-lang="en">Pipe 100 clinical paragraphs into GPT-4 with "find me myocarditis evidence", paste the output into a paper — no citation validation, no ground truth, no expert review.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好做法" data-en="Good practice">好做法</h4>
+<p data-lang="zh">三層 pipeline：(1) TF-IDF + BM25 初步過濾；(2) PubMedBERT embedding + 向量檢索；(3) LLM 摘要必經 MedRAG 驗證 PMID；最後請臨床專家在 380 篇隨機抽 50 篇人工檢核 precision/recall，並記錄在 Methods。</p>
+<p data-lang="en">Three-stage pipeline: (1) TF-IDF + BM25 first-pass filter; (2) PubMedBERT embeddings + vector retrieval; (3) LLM summarisation via MedRAG with PMID verification; clinician spot-checks 50 of 380 for precision/recall, all logged in Methods.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<div class="reflection-q">
+<h4 data-zh="閉上書本前先想想……" data-en="Before closing this chapter, ponder…">閉上書本前先想想……</h4>
+<ol>
+<li data-lang="zh">為什麼 TF-IDF 在 50 年後仍是基準？什麼類型的任務 BM25 至今仍勝過 dense embedding？</li>
+<li data-lang="en">Why does TF-IDF remain a baseline after 50 years? On what tasks does BM25 still beat dense embeddings?</li>
+<li data-lang="zh">"king − man + woman = queen" 為什麼在 Word2Vec 上成立？這個性質在 BERT contextual embedding 上還成立嗎？</li>
+<li data-lang="en">Why does "king − man + woman = queen" hold in Word2Vec? Does it still hold in contextual BERT embeddings?</li>
+<li data-lang="zh">如果你只有 500 筆病歷標註，要做疾病 NER——直接用 BioBERT、微調 BioBERT、用 GPT-4 prompt？比較三條路徑優缺。</li>
+<li data-lang="en">With 500 labelled notes for disease NER — use BioBERT off-the-shelf, fine-tune BioBERT, or prompt GPT-4? Compare the three paths.</li>
+<li data-lang="zh">LDA 主題數 K 為什麼很難「正確選」？topic coherence 比 perplexity 好在哪？</li>
+<li data-lang="en">Why is choosing LDA's K so hard? How does topic coherence beat perplexity?</li>
+<li data-lang="zh">設計一個 RAG 系統避免 LLM 在「醫療問答」上產生幻覺引用——你會用哪些工具與驗證步驟？</li>
+<li data-lang="en">Design a RAG system that prevents LLM hallucinated citations in medical QA — which tools and verification steps would you use?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="section-label" data-zh="研究前沿" data-en="ADVANCED / SOTA">研究前沿</div>
+<div class="advanced-note">
+<span class="adv-label">SOTA 2025-2026</span>
+<h4 data-zh="從 BGE 到 MedRAG：檢索增強的生醫 NLP" data-en="From BGE to MedRAG: retrieval-augmented biomedical NLP">從 BGE 到 MedRAG：檢索增強的生醫 NLP</h4>
+<p data-lang="zh"><strong>BGE / Voyage / E5 (2024-25)</strong>：MTEB leaderboard 上 dense embedding 連月霸榜；BGE-Large-en-v1.5 (BAAI) 開源、可微調；Voyage-3 商業 API；E5-Mistral-7B 把 LLM 當 encoder。實作上 dim=1024–4096，&lt; 100ms 嵌入。</p>
+<p data-lang="en"><strong>BGE / Voyage / E5 (2024-25)</strong>: dense embeddings own the MTEB leaderboard; BGE-Large-en-v1.5 (BAAI) open-source & tunable; Voyage-3 commercial; E5-Mistral-7B turns LLM into encoder. dim=1024–4096, &lt; 100 ms embed.</p>
+<p data-lang="zh"><strong>BioGPT-Large (2024)</strong>：1.5B 參數，PubMed scratch；BioGPT-QA 在 PubMedQA 達 78.2% accuracy（人類 78%）。但生成幻覺仍多，需配 RAG。</p>
+<p data-lang="en"><strong>BioGPT-Large (2024)</strong>: 1.5B params, PubMed scratch; BioGPT-QA hits 78.2% on PubMedQA (human 78%). Hallucinations remain — pair with RAG.</p>
+<p data-lang="zh"><strong>MedRAG benchmark (Xiong 2024)</strong>：統一 7 個生醫 QA 資料集 + 多 embedding + 多 LLM 對比；發現 <em>BM25 + GPT-4 RAG</em> 在多數任務優於 <em>dense + Llama-3</em>——簡單方法仍能贏。</p>
+<p data-lang="en"><strong>MedRAG (Xiong 2024)</strong>: unifies 7 biomedical QA datasets × embeddings × LLMs; finds <em>BM25 + GPT-4 RAG</em> beats <em>dense + Llama-3</em> on most — simple still wins.</p>
+<p data-lang="zh"><strong>SciSpacy + UMLS linker (2025)</strong>：scispaCy 0.5.5 加入 BC5CDR-trained NER + UMLS 2025AA 對應；entity linking 在 MedMentions 達 64% accuracy（dense retrieval 對 4.4M 概念）。</p>
+<p data-lang="en"><strong>SciSpacy + UMLS linker (2025)</strong>: scispaCy 0.5.5 ships BC5CDR-trained NER + UMLS 2025AA; entity linking hits 64% on MedMentions (dense retrieval over 4.4M concepts).</p>
+<p data-lang="zh"><strong>2026 方向：</strong>(a) <code>privacy-preserving RAG</code>（聯邦學習 + on-prem embedding）；(b) <code>multimodal medical NLP</code>（影像報告 + DICOM + 病歷文字）；(c) <code>causal RE</code>——從病歷文字抽取「治療→效果」因果三元組；(d) <a href="#">PubMed 全集 36M 文獻子秒檢索</a>。</p>
+<p data-lang="en"><strong>2026 frontiers:</strong> (a) <code>privacy-preserving RAG</code> (federated + on-prem embedding); (b) <code>multimodal medical NLP</code> (radiology reports + DICOM + notes); (c) <code>causal RE</code> mining "treatment → effect" triples; (d) <a href="#">sub-second retrieval over the full 36M-paper PubMed</a>.</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -214,6 +444,12 @@ inp = tok(docs, padding=<span class="kw">True</span>, return_tensors=<span class
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. BioBERT 比 BERT 小 100 倍</span><span data-lang="en">D. BioBERT is 100× smaller than BERT</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="軼事：" data-en="Anecdote:">軼事：</strong>
+<span data-lang="zh">Word2Vec 的 "king − man + woman = queen" 在 2013 NIPS workshop 首次展示時，全場觀眾的反應是「不可能」。Tomas Mikolov 在台上連按了三次「驗證」按鈕，向量結果穩定地指到 "queen"——觀眾仍懷疑代碼有 bug。一週後 Google 開源，整個 NLP 學界連夜下載——這個「向量加減＝語意推理」的發現至今仍是 NLP 入門教學最戲劇性的時刻。直到 2018 BERT 出世，人們才知道：原來 BERT 把這種「語意算術」做得更深，但**犧牲了**簡單的線性可加性。</span>
+<span data-lang="en">When Word2Vec's "king − man + woman = queen" was first shown at the 2013 NIPS workshop, the audience reaction was "impossible". Tomas Mikolov pressed "verify" three times on stage; the vector stably pointed to "queen" — and people still suspected a bug. A week later Google open-sourced it; the entire NLP community downloaded overnight. This "vector arithmetic = semantic reasoning" remains the most dramatic moment in NLP teaching. Only with BERT (2018) did we learn that contextual embeddings perform deeper semantic arithmetic — but at the cost of simple linear additivity.</span>
+</div>
 
 <nav class="page-nav">
 <a href="anomaly-detection.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 13: 異常偵測 Anomaly Detection" data-en="Ch 13: Anomaly Detection">Ch 13: 異常偵測 Anomaly Detection</span></a>

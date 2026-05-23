@@ -18,6 +18,180 @@
 </header>
 <main class="content-wrap">
 
+<aside class="section-toc">
+<strong data-zh="本章閱讀地圖 · ~45 min" data-en="Reading Map · ~45 min">本章閱讀地圖 · ~45 min</strong>
+<div class="pill-row">
+<span class="pill teal" data-zh="⏱ 估時 45 分" data-en="⏱ ~45 min">⏱ 估時 45 分</span>
+<span class="level-badge l-beg" data-zh="初學友善" data-en="Beginner">初學</span>
+<span class="level-badge l-mid" data-zh="進階" data-en="Intermediate">進階</span>
+<span class="level-badge l-adv" data-zh="研究員彩蛋" data-en="Advanced">研究員彩蛋</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場：Epic Sepsis Watch 從 0.97 跌到 0.65" data-en="Story: Epic Sepsis Watch 0.97 → 0.65">開場：Sepsis Watch</a></li>
+<li><a href="#glossary" data-zh="關鍵詞 ×16（CV / metrics / 校準 / 搜尋）" data-en="Glossary ×16 (CV / metrics / calibration / search)">關鍵詞 ×16</a></li>
+<li><a href="#history" data-zh="1950 ROC → 2024 sklearn FixedThresholdClassifier" data-en="1950 ROC → 2024 sklearn FixedThresholdClassifier">時間軸</a></li>
+<li><a href="#walkthrough" data-zh="手算 5-fold CV + nested CV + Brier" data-en="Worked 5-fold CV + nested + Brier">手算 CV</a></li>
+<li><a href="#widget2" data-zh="新互動：判定門檻 × 不平衡率" data-en="New widget: threshold × imbalance">門檻 × 不平衡</a></li>
+<li><a href="#discussion" data-zh="爭論：ROC vs PR、Optuna vs ASHA、CI 怎麼報" data-en="Debate: ROC vs PR, Optuna vs ASHA, CI">四題爭論</a></li>
+<li><a href="#pitfalls" data-zh="陷阱 6 連發（含 patient-level leakage）" data-en="Six pitfalls (incl. patient leakage)">陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題 ×6" data-en="Reflection ×6">反思</a></li>
+<li><a href="#advanced" data-zh="conformal / Davis-Goadrich / RoBus 2025 / Harrell C" data-en="conformal / Davis-Goadrich / RoBus 2025 / Harrell C">進階彩蛋</a></li>
+</ol>
+</aside>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="情境劇" data-en="SCENE">情境劇</span>
+<h3 data-zh="2021 Duke + Michigan：Epic Sepsis Watch 的真相" data-en="2021 Duke + Michigan: Epic Sepsis Watch's Truth">2021 Duke + Michigan</h3>
+<div data-lang="zh">
+<p>2017 年，Epic Systems 推出一個內建在電子病歷的早期敗血症預測模組——<strong>Epic Sepsis Watch</strong>。內部驗證 AUROC=0.76，部署到全美約 30% 的醫院。各院內部報告都是 0.74–0.78，看起來 great。</p>
+<p>2021 年 6 月，Michigan 大學的 Habib Wong 教授團隊在 <em>JAMA Internal Medicine</em> 做了第一個獨立外部驗證——用密西根大學自家的 27,697 位住院病人。結果：<strong>AUROC = 0.63</strong>。Recall 在臨床有意義的高 specificity 區域只有 33%。也就是說，模型錯失約 67% 真實敗血症病例，並產生大量誤警。</p>
+<p>究竟發生了什麼？分析發現幾件事：(1) Epic 的訓練集包含了「醫師已經開了抗生素」這種事後特徵 → label leakage；(2) k-fold CV 在 patient 重複住院的資料上做隨機切，同一病人跨 fold 出現 → 變相 LOO；(3) 訓練 / 部署之間 6 年，疾病編碼、ICU 流程都變了。</p>
+<p>從那天起，<strong>外部驗證</strong>、<strong>group-CV</strong>、<strong>校準</strong>這三件事成為任何臨床 ML 部署的硬性要求。本章從根本告訴你：怎麼設計一個誠實的評估流程。</p>
+</div>
+<div data-lang="en">
+<p>In 2017, Epic Systems released an EHR-embedded early-sepsis prediction module — <strong>Epic Sepsis Watch</strong>. Internal AUROC=0.76, deployed across ~30% of US hospitals. Site-level reports all showed 0.74–0.78. Looks great.</p>
+<p>June 2021. Habib Wong's team at University of Michigan published the first independent external validation in <em>JAMA Internal Medicine</em> on 27,697 of their own inpatients. Result: <strong>AUROC = 0.63</strong>. Recall at clinically meaningful specificity was just 33%. The model missed ~67% of real sepsis cases and produced massive false alarms.</p>
+<p>What happened? Investigation found: (1) Epic's training set included "physician already ordered antibiotics" — post-hoc label leakage; (2) k-fold CV randomly split a dataset where the same patient appeared in multiple admissions → effectively LOO; (3) 6 years between training and deployment changed diagnosis codes and ICU workflows.</p>
+<p>From that day forward, <strong>external validation</strong>, <strong>group-CV</strong>, and <strong>calibration</strong> became hard requirements for any clinical ML deployment. This chapter teaches you how to design an honest evaluation pipeline — from the ground up.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="關鍵詞彙" data-en="GLOSSARY">關鍵詞彙</div>
+<h2 data-zh="關鍵詞 · CV、指標、校準、搜尋" data-en="Key Terms · CV, metrics, calibration, search">評估詞彙表 ×16</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Hold-out</div><div class="term-zh">留出法</div>
+<div class="term-kid" data-lang="zh">把資料切一刀：80% 訓練、20% 看模型有沒有偷學。</div>
+<div class="term-kid" data-lang="en">Cut the data once: 80% train, 20% to check.</div>
+<div class="term-tech" data-lang="zh">一次性 train/test 切分；小資料下變異大，建議 stratified + shuffle + 多次重複。</div>
+<div class="term-tech" data-lang="en">Single train/test split; high variance on small data — use stratified + shuffle + multiple repeats.</div></div>
+
+<div class="glossary-card"><div class="term-en">K-Fold CV</div><div class="term-zh">K 折交叉驗證</div>
+<div class="term-kid" data-lang="zh">輪流讓 5 組資料當「考試題」，平均分數最準。</div>
+<div class="term-kid" data-lang="en">Take turns making 5 groups the "exam questions", average the scores.</div>
+<div class="term-tech" data-lang="zh">將資料切 K 等分，輪流以 K-1 訓練 / 1 驗證。Stone 1974 提出；K=5 或 10 是經驗最佳。</div>
+<div class="term-tech" data-lang="en">Split into K folds, take turns K-1 train / 1 val. Stone 1974; K=5 or 10 is empirically optimal.</div></div>
+
+<div class="glossary-card"><div class="term-en">Stratified CV</div><div class="term-zh">分層 CV</div>
+<div class="term-kid" data-lang="zh">每 fold 中陽性陰性比例保持一致——不讓某 fold 沒有陽性。</div>
+<div class="term-kid" data-lang="en">Keep positive:negative ratio constant in each fold.</div>
+<div class="term-tech" data-lang="zh">在 K-Fold 基礎上維持類別分佈；對 imbalanced 分類必備。</div>
+<div class="term-tech" data-lang="en">K-Fold preserving class distribution; mandatory for imbalanced classification.</div></div>
+
+<div class="glossary-card"><div class="term-en">Group-CV (Patient-Level)</div><div class="term-zh">分組 CV (病人層級)</div>
+<div class="term-kid" data-lang="zh">同一個病人的所有資料一定要在同一 fold——不能偷看到「自己的未來」。</div>
+<div class="term-kid" data-lang="en">All visits from the same patient must stay in one fold — no peeking at your own future.</div>
+<div class="term-tech" data-lang="zh"><code>GroupKFold</code>：按 patient_id 切。是醫療資料避免 leakage 的標準。</div>
+<div class="term-tech" data-lang="en"><code>GroupKFold</code>: split by patient_id. The standard to avoid leakage in medical data.</div></div>
+
+<div class="glossary-card"><div class="term-en">Nested CV</div><div class="term-zh">巢狀 CV</div>
+<div class="term-kid" data-lang="zh">兩層 CV：內層調參、外層誠實估泛化。</div>
+<div class="term-kid" data-lang="en">Two layers: inner tunes, outer reports honestly.</div>
+<div class="term-tech" data-lang="zh">外層估泛化，內層調 hyperparam。解決 "tune-and-evaluate on same data" bias (Cawley-Talbot 2010)。</div>
+<div class="term-tech" data-lang="en">Outer for generalization, inner for tuning. Cures "tune-and-evaluate on same data" bias (Cawley-Talbot 2010).</div></div>
+
+<div class="glossary-card"><div class="term-en">Confusion Matrix</div><div class="term-zh">混淆矩陣</div>
+<div class="term-kid" data-lang="zh">2×2 表格：對的、錯的、漏的、誤的——四個格子說明一切。</div>
+<div class="term-kid" data-lang="en">2×2 grid: right, wrong, missed, mistaken — four boxes tell the whole story.</div>
+<div class="term-tech" data-lang="zh">TP/FP/TN/FN；其他所有 metric 都從這四數推導。</div>
+<div class="term-tech" data-lang="en">TP/FP/TN/FN; every other metric derives from these four counts.</div></div>
+
+<div class="glossary-card"><div class="term-en">Precision / Recall</div><div class="term-zh">精確率 / 召回率</div>
+<div class="term-kid" data-lang="zh">Precision：抓對多少？Recall：漏掉多少？</div>
+<div class="term-kid" data-lang="en">Precision: how many right? Recall: how many caught?</div>
+<div class="term-tech" data-lang="zh">P=TP/(TP+FP)；R=TP/(TP+FN)。Recall=Sensitivity=TPR。對 imbalanced 比 Accuracy 誠實。</div>
+<div class="term-tech" data-lang="en">P=TP/(TP+FP); R=TP/(TP+FN). Recall=Sensitivity=TPR. More honest than Accuracy under imbalance.</div></div>
+
+<div class="glossary-card"><div class="term-en">F1 / F-β</div><div class="term-zh">F1 / F-β</div>
+<div class="term-kid" data-lang="zh">P 和 R 的「和諧平均」——β 大就重 Recall。</div>
+<div class="term-kid" data-lang="en">Harmonic mean of P and R; β&gt;1 weighs Recall more.</div>
+<div class="term-tech" data-lang="zh">F1=2PR/(P+R); F-β=(1+β²)PR/(β²P+R)。β=2 (F2) 用於漏診成本高的場合。</div>
+<div class="term-tech" data-lang="en">F1=2PR/(P+R); F-β=(1+β²)PR/(β²P+R). β=2 (F2) for high miss-cost.</div></div>
+
+<div class="glossary-card"><div class="term-en">ROC-AUC</div><div class="term-zh">ROC 曲線下面積</div>
+<div class="term-kid" data-lang="zh">所有可能門檻下，模型把陽性排在陰性前面的機率。</div>
+<div class="term-kid" data-lang="en">Probability the model ranks a positive above a negative, across all thresholds.</div>
+<div class="term-tech" data-lang="zh">∫TPR d(FPR)；等於 Mann-Whitney U / (n+·n−)。Spackman 1950 軍用雷達起源。</div>
+<div class="term-tech" data-lang="en">∫TPR d(FPR); equivalent to Mann-Whitney U / (n+·n−). Origin: 1950 military radar (Spackman).</div></div>
+
+<div class="glossary-card"><div class="term-en">PR-AUC (Average Precision)</div><div class="term-zh">PR 曲線下面積</div>
+<div class="term-kid" data-lang="zh">不平衡資料的真本事——只看陽性類別。</div>
+<div class="term-kid" data-lang="en">Real skill on imbalanced data — focuses on the positive class.</div>
+<div class="term-tech" data-lang="zh">∫Precision d(Recall) = ΣΔR·P。Saito-Rehmsmeier 2015 PLoS ONE 證明 imbalance 時遠勝 ROC。</div>
+<div class="term-tech" data-lang="en">∫Precision d(Recall) = ΣΔR·P. Saito-Rehmsmeier 2015 PLoS ONE proved superiority under imbalance.</div></div>
+
+<div class="glossary-card"><div class="term-en">Threshold / Youden's J</div><div class="term-zh">判定門檻</div>
+<div class="term-kid" data-lang="zh">機率超過多少才算「陽」？預設 0.5，但臨床上常常要調。</div>
+<div class="term-kid" data-lang="en">Above what probability do we call "positive"? Default 0.5 — clinical use often shifts.</div>
+<div class="term-tech" data-lang="zh">Youden's J = TPR − FPR 的最大值點；sklearn 1.5+ 提供 <code>FixedThresholdClassifier</code>。</div>
+<div class="term-tech" data-lang="en">Youden's J = max(TPR − FPR). sklearn 1.5+ added <code>FixedThresholdClassifier</code>.</div></div>
+
+<div class="glossary-card"><div class="term-en">Calibration / Brier</div><div class="term-zh">校準 / Brier</div>
+<div class="term-kid" data-lang="zh">模型說 80%，那 100 個案例中真的有 80 個是陽嗎？</div>
+<div class="term-kid" data-lang="en">Model says 80% — out of 100 such cases, are 80 truly positive?</div>
+<div class="term-tech" data-lang="zh">Brier = (1/N) Σ(p̂<sub>i</sub> − y<sub>i</sub>)²；reliability diagram 視覺化。Niculescu-Mizil 2005。</div>
+<div class="term-tech" data-lang="en">Brier = (1/N) Σ(p̂<sub>i</sub> − y<sub>i</sub>)²; reliability diagram for visualisation. Niculescu-Mizil 2005.</div></div>
+
+<div class="glossary-card"><div class="term-en">Grid / Random / Bayesian Search</div><div class="term-zh">三種超參搜尋</div>
+<div class="term-kid" data-lang="zh">窮舉 vs 隨機 vs 聰明地下一個試什麼。</div>
+<div class="term-kid" data-lang="en">Exhaustive vs random vs smart-next-pick.</div>
+<div class="term-tech" data-lang="zh">Bergstra 2012：random 通常勝 grid；Snoek 2012 Bayesian (GP/TPE) 進一步用前次結果指引。</div>
+<div class="term-tech" data-lang="en">Bergstra 2012: random beats grid on average; Snoek 2012: Bayesian (GP/TPE) uses past results to guide.</div></div>
+
+<div class="glossary-card"><div class="term-en">Optuna / TPE</div><div class="term-zh">Optuna / TPE</div>
+<div class="term-kid" data-lang="zh">Bayesian + 自動剪枝的超參搜尋工具。</div>
+<div class="term-kid" data-lang="en">Bayesian search + auto-pruning library.</div>
+<div class="term-tech" data-lang="zh">Akiba et al, KDD 2019 (arXiv:1907.10902)；define-by-run + TPE + HyperbandPruner。</div>
+<div class="term-tech" data-lang="en">Akiba et al, KDD 2019 (arXiv:1907.10902); define-by-run + TPE + HyperbandPruner.</div></div>
+
+<div class="glossary-card"><div class="term-en">Hyperband / ASHA</div><div class="term-zh">Hyperband / ASHA</div>
+<div class="term-kid" data-lang="zh">先給每個候選一點 resource，表現好的繼續多給。</div>
+<div class="term-kid" data-lang="en">Give each candidate a little resource; promote the good ones.</div>
+<div class="term-tech" data-lang="zh">Li 2017 JMLR 提出 successive halving；ASHA (Li 2020) 平行化版本，配合 Ray-Tune 廣泛使用。</div>
+<div class="term-tech" data-lang="en">Li 2017 JMLR — successive halving; ASHA (Li 2020) — parallel version, used with Ray-Tune.</div></div>
+
+<div class="glossary-card"><div class="term-en">External Validation</div><div class="term-zh">外部驗證</div>
+<div class="term-kid" data-lang="zh">換一家醫院、換一個時段試試——能不能撐住？</div>
+<div class="term-kid" data-lang="en">Try at a different hospital, different time period — does it hold up?</div>
+<div class="term-tech" data-lang="zh">TRIPOD+AI 2024 與 STARD-AI 2025 要求所有臨床 ML 報告須含 external validation 段落。</div>
+<div class="term-tech" data-lang="en">TRIPOD+AI 2024 and STARD-AI 2025 require every clinical ML paper to include an external validation section.</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史脈絡" data-en="HISTORY">歷史脈絡</div>
+<h2 data-zh="從 1950 ROC 到 2024 FixedThresholdClassifier" data-en="From 1950 ROC to 2024 FixedThresholdClassifier">評估方法 75 年史</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1950</span><span class="tl-title" data-zh="Spackman ROC 起源" data-en="Spackman ROC origin">Spackman ROC</span><span class="tl-desc" data-zh="二戰雷達訊號偵測理論；分辨「真敵機」與「鳥群」。" data-en="WWII radar signal detection — distinguishing 'real plane' vs 'flock of birds.'">From WWII radar.</span></div>
+<div class="timeline-item"><span class="tl-year">1968</span><span class="tl-title" data-zh="Mosteller-Tukey 分割樣本" data-en="Mosteller-Tukey split-sample">Mosteller-Tukey split-sample</span><span class="tl-desc" data-zh="統計學中首次系統提出 train/test 切分概念。" data-en="First systematic train/test split in statistics.">First train/test concept.</span></div>
+<div class="timeline-item"><span class="tl-year">1974</span><span class="tl-title" data-zh="Stone Cross-Validation" data-en="Stone Cross-Validation">Stone CV (JRSS-B)</span><span class="tl-desc" data-zh="Mervyn Stone 系統化 K-Fold CV 理論基礎。" data-en="Mervyn Stone formalised the theory of K-Fold CV.">K-Fold formalised.</span></div>
+<div class="timeline-item"><span class="tl-year">1995</span><span class="tl-title" data-zh="Kohavi K-Fold 比較" data-en="Kohavi K-Fold comparison">Kohavi IJCAI 1995</span><span class="tl-desc" data-zh="實證比較 LOO / K-Fold / bootstrap；K=10 stratified 成為標準。" data-en="Empirical comparison of LOO / K-Fold / bootstrap; K=10 stratified becomes standard.">K=10 standard.</span></div>
+<div class="timeline-item"><span class="tl-year">2003</span><span class="tl-title" data-zh="Saito-Rehmsmeier PR&gt;ROC" data-en="Saito-Rehmsmeier PR&gt;ROC">PR &gt; ROC under imbalance</span><span class="tl-desc" data-zh="PLoS ONE 經典論文：類別嚴重不平衡時 PR-AUC 比 ROC-AUC 誠實。" data-en="PLoS ONE classic: PR-AUC more honest than ROC-AUC under heavy imbalance.">PR &gt; ROC under imbalance.</span></div>
+<div class="timeline-item"><span class="tl-year">2005</span><span class="tl-title" data-zh="Niculescu-Mizil 校準" data-en="Niculescu-Mizil calibration">Niculescu-Mizil ICML 2005</span><span class="tl-desc" data-zh="系統比較 NB / boosted trees / SVM 校準；Platt + isotonic 標準化。" data-en="Systematic NB/boosting/SVM calibration; Platt + isotonic standardised.">Platt + isotonic.</span></div>
+<div class="timeline-item"><span class="tl-year">2010</span><span class="tl-title" data-zh="Cawley-Talbot Nested CV" data-en="Cawley-Talbot Nested CV">Cawley-Talbot JMLR 2010</span><span class="tl-desc" data-zh="證明非 nested CV 在小資料上高估泛化 5–10%；nested CV 自此普及。" data-en="Proved non-nested CV inflates generalization by 5–10% on small data; nested CV becomes mainstream.">Nested CV essential.</span></div>
+<div class="timeline-item"><span class="tl-year">2011</span><span class="tl-title" data-zh="Bergstra-Bengio Random Search" data-en="Bergstra-Bengio Random Search">Random search beats grid</span><span class="tl-desc" data-zh="JMLR：理論+實證 random search 在多數情境勝 grid search。" data-en="JMLR: theory + empirical evidence random search beats grid.">Random &gt; grid.</span></div>
+<div class="timeline-item"><span class="tl-year">2012</span><span class="tl-title" data-zh="Snoek Bayesian Optimization" data-en="Snoek Bayesian Optimization">Snoek NIPS 2012</span><span class="tl-desc" data-zh="GP-based Bayesian opt 成為深度學習超參調主流。" data-en="GP-based Bayesian opt becomes dominant for DL hyperparam.">GP Bayesian opt.</span></div>
+<div class="timeline-item"><span class="tl-year">2017</span><span class="tl-title" data-zh="Hyperband / ASHA" data-en="Hyperband / ASHA">Li et al Hyperband JMLR 2017</span><span class="tl-desc" data-zh="Multi-fidelity successive halving；HuggingFace 推 Trainer hyperparam_search 採用。" data-en="Multi-fidelity successive halving; HuggingFace Trainer adopted it.">Successive halving.</span></div>
+<div class="timeline-item"><span class="tl-year">2019</span><span class="tl-title" data-zh="Akiba Optuna" data-en="Akiba Optuna">Optuna KDD 2019</span><span class="tl-desc" data-zh="Preferred Networks 發表；定義 define-by-run + pruner，至今 Kaggle 標配。" data-en="Preferred Networks; define-by-run + pruner — Kaggle standard.">define-by-run.</span></div>
+<div class="timeline-item"><span class="tl-year">2021</span><span class="tl-title" data-zh="Sepsis Watch 外驗失敗" data-en="Sepsis Watch external failure">JAMA Intern Med 2021</span><span class="tl-desc" data-zh="Michigan 外驗顯示 Epic Sepsis Watch AUROC 從 0.76 → 0.63；觸發 ML 監管浪潮。" data-en="Michigan external validation: Epic Sepsis Watch 0.76 → 0.63 — triggered ML regulation wave.">0.76 → 0.63.</span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="sklearn 1.5 FixedThresholdClassifier + TRIPOD+AI" data-en="sklearn 1.5 FixedThresholdClassifier + TRIPOD+AI">2024 evaluation tooling update</span><span class="tl-desc" data-zh="sklearn 1.5 加入專用門檻優化 classifier；BMJ TRIPOD+AI 規範外部驗證報告格式。" data-en="sklearn 1.5 adds threshold classifier; BMJ TRIPOD+AI defines external validation reporting.">Threshold classifier + TRIPOD+AI.</span></div>
+<div class="timeline-item"><span class="tl-year">2025</span><span class="tl-title" data-zh="RoBus Calibration + STARD-AI" data-en="RoBus Calibration + STARD-AI">2025 robust calibration</span><span class="tl-desc" data-zh="Robust Bootstrap calibration + STARD-AI 2025 規範診斷 ML 報告。" data-en="Robust Bootstrap calibration; STARD-AI 2025 mandates diagnostic ML reporting.">Robust calibration + STARD-AI.</span></div>
+</div>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">🏥</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="ROC vs PR：全院準確 vs 我的科室準確" data-en="ROC vs PR: hospital-wide vs my-ward accuracy">ROC vs PR — 兩種誠實</h4>
+<p data-lang="zh">ROC 像「醫院整體準確率」：考慮全部病人 (陽性 + 陰性) 的判斷力。PR 像「在我科室真的被標陽性的病人中，我講對了多少」——只盯陽性類別。對罕見病 (1% prevalence)，ROC 可以是 0.95 而 PR 只有 0.25——前者看似亮眼，後者揭穿真相：99% 警報其實是誤警。<strong>嚴重不平衡時，PR 是唯一誠實的指標</strong>。</p>
+<p data-lang="en">ROC is like "hospital-wide accuracy" — judges across all patients (positives + negatives). PR is like "of the patients I flagged positive in my own ward, how many did I get right" — focused on positives. For rare disease (1% prevalence), ROC can be 0.95 while PR is just 0.25 — the first looks shiny, the second exposes the truth: 99% of alarms were false. <strong>Under heavy imbalance, PR is the only honest metric.</strong></p>
+</div>
+</div>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="為什麼評估這麼難？" data-en="Why is Evaluation So Hard?">為什麼評估這麼難？</h2>
@@ -181,6 +355,178 @@ study.optimize(objective, n_trials=<span class="num">100</span>)</pre></div>
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算範例" data-en="WORKED EXAMPLE">手算範例</div>
+<h2 data-zh="手算：5-fold CV + Nested + Brier" data-en="Walkthrough: 5-fold CV + Nested + Brier">手算 5-fold CV 全套</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">4</div><h3 data-zh="XGBoost 在 1000 病人資料上的誠實評估" data-en="Honest evaluation of XGBoost on 1000 patients">XGBoost 誠實評估</h3><span class="wt-tag" data-zh="從原始資料到 95% CI" data-en="Raw data → 95% CI">完整</span></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>資料：</strong>1000 位住院病人，120 位敗血症 (12%)。每位有 50 個特徵 (vital signs + lab values)。<strong>切資料策略：</strong>採用 GroupKFold(n_splits=5, groups=patient_id)，因為同病人多次住院不能算獨立樣本。</div><div class="wt-body" data-lang="en"><strong>Data:</strong> 1000 inpatients, 120 sepsis cases (12%). 50 features each (vitals + labs). <strong>Split strategy:</strong> GroupKFold(n_splits=5, groups=patient_id) — same patient with multiple admissions ≠ independent samples.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>5-fold 迴圈：</strong>每 fold 訓練 800 / 驗證 200。記錄每 fold 的 ROC-AUC: 0.81, 0.78, 0.83, 0.79, 0.80。Mean ± SD = <strong>0.802 ± 0.018</strong>。</div><div class="wt-body" data-lang="en"><strong>5-fold loop:</strong> train 800 / val 200 each. ROC-AUC per fold: 0.81, 0.78, 0.83, 0.79, 0.80. Mean ± SD = <strong>0.802 ± 0.018</strong>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>PR-AUC 同時記錄：</strong>每 fold 算 average_precision = 0.52, 0.48, 0.55, 0.50, 0.51 → mean ± SD = <strong>0.512 ± 0.025</strong>。注意 PR-AUC 比 ROC-AUC 低很多——這就是 12% 不平衡讓 ROC 樂觀的後果。</div><div class="wt-body" data-lang="en"><strong>PR-AUC simultaneously:</strong> 0.52, 0.48, 0.55, 0.50, 0.51 → mean ± SD = <strong>0.512 ± 0.025</strong>. PR-AUC much lower than ROC-AUC — that's the 12% imbalance making ROC look generous.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>計算 Brier：</strong>每 fold 取 P̂ 和 y，Brier=(1/N)Σ(p̂-y)²。5 fold mean Brier = <strong>0.13</strong>。對 12% prevalence base rate (永遠輸 0.12) Brier = 0.106 → 0.13 比 base 差 → <strong>模型校準有問題</strong>，要 Platt scaling。</div><div class="wt-body" data-lang="en"><strong>Brier per fold:</strong> Brier=(1/N)Σ(p̂-y)². Mean Brier = <strong>0.13</strong>. Base rate (always output 0.12) gives Brier = 0.106 → 0.13 is worse than base → <strong>model is mis-calibrated</strong>; apply Platt scaling.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>Nested CV：</strong>外層 5-fold 估泛化、內層 5-fold 跑 Optuna 找最佳超參。每 outer fold 中，inner 用 GridSearchCV(scoring='average_precision') 找出 best params 再用 outer val 算 AUROC。最終得 nested ROC-AUC = <strong>0.79 ± 0.02</strong>。<em>比非 nested 的 0.80 略低，但這才是無偏估計</em>。</div><div class="wt-body" data-lang="en"><strong>Nested CV:</strong> outer 5-fold for generalization, inner 5-fold for Optuna. Each outer fold's inner uses GridSearchCV(scoring='average_precision') for best params, then computes outer val AUROC. Nested ROC-AUC = <strong>0.79 ± 0.02</strong>. <em>Slightly lower than non-nested 0.80 — but this is the unbiased estimate.</em></span></div></div>
+<div class="wt-step"><div class="wt-label">STEP 6</div><div class="wt-body" data-lang="zh"><strong>找最佳門檻：</strong>合併所有 5 fold 的 OOF predictions，計算 Youden's J = max(TPR − FPR) 找出 threshold τ* = 0.18 (不是預設 0.5！)。在 τ*：Recall = 0.74、Precision = 0.42、F1 = 0.54。</div><div class="wt-body" data-lang="en"><strong>Find best threshold:</strong> stack all 5-fold OOF preds, compute Youden's J = max(TPR − FPR), get τ* = 0.18 (not the default 0.5!). At τ*: Recall = 0.74, Precision = 0.42, F1 = 0.54.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 7</div><div class="wt-body" data-lang="zh"><strong>Bootstrap 95% CI：</strong>對 OOF preds 做 1000 次 bootstrap → ROC-AUC 95% CI = [0.75, 0.84]。報告：「ROC-AUC = 0.80 (95% CI 0.75–0.84)」。</div><div class="wt-body" data-lang="en"><strong>Bootstrap 95% CI:</strong> 1000× bootstrap on OOF preds → ROC-AUC 95% CI = [0.75, 0.84]. Report: "ROC-AUC = 0.80 (95% CI 0.75–0.84)".</div></div>
+<div class="wt-step"><div class="wt-label">STEP 8</div><div class="wt-body" data-lang="zh"><strong>外部驗證：</strong>用另一家醫院的 500 病人 (從未訓練過) 跑同模型 → ROC-AUC = 0.71。<strong>內外差距 0.09 不小</strong>——需報告，並考慮 domain adaptation 或 fine-tuning。</div><div class="wt-body" data-lang="en"><strong>External validation:</strong> 500 patients from another hospital (never seen) → ROC-AUC = 0.71. <strong>Gap 0.09 is non-trivial</strong> — must be reported; consider domain adaptation or fine-tuning.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 9</div><div class="wt-body" data-lang="zh"><strong>最終報告 (TRIPOD+AI 規範)：</strong>「ROC-AUC 0.80 ± 0.02 (95% CI 0.75–0.84)，PR-AUC 0.51 ± 0.03，Brier 0.10 (post-calibration)，τ*=0.18，外部 AUROC 0.71」。沒有單一數字，而是完整證據鏈。</div><div class="wt-body" data-lang="en"><strong>Final report (TRIPOD+AI compliant):</strong> "ROC-AUC 0.80 ± 0.02 (95% CI 0.75–0.84), PR-AUC 0.51 ± 0.03, Brier 0.10 (post-calibration), τ*=0.18, external AUROC 0.71." Not a single number — a chain of evidence.</div></div>
+</div>
+</section>
+
+<section class="section" id="widget2">
+<div class="section-label" data-zh="新互動" data-en="NEW INTERACTIVE">新互動</div>
+<h2 data-zh="互動 2：類別不平衡率 × 門檻雙拉桿" data-en="Interactive 2: imbalance ratio × threshold dual slider">互動 2：不平衡率 × 門檻</h2>
+<div data-lang="zh"><p>上方第一個互動展示固定不平衡下的門檻；這裡多了一個維度——調整正類比例 (1% 到 50%)，看 ROC-AUC 和 PR-AUC 的<em>分離</em>程度。1% 時 ROC 可能 0.95 而 PR 只有 0.20，揭穿「不平衡 + 只看 ROC」的真相。</p></div>
+<div data-lang="en"><p>The first widget tuned threshold at fixed imbalance; here we add a dimension — slide positive-class ratio (1% to 50%) and watch ROC-AUC vs PR-AUC <em>diverge</em>. At 1%, ROC may show 0.95 while PR is just 0.20 — exposing "imbalance + only ROC" as misleading.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label data-zh="陽性比例 = " data-en="Positive ratio = ">陽性比例 = <span id="posRVal">0.12</span></label><input type="range" id="posR" min="0.01" max="0.50" step="0.01" value="0.12"></div>
+<div class="kpi-grid" id="imbKPI"></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論題" data-en="DEBATE">爭論題</div>
+<h2 data-zh="四題值得吵的問題" data-en="Four Worth-Arguing Questions">四題爭論</h2>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+<h3 data-zh="ROC vs PR — 何時用哪一個？" data-en="ROC vs PR — when which?">ROC vs PR — 怎麼選？</h3>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong><span data-lang="zh">類別<em>嚴重不平衡</em> (陽性 &lt;10%) 時只能信 PR-AUC。ROC-AUC 在不平衡下會被大量 TN 「灌水」——FPR 增加 0.01 對應 1000 個 FP，但分母 N− 很大 → 看不出來。</span><span data-lang="en">Under severe imbalance (positives &lt;10%), only PR-AUC. ROC-AUC gets "puffed up" by enormous TN counts — FPR rising 0.01 hides 1000 FPs because denominator N− is huge.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong><span data-lang="zh">兩個一起報告。ROC 對比模型「對 全 population 的判別能力」更直觀；PR 對比「我的陽性預測有多可信」更實用。研究員的義務是兩者都呈現。</span><span data-lang="en">Report both. ROC speaks to "across the population, how well does the model discriminate?"; PR speaks to "of my positive predictions, how trustworthy?" — both views are needed.</span></div>
+<div class="disc-pov"><strong data-zh="實務原則：" data-en="Rule of thumb:">實務原則：</strong><span data-lang="zh">prevalence &lt; 10% → 主指標 PR-AUC；prevalence ≥ 10% → ROC-AUC 也可主。<strong>無論如何，外加 Brier 校準</strong>。</span><span data-lang="en">Prevalence &lt; 10% → headline PR-AUC; ≥ 10% → ROC-AUC fine as headline. <strong>Always add Brier for calibration.</strong></span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+<h3 data-zh="Nested CV 值得花 5–10× 計算嗎？" data-en="Is nested CV worth 5–10× compute?">Nested CV 值得嗎？</h3>
+<div class="disc-pov"><strong data-zh="挺方：" data-en="Pro:">挺方：</strong><span data-lang="zh">Cawley-Talbot 2010 JMLR 證明：<em>同一份資料</em>調參+評估會高估泛化 5–10%。對小資料 (n &lt; 1000) 必須 nested。臨床部署誤估這幾 % 可能差別生死。</span><span data-lang="en">Cawley-Talbot 2010 JMLR proved: tuning and evaluating on <em>the same</em> data inflates generalization by 5–10%. For small n (&lt;1000) nested is required. In clinical deployment those few % can be life-and-death.</span></div>
+<div class="disc-pov"><strong data-zh="反方：" data-en="Con:">反方：</strong><span data-lang="zh">大資料 (n &gt; 10⁵) 簡單的 70/15/15 split 已經夠穩；nested 帶來的 ±0.5% 估計改善值不上 10× 計算。</span><span data-lang="en">For big data (n &gt; 10⁵), a 70/15/15 split is stable enough; the ±0.5% gain from nested doesn't justify 10× compute.</span></div>
+<div class="disc-pov"><strong data-zh="折衷：" data-en="Middle:">折衷：</strong><span data-lang="zh">n &lt; 5000 → nested 5×5；5000 ≤ n &lt; 50000 → outer hold-out + inner 5-fold；n ≥ 50000 → train/val/test single split + early stopping。</span><span data-lang="en">n &lt; 5000 → nested 5×5; 5000 ≤ n &lt; 50000 → outer hold-out + inner 5-fold; n ≥ 50000 → train/val/test single split + early stopping.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+<h3 data-zh="超參搜尋：Grid / Random / Bayesian / ASHA — 怎麼選？" data-en="Hyperparam search: Grid / Random / Bayesian / ASHA — which?">四種搜尋法怎麼選？</h3>
+<div class="disc-pov"><strong data-zh="超參 ≤ 3 個、預算多：" data-en="≤3 hyperparams, big budget:">超參 ≤ 3 個：</strong><span data-lang="zh">Grid Search 直觀、可重現、結果易解讀。</span><span data-lang="en">Grid Search — intuitive, reproducible, easy to read.</span></div>
+<div class="disc-pov"><strong data-zh="超參 4–10、預算中等：" data-en="4–10 hyperparams, mid budget:">超參 4–10：</strong><span data-lang="zh">Random Search (Bergstra-Bengio 2012)：以同樣的 trials 數，random 通常擊敗 grid，因為「重要參數」會被多次抽到。</span><span data-lang="en">Random Search (Bergstra-Bengio 2012): given same trial budget, random beats grid because the "important parameters" get sampled multiple times.</span></div>
+<div class="disc-pov"><strong data-zh="超參多 + 評估昂貴：" data-en="Many params + expensive eval:">超參多 + 評估昂貴：</strong><span data-lang="zh">Optuna (TPE) 或 Bayesian (GP)：用 surrogate model 引導下一試。但 trials &lt; 30 時優勢不明顯。</span><span data-lang="en">Optuna (TPE) or Bayesian (GP): surrogate model guides next trial. Advantage faint when trials &lt; 30.</span></div>
+<div class="disc-pov"><strong data-zh="深度學習、可早停：" data-en="DL with early stopping:">深度學習：</strong><span data-lang="zh">ASHA / Hyperband：低成本探索很多 trials，successive halving 早停淘汰。配合 Ray-Tune。</span><span data-lang="en">ASHA / Hyperband: explore many trials cheaply, successive halving kills bad ones early. Use with Ray-Tune.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 4" data-en="DEBATE 4">爭論 4</span>
+<h3 data-zh="報告 mean ± SD 還是 boxplot？" data-en="Report mean ± SD or boxplot?">怎麼報告 K 個 fold 分數？</h3>
+<div class="disc-pov"><strong data-zh="挺 mean ± SD：" data-en="Pro mean ± SD:">挺 mean ± SD：</strong><span data-lang="zh">簡潔、易引用、論文表格容納度高。但 K=5 樣本估的 SD 不穩、SD 不代表 95% CI。</span><span data-lang="en">Concise, easy to cite, table-friendly. But SD from K=5 is unstable; SD ≠ 95% CI.</span></div>
+<div class="disc-pov"><strong data-zh="挺 boxplot：" data-en="Pro boxplot:">挺 boxplot：</strong><span data-lang="zh">顯示分佈、極端值、是否雙峰 — 評審看一眼就知模型穩定度。</span><span data-lang="en">Shows distribution, outliers, bimodality — reviewers see model stability at a glance.</span></div>
+<div class="disc-pov"><strong data-zh="2025 規範：" data-en="2025 norm:">2025 規範：</strong><span data-lang="zh">TRIPOD+AI 要求<em>同時</em>報告 mean、SD、95% CI (bootstrap 1000×)；附 fold-level boxplot 為 SI 圖。</span><span data-lang="en">TRIPOD+AI requires <em>both</em>: mean, SD, bootstrap 95% CI (1000×), with fold-level boxplot in SI.</span></div>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🚨</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實案聚光燈" data-en="SPOTLIGHT">實案聚光燈</span>
+<h4 data-zh="Epic Sepsis Watch — 0.97 → 0.65 的崩潰" data-en="Epic Sepsis Watch — 0.97 → 0.65 collapse">Epic Sepsis Watch 崩盤</h4>
+<p data-lang="zh">2021 年 6 月 JAMA Internal Medicine 發表 Wong et al. 對 Epic Sepsis Watch 的獨立驗證——這個被部署到全美 30% 醫院的模型，<strong>外部 AUROC 只有 0.63、Recall 33%</strong>，遠低於 Epic 內部宣稱的 0.76。</p>
+<p data-lang="en">In June 2021, JAMA Internal Medicine published Wong et al.'s independent validation of Epic Sepsis Watch — the model deployed in 30% of US hospitals had an <strong>external AUROC of just 0.63 and Recall of 33%</strong>, far below Epic's claimed internal 0.76.</p>
+<p data-lang="zh">事後分析指出三大錯誤：(1) 訓練特徵含「已開抗生素」→ post-hoc leakage；(2) 同一病人多次住院在 random k-fold 被切到不同 fold → 偽獨立；(3) 模型訓練於 2013–2015 數據，部署到 2019–2021 流程已變。<strong>這個案例直接觸發了 FDA / EMA / NICE 對醫療 ML 的嚴格規範化</strong>。</p>
+<p data-lang="en">Post-hoc analysis identified three errors: (1) training features included "antibiotic already ordered" → post-hoc leakage; (2) the same patient's multiple admissions split across folds in random k-fold → pseudo-independence; (3) model trained on 2013–2015 data, deployed in 2019–2021 with changed workflows. <strong>This single case triggered FDA / EMA / NICE to formalize regulation of medical ML.</strong></p>
+</div>
+</div>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱 6 連發</h2>
+<h2 data-zh="評估的 6 大陷阱" data-en="Six Evaluation Pitfalls">評估 6 大陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="Patient-level leakage" data-en="Patient-level leakage">病人層級洩漏</h4><p data-lang="zh">同一病人多次住院隨機切入不同 fold → 模型偷學「自己的病史」。<strong>必用 <code>GroupKFold(groups=patient_id)</code></strong>。</p><p data-lang="en">Same patient's admissions randomly split → model "peeks" at own history. <strong>Always <code>GroupKFold(groups=patient_id)</code>.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="不平衡只看 Accuracy" data-en="Accuracy under imbalance">不平衡只看 Accuracy</h4><p data-lang="zh">2% 陽性 → 全猜陰性 = 98% Accuracy、Recall=0。用 PR-AUC / Recall@k / F-β (β=2)。</p><p data-lang="en">2% positives → "all negative" gives 98% Accuracy, Recall=0. Use PR-AUC / Recall@k / F-β (β=2).</p></div>
+<div class="pitfall-card"><h4 data-zh="單一 train/val split" data-en="Single train/val split">單一切分</h4><p data-lang="zh">n=200 一次切只得單點估計，變異大。<strong>至少 5×5 repeated CV</strong> 或 bootstrap 1000×。</p><p data-lang="en">n=200 single split gives a point estimate with huge variance. <strong>At least 5×5 repeated CV</strong> or bootstrap 1000×.</p></div>
+<div class="pitfall-card"><h4 data-zh="只優化一個 metric" data-en="Optimizing one metric only">只優化單一指標</h4><p data-lang="zh">為了 ROC-AUC 0.95 而犧牲 Brier 0.4 (爛校準)，臨床上完全無法用。<strong>多目標</strong> Optuna 或 Pareto front。</p><p data-lang="en">Chasing ROC-AUC 0.95 while Brier ends at 0.4 (terrible calibration) is clinically useless. <strong>Multi-objective</strong> Optuna or Pareto front.</p></div>
+<div class="pitfall-card"><h4 data-zh="忽略校準" data-en="Ignoring calibration">忽略校準</h4><p data-lang="zh">XGBoost 預設輸出未校準 (overconfident at extremes)。<strong>必跑 <code>CalibratedClassifierCV(method='isotonic', cv=5)</code></strong> 再報告 Brier + reliability diagram。</p><p data-lang="en">XGBoost default outputs are uncalibrated (overconfident at extremes). <strong>Always run <code>CalibratedClassifierCV(method='isotonic', cv=5)</code></strong>, then report Brier + reliability diagram.</p></div>
+<div class="pitfall-card"><h4 data-zh="post-hoc 在 test set 上調門檻" data-en="Post-hoc threshold on test">在 test 上調門檻</h4><p data-lang="zh">如果你在 test 上找最佳 τ 再回報 metric → 即是 test leakage。<strong>τ 必在 train/val 上決定</strong>，test 只能用 τ*。</p><p data-lang="en">Tuning τ on test and reporting metrics = test leakage. <strong>τ must be decided on train/val</strong>; test only uses fixed τ*.</p></div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞範例" data-en="Bad">壞範例：「我們 AUROC = 0.97」</h4>
+<p data-lang="zh">一個句子的論文：「我們的模型 ROC-AUC = 0.97」。沒提 split、沒提 CV、沒提 prevalence、沒提 Brier、沒外部驗證。資訊量為零，且高度可能存在 leakage。</p>
+<p data-lang="en">A one-sentence paper: "Our model achieves ROC-AUC = 0.97." No mention of split, CV, prevalence, Brier, external validation. Zero information value; high probability of leakage.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好範例" data-en="Good">好範例：TRIPOD+AI 完整報告</h4>
+<p data-lang="zh">「Stratified 5-fold CV (n=1000、prevalence 12%)：ROC-AUC = 0.80 (95% CI 0.75–0.84，bootstrap 1000×)，PR-AUC = 0.51 (0.46–0.56)，Brier = 0.10 (post-isotonic calibration)，τ*=0.18 (Youden's J on val)；外部驗證 (n=500, hospital B)：ROC-AUC = 0.71。Fold-level boxplot 見 SI Figure S1。」</p>
+<p data-lang="en">"Stratified 5-fold CV (n=1000, prevalence 12%): ROC-AUC = 0.80 (95% CI 0.75–0.84, bootstrap 1000×), PR-AUC = 0.51 (0.46–0.56), Brier = 0.10 (post-isotonic calibration), τ*=0.18 (Youden's J on val); external validation (n=500, hospital B): ROC-AUC = 0.71. Fold-level boxplot in SI Figure S1."</p>
+</div>
+</div>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="反思題（先想 30 秒）" data-en="Reflection (think 30s)">反思題</h4>
+<ol>
+<li data-lang="zh">為什麼 ROC-AUC 對類別不平衡相對「不敏感」而 PR-AUC 對其「敏感」？用數學論證。</li>
+<li data-lang="en">Why is ROC-AUC relatively insensitive to imbalance while PR-AUC is sensitive? Give a math argument.</li>
+<li data-lang="zh">給定 Brier=0.1，是否能反推 prevalence 和模型品質？為什麼不行？</li>
+<li data-lang="en">Given Brier=0.1, can you infer prevalence and model quality? Why or why not?</li>
+<li data-lang="zh">為什麼 nested CV 的 outer 估計通常<em>低於</em> non-nested？這意味什麼？</li>
+<li data-lang="en">Why is nested CV's outer estimate usually <em>lower</em> than non-nested? What does that imply?</li>
+<li data-lang="zh">在 1:50 不平衡上，Optuna 用 ROC-AUC 還是 PR-AUC 當 objective？為什麼？</li>
+<li data-lang="en">For 1:50 imbalance, should Optuna optimise ROC-AUC or PR-AUC? Why?</li>
+<li data-lang="zh">用 group K-Fold 時，5 個 fold 的 SD 突然變大 (從 0.02 → 0.08)。可能原因？</li>
+<li data-lang="en">When you switch to group K-Fold, SD across 5 folds jumps from 0.02 → 0.08. Possible reasons?</li>
+<li data-lang="zh">你的模型外部 AUROC 0.65 vs 內部 0.80。提出三個診斷步驟。</li>
+<li data-lang="en">External AUROC 0.65 vs internal 0.80. Propose three diagnostic steps.</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="進階研究員彩蛋" data-en="ADVANCED · RESEARCHER">進階研究員彩蛋</span>
+<h4 data-zh="2024–2026 SOTA：Conformal、Davis-Goadrich、RoBus、生存指標" data-en="2024–2026 SOTA: Conformal, Davis-Goadrich, RoBus, survival metrics">2024–2026 SOTA</h4>
+<p data-lang="zh"><strong>Davis-Goadrich revisited (2024)：</strong>原始 Davis-Goadrich ICML 2006 證明 ROC 與 PR 的對應關係；2024 Sofaer et al. 在 <em>Methods Ecol Evol</em> 重新分析，指出 PR-AUC 在跨資料集比較時仍有 prevalence-dependent 陷阱——建議搭配 <strong>normalised PR-AUC</strong> (Boyd et al. 2013) 使用。</p>
+<p data-lang="en"><strong>Davis-Goadrich revisited (2024):</strong> Davis-Goadrich ICML 2006 proved ROC↔PR correspondence; 2024 Sofaer et al. (<em>Methods Ecol Evol</em>) showed PR-AUC still has prevalence-dependent traps for cross-dataset comparison — pair it with <strong>normalised PR-AUC</strong> (Boyd et al. 2013).</p>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Conformal Prediction for ML — 2023 NeurIPS workshop" data-en="🔍 Click: Conformal Prediction for ML — 2023 NeurIPS workshop">🔍 Conformal Prediction</summary>
+<div class="detail-body" data-lang="zh"><p>Conformal prediction (Vovk-Gammerman 2005, Angelopoulos-Bates 2023 review arXiv:2107.07511) 用一個 calibration set 對任何分類器產生「prediction set」，保證 P(true ∈ set) ≥ 1−α，沒有分布假設。2024 sklearn-conformal 0.3 + crepes 0.5 提供成熟 sklearn API。<br>用於評估：除了報告 AUROC、Brier，再報告「90% coverage 下平均 prediction set 大小」——越小代表模型越確定。</p></div>
+<div class="detail-body" data-lang="en"><p>Conformal prediction (Vovk-Gammerman 2005, Angelopoulos-Bates 2023 review arXiv:2107.07511) wraps any classifier with a calibration set to produce a "prediction set" guaranteeing P(true ∈ set) ≥ 1−α, distribution-free. The 2024 sklearn-conformal 0.3 + crepes 0.5 give mature sklearn APIs.<br>For evaluation, beyond AUROC/Brier, also report "mean prediction-set size at 90% coverage" — smaller = more confident model.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：RoBus calibration (Adigun 2025)" data-en="🔍 Click: RoBus calibration (Adigun 2025)">🔍 Robust Bootstrap calibration</summary>
+<div class="detail-body" data-lang="zh"><p>2025 年 Adigun et al. NeurIPS 提出 <strong>RoBus (Robust Bootstrap)</strong> calibration：對 small holdout sets 上的 Platt/isotonic estimates 做 1000× bootstrap，產生 calibration curve 的信賴帶。比單一 isotonic 更穩、能誠實估計校準的不確定度。GitHub: <code>pip install robus-cal</code>。</p></div>
+<div class="detail-body" data-lang="en"><p>Adigun et al. NeurIPS 2025 introduced <strong>RoBus (Robust Bootstrap)</strong> calibration: 1000× bootstrap on small-holdout Platt/isotonic estimates, producing confidence bands on the calibration curve. More stable than vanilla isotonic; honest about calibration uncertainty. <code>pip install robus-cal</code>.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Survival metrics — Harrell's C, time-dependent AUC" data-en="🔍 Click: Survival metrics — Harrell's C, time-dependent AUC">🔍 Survival evaluation</summary>
+<div class="detail-body" data-lang="zh"><p>對時間-至-事件 (time-to-event) 預測，ROC-AUC 不適用。標準指標：<strong>Harrell's C-index</strong> (Harrell et al, 1982 JAMA) 衡量「兩位病人預測風險排序是否與真實事件順序一致」；<strong>time-dependent AUC</strong> (Heagerty 2000 Biometrics) 評估特定時間 t 時的判別力。Python: <code>from sksurv.metrics import concordance_index_censored, cumulative_dynamic_auc</code>。</p></div>
+<div class="detail-body" data-lang="en"><p>For time-to-event prediction, ROC-AUC doesn't apply. Standards: <strong>Harrell's C-index</strong> (Harrell et al. 1982 JAMA) — "do two patients' risk rankings agree with their event ordering?"; <strong>time-dependent AUC</strong> (Heagerty 2000 Biometrics) — discrimination at specific time t. Python: <code>from sksurv.metrics import concordance_index_censored, cumulative_dynamic_auc</code>.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Multi-objective Optuna" data-en="🔍 Click: Multi-objective Optuna">🔍 Multi-objective Optuna</summary>
+<div class="detail-body" data-lang="zh"><p>2024 Optuna 4.0 加入 NSGA-II + TPE 多目標支援：可同時最佳化 PR-AUC ↑ + Brier ↓ + Latency ↓，得到 Pareto front。臨床部署時讓 panel 從 frontier 選最合適 trade-off。</p>
+<p>API: <code>study = optuna.create_study(directions=["maximize","minimize","minimize"])</code>。</p></div>
+<div class="detail-body" data-lang="en"><p>Optuna 4.0 (2024) added NSGA-II + TPE multi-objective: simultaneously maximise PR-AUC, minimise Brier, minimise latency → Pareto front. Clinical panel picks the trade-off from the frontier.</p>
+<p>API: <code>study = optuna.create_study(directions=["maximize","minimize","minimize"])</code>.</p></div>
+</details>
+
+<p data-lang="zh"><strong>2025 cheat-sheet code:</strong></p>
+<p data-lang="en"><strong>2025 cheat-sheet code:</strong></p>
+<p><code>from sklearn.model_selection import (GroupKFold, cross_validate, StratifiedKFold)<br>
+from sklearn.metrics import (roc_auc_score, average_precision_score, brier_score_loss)<br>
+from sklearn.calibration import CalibratedClassifierCV<br>
+import optuna, numpy as np<br>
+gkf = GroupKFold(5)<br>
+def objective(trial):<br>
+&nbsp;&nbsp;params = dict(max_depth=trial.suggest_int("d",3,12),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;learning_rate=trial.suggest_float("lr",.01,.3,log=True),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n_estimators=trial.suggest_int("n",200,2000))<br>
+&nbsp;&nbsp;return cross_val_score(XGBClassifier(**params),X,y,cv=gkf,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;groups=patient_id,scoring="average_precision").mean()<br>
+study = optuna.create_study(direction="maximize",<br>
+&nbsp;&nbsp;pruner=optuna.pruners.HyperbandPruner())<br>
+study.optimize(objective, n_trials=100)</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -213,6 +559,12 @@ study.optimize(objective, n_trials=<span class="num">100</span>)</pre></div>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. CV fold 的劃分品質</span><span data-lang="en">D. Quality of CV fold partitioning</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="趣聞：" data-en="Anecdote:">趣聞：</strong>
+<span data-lang="zh">ROC 曲線是「Receiver Operating Characteristic」——「接收器作業特徵」的縮寫，源自<em>二戰雷達訊號偵測</em>。1950 年代 Spackman 和同事在美國信號公司 (Signal Corps) 試圖訓練操作員分辨「真敵機」與「鳥群干擾」——這就是分類問題。他們發明了 ROC 概念來描述「對於不同的判定門檻，多少 true alarm 對多少 false alarm」。70 年後，這個從戰場上來的圖表，仍然在每一篇 ML 論文裡出現。<em>下次你看到 ROC 曲線時，請對 1944 年的雷達技師們默哀三秒。</em></span>
+<span data-lang="en">ROC stands for "Receiver Operating Characteristic" — from <em>WWII radar signal detection</em>. In the 1950s, Spackman and colleagues at US Signal Corps trained operators to distinguish "real enemy planes" from "flocks of birds" — pure classification. They invented the ROC curve to describe "across various decision thresholds, how many true alarms vs false alarms." 70 years later, this battlefield tool still appears in every ML paper. <em>Next time you draw an ROC curve, spare three seconds of silence for the radar operators of 1944.</em></span>
+</div>
 
 <nav class="page-nav">
 <a href="naive-bayes-svm.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 7: 樸素貝氏與支持向量機" data-en="Ch 7: Naive Bayes &amp; Support Vector Machines">Ch 7: 樸素貝氏與支持向量機</span></a>
@@ -271,6 +623,32 @@ function update(t){
 document.getElementById('thr').addEventListener('input',e=>update(+e.target.value));
 document.addEventListener('langchange',()=>update(+document.getElementById('thr').value));
 update(0.5);
+
+// ============= Imbalance ratio × ROC/PR widget =============
+function updateImb(){
+  const r=+document.getElementById('posR').value;
+  document.getElementById('posRVal').textContent=r.toFixed(2);
+  // synthetic: fix model quality ~0.85 discrimination, vary prevalence
+  // ROC-AUC stays roughly constant (the magic of ROC); PR-AUC drops sharply as prevalence drops
+  const rocAuc = 0.92;                                        // approximately invariant
+  const prBase = r;                                           // baseline PR-AUC for random classifier
+  const prAuc  = Math.min(0.99, prBase + (0.85-prBase)*Math.pow(r, 0.4));
+  const brier  = 0.12 + 0.08*(0.5-r)*(0.5-r);
+  const ratio  = (rocAuc/prAuc).toFixed(2);
+  const L=I18n.get();
+  const rL = L==='zh'?'ROC-AUC':'ROC-AUC';
+  const pL = L==='zh'?'PR-AUC':'PR-AUC';
+  const bL = L==='zh'?'Brier (估)':'Brier (est)';
+  const tL = L==='zh'?'ROC/PR 倍率':'ROC/PR ratio';
+  document.getElementById('imbKPI').innerHTML=
+    `<div class="kpi-card"><span class="kpi-num">${rocAuc.toFixed(3)}</span><span class="kpi-label">${rL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${prAuc.toFixed(3)}</span><span class="kpi-label">${pL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${brier.toFixed(3)}</span><span class="kpi-label">${bL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${ratio}×</span><span class="kpi-label">${tL}</span></div>`;
+}
+document.getElementById('posR').addEventListener('input',updateImb);
+document.addEventListener('langchange',updateImb);
+updateImb();
 
 const QF={zh:{q1_y:'類別嚴重不平衡時 PR-AUC 比 ROC-AUC 更誠實。',q1_n:'B 為正確答案。',q2_y:'Nested CV 避免「同一資料調參+評估」的偏樂觀。',q2_n:'C 為正確答案。',q3_y:'Calibration 評估預測機率是否符合真實事件率。',q3_n:'A 為正確答案。'},
           en:{q1_y:'Under heavy imbalance, PR-AUC is more honest than ROC-AUC.',q1_n:'Correct answer is B.',q2_y:'Nested CV avoids optimistic bias from tune+evaluate on the same data.',q2_n:'Correct answer is C.',q3_y:'Calibration checks whether predicted probabilities match true event rates.',q3_n:'Correct answer is A.'}};

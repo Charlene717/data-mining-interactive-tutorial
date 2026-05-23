@@ -18,6 +18,197 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽（閱讀時間 ~22 分）" data-en="Chapter map (reading time ~22 min)">本章導覽（閱讀時間 ~22 分）</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="初學者" data-en="Beginner">初學者</span>
+<span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+<span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+<span class="pill teal">GSP</span><span class="pill amber">PrefixSpan</span><span class="pill violet">SPADE</span><span class="pill rose">PM4Py</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場故事：ICU 敗血症的 5 步預兆" data-en="Story: ICU sepsis's 5-step warning">開場故事：ICU 敗血症的 5 步預兆</a></li>
+<li><a href="#glossary" data-zh="核心詞彙表（雙語）" data-en="Glossary (bilingual)">核心詞彙表（雙語）</a></li>
+<li><a href="#history" data-zh="演算法簡史 1995–2024" data-en="Algorithm timeline 1995–2024">演算法簡史 1995–2024</a></li>
+<li><a href="#walkthrough" data-zh="PrefixSpan 手算：4 個序列" data-en="PrefixSpan walkthrough: 4 sequences">PrefixSpan 手算：4 個序列</a></li>
+<li><a href="#discussion" data-zh="討論：序列 vs 流程探勘" data-en="Discussion: sequence vs process">討論：序列 vs 流程探勘</a></li>
+<li><a href="#pitfalls" data-zh="常見陷阱" data-en="Common pitfalls">常見陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題" data-en="Reflection questions">反思題</a></li>
+<li><a href="#advanced" data-zh="進階：PM4Py + 流式 + LLM" data-en="Advanced: PM4Py + streaming + LLM">進階：PM4Py + 流式 + LLM</a></li>
+</ol>
+</div>
+
+<section id="story" class="section">
+<div class="section-label" data-zh="故事開場" data-en="OPENING STORY">故事開場</div>
+<h2 data-zh="場景：ICU 的 24 小時黃金窗口" data-en="Scene: ICU's 24-hour Golden Window">場景：ICU 的 24 小時黃金窗口</h2>
+<div class="story-block">
+<span class="story-tag">SCENE · ICU 2018</span>
+<h3 data-zh="敗血症發作前的 5 步指紋" data-en="The 5-step fingerprint before sepsis">敗血症發作前的 5 步指紋</h3>
+<div data-lang="zh">
+<p>Mayo Clinic 的 ICU 研究員 Dr. Chen 看著螢幕上 12,000 位過去 5 年的病人事件序列：抽血、生命徵象、用藥、報告⋯⋯她要找的是「敗血症 (sepsis) 發作前 24 小時的共通模式」。<strong>關聯規則探勘失敗了</strong>——它能告訴你「乳酸 + 心搏過速 + 體溫 + 血壓下降 + 白血球升高」共現，但不知道哪個先發生。在重症照護裡，順序就是一切。</p>
+<p>她改用 PrefixSpan。輸入 12,000 個事件序列，min_support = 0.5。第一個結果讓她屏住呼吸：⟨乳酸 ≥ 2 → 心搏 &gt; 100 → 體溫 &gt; 38°C → MAP &lt; 65 → SOFA ≥ 2⟩——支援度 78%，意思是 78% 的後續敗血症病人，在發作前 24 小時都依「這個順序」走過這 5 步。前期 4 步若觸發，平均距離正式診斷還有 11.3 小時——足夠介入。</p>
+<p>她把這個 5-event sequence 包裝成早期預警分數 (EWS)，加入 ICU 的監測系統。一年後的回顧顯示：敗血症相關死亡率降低 14%、ICU 住院日減少平均 1.8 天。<strong>關聯規則告訴你「什麼一起發生」、序列模式告訴你「按什麼順序」——而順序，常常是時間窗口的關鍵。</strong></p>
+</div>
+<div data-lang="en">
+<p>Mayo Clinic ICU researcher Dr. Chen is staring at 12,000 patient event sequences from the past 5 years: blood draws, vitals, meds, reports. Her question: "Is there a common pattern in the 24 h before sepsis onset?" <strong>Association mining failed</strong> — it could tell her "lactate + tachycardia + fever + hypotension + leukocytosis" co-occur, but couldn't say which came first. In critical care, order is everything.</p>
+<p>She switches to PrefixSpan. Inputs 12,000 event sequences with min_support = 0.5. The first result makes her hold her breath: ⟨lactate ≥ 2 → HR &gt; 100 → temp &gt; 38°C → MAP &lt; 65 → SOFA ≥ 2⟩ — support 78%, meaning 78% of patients who later developed sepsis went through these 5 steps in <em>this order</em> in the prior 24 hours. The first 4 steps trigger an average of 11.3 hours before formal diagnosis — enough lead time to intervene.</p>
+<p>She wraps the 5-event sequence into an Early Warning Score (EWS), integrates it into the ICU monitoring system. One year later: sepsis-related mortality down 14%, ICU LOS down 1.8 days on average. <strong>Association rules tell you what co-occurs; sequence patterns tell you the order — and order is often the key to the intervention window.</strong></p>
+</div>
+</div>
+</section>
+
+<section id="glossary" class="section">
+<div class="section-label" data-zh="核心詞彙" data-en="GLOSSARY">核心詞彙</div>
+<h2 data-zh="12 個關鍵術語（給每一種讀者）" data-en="12 Key Terms (for every reader)">12 個關鍵術語</h2>
+<div class="glossary-grid">
+<div class="glossary-card">
+<div class="term-en">Sequence database</div><div class="term-zh">序列資料庫</div>
+<div class="term-kid" data-lang="zh">每個人都有一串「他做過什麼、按什麼順序」的清單。</div>
+<div class="term-kid" data-lang="en">A list of "what each person did, in what order".</div>
+<div class="term-tech" data-lang="zh">D = {S_1, ..., S_N}，每 S_i = ⟨I_1, I_2, ...⟩ 是 timestamp 順序的 itemset 序列。Bio 例：病人事件、scRNA-seq 時間軸、單細胞發育軌跡。</div>
+<div class="term-tech" data-lang="en">D = {S_1, ..., S_N} where each S_i = ⟨I_1, I_2, ...⟩ is an ordered itemset sequence. Bio examples: patient events, time-stamped scRNA-seq, developmental trajectories.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Subsequence</div><div class="term-zh">子序列</div>
+<div class="term-kid" data-lang="zh">原序列「跳著拿」幾個 itemset，順序不變——這就是子序列。</div>
+<div class="term-kid" data-lang="en">Pick some itemsets from the original sequence, keep their order — that's a subsequence.</div>
+<div class="term-tech" data-lang="zh">P = ⟨P_1, ..., P_m⟩ 是 S = ⟨S_1, ..., S_n⟩ 的子序列，當存在 1 ≤ j_1 &lt; ... &lt; j_m ≤ n 使 P_k ⊆ S_{j_k}。</div>
+<div class="term-tech" data-lang="en">P = ⟨P_1, ..., P_m⟩ is a subsequence of S = ⟨S_1, ..., S_n⟩ iff there exist 1 ≤ j_1 &lt; ... &lt; j_m ≤ n with P_k ⊆ S_{j_k}.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Sequence support</div><div class="term-zh">序列支援度</div>
+<div class="term-kid" data-lang="zh">這個小順序在資料庫裡幾位人「走過」？</div>
+<div class="term-kid" data-lang="en">How many people in the DB went through this little order?</div>
+<div class="term-tech" data-lang="zh">supp(P) = |{S ∈ D : P ⊆ S as subsequence}| / |D|。注意計算的是「序列數」非「事件數」。</div>
+<div class="term-tech" data-lang="en">supp(P) = |{S ∈ D : P ⊆ S as subsequence}| / |D|. Counts <em>sequences</em>, not events.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">GSP</div><div class="term-zh">GSP</div>
+<div class="term-kid" data-lang="zh">序列版的 Apriori：逐層產生候選順序、過濾。</div>
+<div class="term-kid" data-lang="en">Apriori for sequences: generate-then-test, level by level.</div>
+<div class="term-tech" data-lang="zh">Generalized Sequential Patterns (Srikant-Agrawal 1996)；候選由 (k-1)-pattern 自連產生，可加 sliding window / min-gap / max-gap 時序限制。</div>
+<div class="term-tech" data-lang="en">Generalized Sequential Patterns (Srikant-Agrawal 1996); candidates from self-join of (k-1)-patterns; supports sliding window / min-gap / max-gap temporal constraints.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">SPADE</div><div class="term-zh">SPADE</div>
+<div class="term-kid" data-lang="zh">每個 item 記它「在哪個序列、哪個位置」出現——交集就知道共現順序。</div>
+<div class="term-kid" data-lang="en">Each item lists "which sequence, which position" — intersect lists to find co-order.</div>
+<div class="term-tech" data-lang="zh">Zaki 2001（Machine Learning 42）；垂直 id-list = {(sid, eid)}，supp 由 id-list 交集計算。比 GSP 快 1.5–3×。</div>
+<div class="term-tech" data-lang="en">Zaki 2001 (Machine Learning 42); vertical id-list = {(sid, eid)}, support via id-list intersection. 1.5–3× faster than GSP.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">PrefixSpan</div><div class="term-zh">PrefixSpan</div>
+<div class="term-kid" data-lang="zh">挑一個常見開頭，把每個序列「砍頭」只看後面，再遞迴。</div>
+<div class="term-kid" data-lang="en">Pick a frequent prefix, chop each sequence to "what comes after", recurse.</div>
+<div class="term-tech" data-lang="zh">Pei et al. 2001（ICDE）；pattern-growth + projected databases，無候選產生。長序列效率最佳；FP-Growth 的序列對應版本。</div>
+<div class="term-tech" data-lang="en">Pei et al. 2001 (ICDE); pattern-growth + projected databases, no candidate generation. Best on long sequences; the sequence-data analogue of FP-Growth.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Projected database</div><div class="term-zh">投影資料庫</div>
+<div class="term-kid" data-lang="zh">給一個前綴，把每個序列「砍掉開頭」只留後面那段——就是這個前綴的「世界」。</div>
+<div class="term-kid" data-lang="en">Given a prefix, chop each sequence to "what came after" — that's the prefix's "world".</div>
+<div class="term-tech" data-lang="zh">D|⟨α⟩ = {S' : S' = S 砍 α 後的後綴}。PrefixSpan 在 D|⟨α⟩ 上遞迴找 ⟨α, x⟩ 的 frequent extension。記憶體會隨深度膨脹。</div>
+<div class="term-tech" data-lang="en">D|⟨α⟩ = {S' : S' = suffix of S after α}. PrefixSpan recurses on D|⟨α⟩ to find frequent extensions ⟨α, x⟩. Memory grows with depth.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Closed sequential pattern</div><div class="term-zh">閉合序列模式</div>
+<div class="term-kid" data-lang="zh">沒有更長的「同樣常見」延伸——是該支援度的代表。</div>
+<div class="term-kid" data-lang="en">No longer extension with the same support — the representative at that level.</div>
+<div class="term-tech" data-lang="zh">P closed iff ∀Q ⊃ P (with P subsequence of Q), supp(Q) &lt; supp(P)。CloSpan (Yan-Han-Afshar 2003) 高效輸出。無資訊損失但大幅壓縮。</div>
+<div class="term-tech" data-lang="en">P closed iff ∀Q ⊃ P (with P as subsequence of Q), supp(Q) &lt; supp(P). CloSpan (Yan-Han-Afshar 2003) outputs efficiently. Lossless yet drastically compressed.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Process mining</div><div class="term-zh">流程探勘</div>
+<div class="term-kid" data-lang="zh">把事件記錄變成可執行的「流程圖」，有並行、有選擇、有循環。</div>
+<div class="term-kid" data-lang="en">Turn an event log into an executable workflow — with parallels, choices, and loops.</div>
+<div class="term-tech" data-lang="zh">van der Aalst 2004 起；輸入 event log (case_id, activity, timestamp)，輸出 Petri net 或 BPMN。可做 discovery、conformance、enhancement。</div>
+<div class="term-tech" data-lang="en">Started by van der Aalst 2004; input is event log (case_id, activity, timestamp), output is a Petri net or BPMN. Supports discovery, conformance, enhancement.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Alpha algorithm</div><div class="term-zh">α-演算法</div>
+<div class="term-kid" data-lang="zh">第一個從事件記錄推導流程圖的方法。</div>
+<div class="term-kid" data-lang="en">First algorithm to derive a workflow from event logs.</div>
+<div class="term-tech" data-lang="zh">van der Aalst-Weijters-Maruster 2004 (IEEE TKDE)；以 footprint matrix（&gt;, →, ∥, #）推導 Petri net 結構；對 noise 敏感。</div>
+<div class="term-tech" data-lang="en">van der Aalst-Weijters-Maruster 2004 (IEEE TKDE); derives Petri net structure from footprint matrix (&gt;, →, ∥, #); noise-sensitive.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Inductive miner</div><div class="term-zh">Inductive Miner</div>
+<div class="term-kid" data-lang="zh">用「分而治之」遞迴拆解事件記錄，保證輸出合理的流程圖。</div>
+<div class="term-kid" data-lang="en">Divide-and-conquer recursion that guarantees a sound workflow.</div>
+<div class="term-tech" data-lang="zh">Leemans-Fahland-van der Aalst 2013 (CAiSE)；遞迴在 directly-follows graph 上找 cuts (XOR/AND/Loop)；soundness guaranteed；對 noise 穩健。</div>
+<div class="term-tech" data-lang="en">Leemans-Fahland-van der Aalst 2013 (CAiSE); recursively finds cuts (XOR/AND/Loop) in the directly-follows graph; soundness guaranteed; noise-robust.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Conformance checking</div><div class="term-zh">合規性檢查</div>
+<div class="term-kid" data-lang="zh">每位病人實際的流程，跟「應該」的指引差多少？</div>
+<div class="term-kid" data-lang="en">How far is each patient's actual flow from the "should-be" guideline?</div>
+<div class="term-tech" data-lang="zh">給定 event log + reference model，計算 fitness (能 replay 的比例) + precision (model 是否過泛)。常用 token-based replay 或 alignment-based。PM4Py 提供 API。</div>
+<div class="term-tech" data-lang="en">Given event log + reference model, compute fitness (fraction replayable) + precision (whether the model is too permissive). Common methods: token-based replay, alignment-based. PM4Py exposes the API.</div>
+</div>
+</div>
+</section>
+
+<section id="history" class="section">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="序列模式探勘 + 流程探勘 簡史" data-en="A Short History of Sequential + Process Mining">序列 + 流程探勘 簡史</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1995</span><span class="tl-title" data-zh="Agrawal-Srikant 提出序列模式" data-en="Agrawal-Srikant introduce sequential patterns">Agrawal-Srikant 提出序列模式</span><span class="tl-desc" data-zh="ICDE 1995；定義 sequence support，與關聯規則並列為兩大早期 DM 任務。" data-en="ICDE 1995; defined sequence support, one of two early DM tasks alongside association rules."></span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="GSP：序列版 Apriori" data-en="GSP: sequence Apriori">GSP：序列版 Apriori</span><span class="tl-desc" data-zh="Srikant-Agrawal EDBT 1996；加入 sliding window / min-gap / max-gap 時序限制。" data-en="Srikant-Agrawal EDBT 1996; added sliding window / min-gap / max-gap constraints."></span></div>
+<div class="timeline-item"><span class="tl-year">2001</span><span class="tl-title" data-zh="Zaki：SPADE 垂直 id-list" data-en="Zaki: SPADE vertical id-list">Zaki：SPADE 垂直 id-list</span><span class="tl-desc" data-zh="Machine Learning 42；id-list 交集計算 support。" data-en="Machine Learning 42; computes support via id-list intersection."></span></div>
+<div class="timeline-item"><span class="tl-year">2001</span><span class="tl-title" data-zh="Pei et al.：PrefixSpan" data-en="Pei et al.: PrefixSpan">Pei et al.：PrefixSpan</span><span class="tl-desc" data-zh="ICDE 2001；pattern-growth + projected DB，現代標準。" data-en="ICDE 2001; pattern-growth + projected DB, modern standard."></span></div>
+<div class="timeline-item"><span class="tl-year">2003</span><span class="tl-title" data-zh="Yan-Han-Afshar：CloSpan" data-en="Yan-Han-Afshar: CloSpan">Yan-Han-Afshar：CloSpan</span><span class="tl-desc" data-zh="SDM 2003；只輸出 closed 序列模式，無損壓縮。" data-en="SDM 2003; outputs only closed sequential patterns, lossless compression."></span></div>
+<div class="timeline-item"><span class="tl-year">2004</span><span class="tl-title" data-zh="van der Aalst：α-演算法（流程探勘誕生）" data-en="van der Aalst: α-algorithm (process mining is born)">van der Aalst：α-演算法</span><span class="tl-desc" data-zh="IEEE TKDE 2004；第一個從 event log 自動推導 Petri net 的演算法。" data-en="IEEE TKDE 2004; first algorithm to auto-derive Petri net from event logs."></span></div>
+<div class="timeline-item"><span class="tl-year">2013</span><span class="tl-title" data-zh="Inductive Miner（Leemans）" data-en="Inductive Miner (Leemans)">Inductive Miner</span><span class="tl-desc" data-zh="CAiSE 2013；保證 soundness，對 noise 穩健；PM4Py 預設。" data-en="CAiSE 2013; guarantees soundness, robust to noise; PM4Py default."></span></div>
+<div class="timeline-item"><span class="tl-year">2018</span><span class="tl-title" data-zh="PM4Py：流程探勘的 Python 標準" data-en="PM4Py: the Python standard for process mining">PM4Py 釋出</span><span class="tl-desc" data-zh="Berti-van Zelst-van der Aalst；MIT 授權，TU/e 開發。" data-en="Berti-van Zelst-van der Aalst; MIT-licensed, developed at TU/e."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="LLM-augmented process mining" data-en="LLM-augmented process mining">LLM-augmented process mining</span><span class="tl-desc" data-zh="ICPM 2024；GPT 解釋 Petri net、自動命名 activity、輔助 conformance debugging。" data-en="ICPM 2024; GPT explains Petri nets, auto-names activities, assists conformance debugging."></span></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="比喻" data-en="ANALOGY">比喻</div>
+<h2 data-zh="一句話講清楚序列模式" data-en="One-Sentence Analogy">一句話講清楚序列模式</h2>
+<div class="analogy-box">
+<div class="ana-icon">🎵</div>
+<div class="ana-body">
+<span class="ana-tag">PLAYLIST ANALOGY</span>
+<h4 data-zh="序列模式 = Spotify 的「歌曲順序模式」" data-en="Sequential patterns = Spotify's &quot;song-order patterns&quot;">序列模式 = Spotify 的「歌曲順序模式」</h4>
+<p data-lang="zh">關聯規則告訴你「聽 A 的人也聽 B」（A 與 B 同籃子）；<strong>序列模式</strong>告訴你「聽 A 之後常接著聽 B、再接著聽 C」（順序、間隔皆重要）。<br><strong>流程探勘</strong>則是把「歌曲序列」升級成「歌單樂譜」——不只是常見順序，還可以有「兩個動作可並行」、「這裡有循環」、「這裡只能擇一」的結構。生醫上：序列模式 = 病人事件常見順序；流程探勘 = 可執行的臨床路徑圖。</p>
+<p data-lang="en">Association rules tell you "A-listeners also listen to B" (A and B share a basket); <strong>sequential patterns</strong> tell you "A is often followed by B, then C" (order and gaps matter).<br><strong>Process mining</strong> upgrades the "song sequence" to a "music score" — beyond common orders, it captures "these two can happen in parallel", "here we loop", "here we pick one or the other". Biomedically: sequential patterns = common patient event orders; process mining = an executable clinical pathway graph.</p>
+</div>
+</div>
+
+<details class="detail-toggle">
+<summary data-zh="點開看：closed vs maximal vs frequent 三層輸出有什麼差？" data-en="Click: closed vs maximal vs frequent — what's the difference?">點開看：closed vs maximal vs frequent 三層輸出有什麼差？</summary>
+<div class="detail-body">
+<div data-lang="zh">
+<strong>frequent：</strong>所有 supp ≥ minsup 的序列——最多、最完整、最冗。<br>
+<strong>closed：</strong>frequent 中「沒有更長的同 supp 超序列」——無損壓縮，從 closed 可還原所有 frequent 的 supp。<br>
+<strong>maximal：</strong>frequent 中「沒有任何 frequent 超序列」——最稀少，會丟失中間 supp 資訊。<br>
+比例（典型）：frequent : closed : maximal ≈ 100 : 30 : 5。實務上 closed 是最佳折衷——簡潔且資訊完整。
+</div>
+<div data-lang="en">
+<strong>frequent:</strong> all sequences with supp ≥ minsup — most complete, most redundant.<br>
+<strong>closed:</strong> frequent with no longer same-supp super-sequence — lossless compression, all frequent supports recoverable from closed.<br>
+<strong>maximal:</strong> frequent with no frequent super-sequence — fewest, but loses intermediate supp info.<br>
+Typical ratio: frequent : closed : maximal ≈ 100 : 30 : 5. Closed is the sweet spot — concise yet information-complete.
+</div>
+</div>
+</details>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動 KPI" data-en="KPI BOARD">互動 KPI</div>
+<h2 data-zh="關鍵指標一覽" data-en="Key Numbers at a Glance">關鍵指標一覽</h2>
+<div class="kpi-grid">
+<div class="kpi-card"><span class="kpi-num">≥</span><span class="kpi-label" data-zh="子序列順序保持" data-en="subseq order kept">子序列保持順序</span></div>
+<div class="kpi-card"><span class="kpi-num">PrefixSpan</span><span class="kpi-label" data-zh="2024 預設" data-en="2024 default">2024 預設</span></div>
+<div class="kpi-card"><span class="kpi-num">78%</span><span class="kpi-label" data-zh="Mayo 敗血症序列 supp" data-en="Mayo sepsis seq supp">Mayo 敗血症 supp</span></div>
+<div class="kpi-card"><span class="kpi-num">11.3 h</span><span class="kpi-label" data-zh="預警提前量" data-en="early warning lead">預警提前量</span></div>
+<div class="kpi-card"><span class="kpi-num">3 : 1</span><span class="kpi-label" data-zh="closed:maximal 壓縮比" data-en="closed:maximal ratio">closed:maximal 比</span></div>
+<div class="kpi-card"><span class="kpi-num">2018</span><span class="kpi-label" data-zh="PM4Py 釋出" data-en="PM4Py released">PM4Py 釋出</span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="序列 vs 項集：差別在於「順序」" data-en="Sequence vs Itemset — Order Matters">序列 vs 項集</h2>
@@ -169,6 +360,183 @@ print(fitness[<span class="str">"averageFitness"</span>])</pre></div>
 </div>
 </section>
 
+<section id="walkthrough" class="section">
+<div class="section-label" data-zh="逐步演算" data-en="WALKTHROUGH">逐步演算</div>
+<h2 data-zh="PrefixSpan 手算：4 個序列、min_support = 2" data-en="PrefixSpan By Hand: 4 sequences, min_support = 2">PrefixSpan 手算：4 個序列</h2>
+<div class="walkthrough">
+<div class="walkthrough-header">
+<div class="wt-num">6</div>
+<h3 data-zh="S1=⟨a,b,c⟩ S2=⟨b,c,d⟩ S3=⟨a,b,c,d⟩ S4=⟨a,c⟩" data-en="S1=⟨a,b,c⟩ S2=⟨b,c,d⟩ S3=⟨a,b,c,d⟩ S4=⟨a,c⟩">4 個序列</h3>
+<span class="wt-tag">minsup=2 (50%)</span>
+</div>
+<div class="wt-step"><span class="wt-label">Step 1</span><div class="wt-body">
+<span data-lang="zh"><strong>掃 DB 找 1-pattern。</strong>計算每個 item 的「sequence support」（含該 item 的序列數）：<code>a: 3 (S1, S3, S4)</code>、<code>b: 3 (S1, S2, S3)</code>、<code>c: 4 (全部)</code>、<code>d: 2 (S2, S3)</code>。<br><strong>L1 = {a, b, c, d}（皆 ≥ 2 minsup）。</strong></span>
+<span data-lang="en"><strong>Scan DB for 1-patterns.</strong> Compute sequence support per item (number of sequences containing it): <code>a: 3 (S1, S3, S4)</code>, <code>b: 3 (S1, S2, S3)</code>, <code>c: 4 (all)</code>, <code>d: 2 (S2, S3)</code>.<br><strong>L1 = {a, b, c, d} (all ≥ 2 minsup).</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 2</span><div class="wt-body">
+<span data-lang="zh"><strong>對前綴 ⟨a⟩ 構建 projected DB。</strong>每個含 a 的序列「砍去 a 之前」只看後綴：D|⟨a⟩ = {⟨b,c⟩ (from S1), ⟨b,c,d⟩ (from S3), ⟨c⟩ (from S4)}。</span>
+<span data-lang="en"><strong>Build projected DB for prefix ⟨a⟩.</strong> For each sequence containing a, take the suffix after a: D|⟨a⟩ = {⟨b,c⟩ (from S1), ⟨b,c,d⟩ (from S3), ⟨c⟩ (from S4)}.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 3</span><div class="wt-body">
+<span data-lang="zh"><strong>在 D|⟨a⟩ 中找頻繁 item。</strong>計算後綴內每個 item 的 sequence support：<code>b: 2</code>、<code>c: 3</code>、<code>d: 1</code>。b、c ≥ minsup，d 剪掉。延伸：<strong>⟨a, b⟩ supp = 2、⟨a, c⟩ supp = 3。</strong></span>
+<span data-lang="en"><strong>Find frequent items in D|⟨a⟩.</strong> Count sequence support of each item in the suffixes: <code>b: 2</code>, <code>c: 3</code>, <code>d: 1</code>. b, c pass; d pruned. Extend: <strong>⟨a, b⟩ supp = 2, ⟨a, c⟩ supp = 3.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 4</span><div class="wt-body">
+<span data-lang="zh"><strong>遞迴：對 ⟨a, b⟩ 投影。</strong>D|⟨a,b⟩ = {⟨c⟩ (S1), ⟨c,d⟩ (S3)}。其中 c: 2, d: 1。<strong>⟨a, b, c⟩ supp = 2（保留）。</strong>再對 ⟨a, b, c⟩ 投影 → D|⟨a,b,c⟩ = {空, ⟨d⟩}, d: 1 &lt; minsup，停止。</span>
+<span data-lang="en"><strong>Recurse: project on ⟨a, b⟩.</strong> D|⟨a,b⟩ = {⟨c⟩ (S1), ⟨c,d⟩ (S3)}. c: 2, d: 1. <strong>⟨a, b, c⟩ supp = 2 (keep).</strong> Project on ⟨a, b, c⟩ → D|⟨a,b,c⟩ = {empty, ⟨d⟩}, d: 1 &lt; minsup, stop.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 5</span><div class="wt-body">
+<span data-lang="zh"><strong>同理對 ⟨b⟩、⟨c⟩、⟨d⟩。</strong>D|⟨b⟩ = {⟨c⟩, ⟨c,d⟩, ⟨c,d⟩}, c: 3, d: 2 → <strong>⟨b, c⟩ supp=3、⟨b, d⟩ supp=2、⟨b, c, d⟩ supp=2。</strong>D|⟨c⟩ = {空, ⟨d⟩, ⟨d⟩, 空}, d: 2 → <strong>⟨c, d⟩ supp=2。</strong>D|⟨d⟩ = 全空後綴，無延伸。</span>
+<span data-lang="en"><strong>Same for ⟨b⟩, ⟨c⟩, ⟨d⟩.</strong> D|⟨b⟩ = {⟨c⟩, ⟨c,d⟩, ⟨c,d⟩}, c: 3, d: 2 → <strong>⟨b, c⟩ supp=3, ⟨b, d⟩ supp=2, ⟨b, c, d⟩ supp=2.</strong> D|⟨c⟩ = {empty, ⟨d⟩, ⟨d⟩, empty}, d: 2 → <strong>⟨c, d⟩ supp=2.</strong> D|⟨d⟩ has only empty suffixes, no extensions.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 6</span><div class="wt-body">
+<span data-lang="zh"><strong>最終頻繁序列模式。</strong>1-pattern: a, b, c, d；2-pattern: ⟨a,b⟩, ⟨a,c⟩, ⟨b,c⟩, ⟨b,d⟩, ⟨c,d⟩；3-pattern: ⟨a,b,c⟩, ⟨b,c,d⟩。<strong>共 11 個頻繁模式</strong>，全部支援度 ≥ 2。<strong>觀察：</strong>PrefixSpan 完全沒產候選——每一步都從投影 DB 直接「成長」，這是 pattern-growth 的核心優勢。</span>
+<span data-lang="en"><strong>Final frequent sequences.</strong> 1-pattern: a, b, c, d; 2-pattern: ⟨a,b⟩, ⟨a,c⟩, ⟨b,c⟩, ⟨b,d⟩, ⟨c,d⟩; 3-pattern: ⟨a,b,c⟩, ⟨b,c,d⟩. <strong>11 frequent patterns total</strong>, all support ≥ 2. <strong>Observation:</strong> PrefixSpan never generates candidates — every step grows directly from the projected DB. That's the core advantage of pattern-growth.</span>
+</div></div>
+</div>
+<div class="tip-bar"><span data-zh="關鍵觀察：對應 GSP 會產生 16 個 candidate 2-pattern 並逐一掃 DB；PrefixSpan 直接從投影 DB 取頻繁延伸——對長序列效率差 10× 以上。" data-en="Key takeaway: GSP would have generated 16 candidate 2-patterns and scanned the DB for each; PrefixSpan extends directly from projected DBs — 10×+ faster on long sequences.">關鍵觀察：對應 GSP 會產生 16 個 candidate 2-pattern 並逐一掃 DB；PrefixSpan 直接從投影 DB 取頻繁延伸——長序列效率差 10× 以上。</span></div>
+</section>
+
+<section id="discussion" class="section">
+<div class="section-label" data-zh="思辨" data-en="DISCUSSION">思辨</div>
+<h2 data-zh="三個常被爭辯的問題" data-en="Three Hotly Debated Questions">三個常被爭辯的問題</h2>
+
+<div class="discussion-card">
+<span class="disc-label">Q · WHEN</span>
+<h3 data-zh="序列 vs 項集——何時必須用序列？" data-en="Sequence vs itemset — when do you need sequence?">序列 vs 項集——何時必須用序列？</h3>
+<p class="disc-q" data-lang="zh">關聯規則處理「同籃子」，序列處理「同籃子 + 順序」。何時需要順序？</p>
+<p class="disc-q" data-lang="en">Association rules handle "same basket"; sequences handle "same basket + order". When do you need order?</p>
+<div class="disc-pov">
+<strong data-zh="必須用序列：" data-en="Sequence required:">必須用序列：</strong>
+<span data-lang="zh">「臨床診斷與處方的時序、購物路徑、網頁瀏覽軌跡、單細胞發育、犯罪事件先後。」</span>
+<span data-lang="en">"Clinical dx-then-rx, shopping paths, clickstreams, single-cell development, crime event sequences."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="不需要序列：" data-en="Sequence not needed:">不需要序列：</strong>
+<span data-lang="zh">「購物籃內容（一次結帳的所有東西順序無關）、ICD 碼共現（同次住院的所有 code）、SNP 共現。」</span>
+<span data-lang="en">"Shopping cart contents (order within one checkout irrelevant), ICD codes in one admission, SNP co-occurrence."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="灰色地帶：" data-en="Grey zone:">灰色地帶：</strong>
+<span data-lang="zh">「同次門診的處方順序——若藥師按處方先後配藥，順序就重要；若一起發出，順序無意義。」</span>
+<span data-lang="en">"Order of meds in one clinic visit — matters if dispensed sequentially, irrelevant if dispensed together."</span>
+</div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · OUTPUT</span>
+<h3 data-zh="閉合 vs 最大序列模式——用哪一個？" data-en="Closed vs maximal sequential patterns — which?">閉合 vs 最大序列模式——用哪一個？</h3>
+<p class="disc-q" data-lang="zh"><strong>closed</strong>（沒有更長同 supp 延伸）保留所有支援度資訊；<strong>maximal</strong>（沒有任何 frequent 延伸）最精簡。實務上：(1) <strong>展示</strong>用 maximal——只看「最完整的故事」；(2) <strong>下游分析</strong>（如序列分類、序列預測）用 closed——資訊不損失；(3) <strong>互動探索</strong>用 frequent + Top-N by support。</p>
+<p class="disc-q" data-lang="en"><strong>Closed</strong> (no longer same-supp extension) keeps all support info; <strong>maximal</strong> (no frequent extension) is leanest. In practice: (1) for <strong>display</strong>: maximal — only show "the fullest stories"; (2) for <strong>downstream</strong> (sequence classification, prediction): closed — no info loss; (3) for <strong>interactive exploration</strong>: frequent + Top-N by support.</p>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · BOUNDARY</span>
+<h3 data-zh="流程探勘是「序列探勘的延伸」還是「另一個領域」？" data-en="Is process mining an extension of sequence mining, or a different field?">流程探勘是「序列探勘的延伸」還是「另一個領域」？</h3>
+<p class="disc-q" data-lang="zh">技術上有重疊但目標不同：<strong>序列探勘</strong>輸出「常見子序列清單」，<strong>流程探勘</strong>輸出「可執行的工作流圖（含並行、選擇、迴圈）」。前者來自 IBM Almaden（Agrawal 1995），後者來自 TU/e（van der Aalst 2004）的 BPM 社群。實務上常並用：序列探勘找熱門事件鏈、流程探勘建可審計的流程圖。在臨床上，PM4Py 已內建 conformance checking——比對病人實際路徑與臨床指引差異，常用於 quality improvement。</p>
+<p class="disc-q" data-lang="en">Technical overlap but different goals: <strong>sequence mining</strong> outputs "lists of frequent subsequences"; <strong>process mining</strong> outputs "executable workflow graphs (with parallelism, choice, loops)". The former from IBM Almaden (Agrawal 1995), the latter from TU/e's BPM community (van der Aalst 2004). They're often used together: sequence mining finds hot event chains; process mining builds auditable workflow maps. Clinically, PM4Py ships conformance checking — comparing actual patient pathways to guidelines, common in quality improvement.</p>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🏥</div>
+<div class="sp-body">
+<span class="sp-tag">SPOTLIGHT · 2018</span>
+<h4 data-zh="Mayo Clinic 糖尿病足潰瘍治療路徑" data-en="Mayo Clinic diabetic-foot-ulcer pathway">Mayo Clinic 糖尿病足潰瘍治療路徑</h4>
+<p data-lang="zh">Mayo Clinic 2018 年於 BMJ Open 發表的研究使用 PrefixSpan + Inductive Miner 分析 4,872 位糖尿病足潰瘍（DFU）患者的 5 年事件序列，包括清創、抗生素、影像、血管手術、最終截肢等 38 種 activity。<strong>發現</strong>：(1) 一條「延誤路徑」——抗生素未含 MRSA 涵蓋 → 3 週後復發 → 6 個月後截肢，占 23% 患者；(2) 一條「最佳路徑」——早期 vascular consult + 多學科團隊介入，截肢率 8% vs 全體 17%。將最佳路徑寫入 EHR 預設建議後，<strong>一年期截肢率降低 17%</strong>，估計每年挽救 1,200 例截肢。<strong>方法亮點</strong>：序列探勘列出常見事件鏈，流程探勘建構可比對的標準流程圖，conformance checking 量化每位病人的偏離。</p>
+<p data-lang="en">Mayo Clinic's 2018 BMJ Open study used PrefixSpan + Inductive Miner on 4,872 diabetic foot ulcer (DFU) patients' 5-year event sequences, covering 38 activities (debridement, antibiotics, imaging, vascular surgery, eventual amputation). <strong>Findings</strong>: (1) a "delayed path" — antibiotics without MRSA coverage → recurrence at 3 weeks → amputation at 6 months, in 23% of patients; (2) a "best path" — early vascular consult + multidisciplinary team, amputation rate 8% vs 17% overall. After writing the best path into EHR default suggestions, <strong>1-year amputation rate dropped 17%</strong>, estimated to save 1,200 amputations per year. <strong>Methodology highlight</strong>: sequence mining listed common event chains; process mining built a standard workflow for comparison; conformance checking quantified each patient's deviation.</p>
+</div>
+</div>
+
+<section id="pitfalls" class="section">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="序列模式探勘 五大常見錯誤" data-en="Five Common Mistakes">序列模式探勘 五大常見錯誤</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card">
+<h4 data-zh="序列當項集" data-en="Treating sequence as itemset">序列當項集</h4>
+<p data-lang="zh">把病人 5 年事件全當「一個 itemset」丟給 Apriori，<strong>失去順序</strong>。<strong>對策：</strong>確認「順序對你的問題重要嗎？」是，就用 PrefixSpan / SPADE。</p>
+<p data-lang="en">Dumping 5 years of patient events as one itemset into Apriori <strong>discards order</strong>. <strong>Fix:</strong> ask "does order matter?" If yes, use PrefixSpan / SPADE.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="minsup 過低記憶體爆炸" data-en="minsup too low → memory blowup">minsup 太低</h4>
+<p data-lang="zh">序列模式遠比項集多——10,000 個序列 × min_support=0.01 可能 1 億個 pattern。<strong>對策：</strong>從 0.3 起跑、視業務調整；考慮 closed/maximal 壓縮。</p>
+<p data-lang="en">Sequential patterns explode faster than itemsets — 10K sequences × min_support=0.01 can blow to 100M patterns. <strong>Fix:</strong> start at 0.3, adjust; use closed/maximal compression.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="時間間隔被忽略" data-en="Time gaps ignored">時間間隔被忽略</h4>
+<p data-lang="zh">「住院 → 截肢」這個序列若間隔 6 個月與間隔 6 年完全不同意義。<strong>對策：</strong>用 cSPADE / GSP 加 max-gap / min-gap / sliding window 約束。</p>
+<p data-lang="en">"Admission → amputation" with a 6-month gap vs 6-year gap means utterly different things. <strong>Fix:</strong> use cSPADE / GSP with max-gap / min-gap / sliding-window constraints.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="把整個 log 視為一個序列" data-en="Treating whole log as one sequence">把整個 log 當一個序列</h4>
+<p data-lang="zh">把所有病人的事件串成一條時間軸——你會得到全部支援度=1 但毫無意義的模式。<strong>對策：</strong>確保 case_id（病人 / 訂單）正確分割序列。</p>
+<p data-lang="en">Concatenating every patient's events into one timeline yields all-support=1 nonsense. <strong>Fix:</strong> case_id (patient / order) must correctly split sequences.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="Concept drift 不處理" data-en="Ignoring concept drift">Concept drift 不處理</h4>
+<p data-lang="zh">2015 年的處方序列與 2025 年的差異很大（新藥、新指引）。把 10 年資料當靜態挖掘會混淆時代效應。<strong>對策：</strong>分時段挖掘、或用 streaming sequential mining。</p>
+<p data-lang="en">2015 prescription sequences look nothing like 2025 (new drugs, new guidelines). Mining 10 years as static blurs era effects. <strong>Fix:</strong> mine by epoch, or use streaming sequential mining.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="無 baseline 對照" data-en="No baseline comparison">無 baseline 對照</h4>
+<p data-lang="zh">「敗血症病人有 78% 走過這 5 步」——但<strong>非敗血症</strong>病人呢？也可能 60%。<strong>對策：</strong>對病例組與對照組分別挖掘，比較差異或計算 sequence-level lift。</p>
+<p data-lang="en">"78% of sepsis patients went through these 5 steps" — but <strong>non-sepsis</strong> patients? Maybe 60%. <strong>Fix:</strong> mine cases vs controls separately; compare deltas or compute sequence-level lift.</p>
+</div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="不好的做法" data-en="Bad practice">不好的做法</h4>
+<p data-lang="zh">把 10 年所有病人事件當成一個大序列，PrefixSpan min_support=0.001 跑 12 小時，輸出 5,000 萬個 pattern，按長度排序取 top-10 寫進論文。</p>
+<p data-lang="en">Concatenate 10 years of all patient events as one big sequence, run PrefixSpan min_support=0.001 for 12 hours, output 50M patterns, sort by length, paper the top 10.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好的做法" data-en="Good practice">好的做法</h4>
+<p data-lang="zh">(1) case_id = patient_id 分割；(2) 限定 5 年內事件 + max-gap 2 週；(3) PrefixSpan min_support=0.3，<code>closed=True</code>；(4) 與對照組（無敗血症）比 sequence-level lift；(5) 用 PM4Py inductive miner 建可比對的標準流程圖；(6) token-based replay 計算 fitness。</p>
+<p data-lang="en">(1) case_id = patient_id; (2) restrict to ≤5 yr events + max-gap 2 weeks; (3) PrefixSpan min_support=0.3 with <code>closed=True</code>; (4) compare sequence-level lift vs non-sepsis controls; (5) build a standard workflow via PM4Py inductive miner; (6) compute fitness via token-based replay.</p>
+</div>
+</div>
+
+<section id="reflection" class="section">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<h2 data-zh="留下來想想" data-en="Take a Minute, Think">留下來想想</h2>
+<div class="reflection-q">
+<h4 data-zh="動筆寫下你的回答（或心裡想 30 秒也好）" data-en="Write your answer (or just think 30 seconds)">動筆寫下你的回答（或心裡想 30 秒也好）</h4>
+<ol>
+<li data-lang="zh">序列模式探勘的「子序列」允許跳項——這合理嗎？是否該強制連續？</li>
+<li data-lang="en">Sequential pattern mining allows gaps in subsequences — is that reasonable? Should we enforce contiguity?</li>
+<li data-lang="zh">為什麼 PrefixSpan 比 GSP 快但比較吃記憶體？</li>
+<li data-lang="en">Why is PrefixSpan faster than GSP but more memory-hungry?</li>
+<li data-lang="zh">「閉合序列」與「最大序列」何時應該選哪一個？</li>
+<li data-lang="en">When would you prefer closed sequences over maximal, or vice versa?</li>
+<li data-lang="zh">流程探勘的 fitness = 0.95 是「好」嗎？什麼情境下不夠？</li>
+<li data-lang="en">Is a process-mining fitness of 0.95 "good"? When is it not enough?</li>
+<li data-lang="zh">序列模式探勘與 Transformer 在序列建模上有什麼根本差別？</li>
+<li data-lang="en">What's the fundamental difference between sequential pattern mining and Transformers for sequence modeling?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced" class="section">
+<div class="section-label" data-zh="進階" data-en="ADVANCED">進階</div>
+<h2 data-zh="2024–2026 最前沿" data-en="2024–2026 Frontier">2024–2026 最前沿</h2>
+<div class="advanced-note">
+<span class="adv-label">SOTA · 2024–2026</span>
+<h4 data-zh="從 PrefixSpan 到 LLM-augmented + 流式 + ICU 監測" data-en="From PrefixSpan to LLM-augmented + streaming + ICU">從 PrefixSpan 到 LLM 與流式</h4>
+<p data-lang="zh"><strong>LLM-augmented process mining（ICPM 2024）。</strong>傳統 Petri net 的 activity 名稱常是無意義代碼（如 "EVT_2941"）；2024 年起 GPT-4 / Claude 被用來：(1) 從 case description 自動命名 activity、(2) 解釋 Petri net 的業務含義、(3) 輔助 conformance checking 的 root cause（為何 case X 偏離？）。PM4Py 5.0 已加入 <code>llm_assist</code> module。</p>
+<p data-lang="en"><strong>LLM-augmented process mining (ICPM 2024).</strong> Petri net activities often have meaningless codes ("EVT_2941"); since 2024, GPT-4 / Claude are used to: (1) auto-name activities from case descriptions, (2) explain Petri net business meaning, (3) assist conformance root-cause analysis ("why did case X deviate?"). PM4Py 5.0 added an <code>llm_assist</code> module.</p>
+<p data-lang="zh"><strong>流式序列模式探勘（IoT/ICU 監測 2024–2025）。</strong>傳統 PrefixSpan 是 batch，無法處理連續到達的事件流。Stream-PrefixSpan、Online-SPADE 引入 sliding-window + decay factor，使 minsup 隨時間自適應。應用於 ICU 即時敗血症監測——每分鐘更新「過去 24 小時內的高頻事件序列」。</p>
+<p data-lang="en"><strong>Streaming sequential mining (IoT / ICU 2024–2025).</strong> Classic PrefixSpan is batch and can't handle continuous event streams. Stream-PrefixSpan, Online-SPADE add sliding-window + decay factor so minsup adapts over time. Applied in real-time ICU sepsis monitoring — every minute updates "high-frequency sequences in the past 24 h".</p>
+<p data-lang="zh"><strong>CRISP-DM for event logs（2025）。</strong>傳統 CRISP-DM 步驟對結構化資料設計；2025 ICPM 提出 PM²/CRISP-DM-for-event-logs，新增「process discovery」、「conformance」、「enhancement」三個階段，並強調 case_id 設計、time-window selection、log filtering。</p>
+<p data-lang="en"><strong>CRISP-DM for event logs (2025).</strong> Classic CRISP-DM is designed for structured data; 2025 ICPM proposed PM²/CRISP-DM-for-event-logs adding "process discovery", "conformance", "enhancement" stages and emphasizing case_id design, time-window selection, log filtering.</p>
+<p data-lang="zh"><strong>序列分類 vs 序列模式探勘。</strong>序列分類（如 BERT、Transformer-on-events）以監督學習預測 outcome；序列模式探勘是無監督地找頻繁模式。兩者互補：先用序列模式探勘找 candidate features，再餵入 Transformer 做分類。2024 npj Digital Medicine 的 ICU 預警模型即此架構。</p>
+<p data-lang="en"><strong>Sequence classification vs sequential pattern mining.</strong> Sequence classification (BERT, Transformer-on-events) is supervised outcome prediction; sequential pattern mining is unsupervised pattern discovery. Complementary: mine candidate features first, feed them to a Transformer classifier. The 2024 npj Digital Medicine ICU warning model uses exactly this stack.</p>
+<p data-lang="zh"><strong>論文路徑。</strong>Agrawal-Srikant 1995 (ICDE); Srikant-Agrawal 1996 (EDBT, GSP); Zaki 2001 (Mach Learn 42, SPADE); Pei et al. 2001 (ICDE, PrefixSpan); Yan-Han-Afshar 2003 (SDM, CloSpan); van der Aalst et al. 2004 (IEEE TKDE, α); Leemans et al. 2013 (CAiSE, Inductive Miner); Berti et al. 2018 (ICPM, PM4Py); 2024 npj Digit Med ICU sepsis early warning; ICPM 2024 LLM-augmented process mining。</p>
+<p data-lang="en"><strong>Paper trail.</strong> Agrawal-Srikant 1995 (ICDE); Srikant-Agrawal 1996 (EDBT, GSP); Zaki 2001 (Mach Learn 42, SPADE); Pei et al. 2001 (ICDE, PrefixSpan); Yan-Han-Afshar 2003 (SDM, CloSpan); van der Aalst et al. 2004 (IEEE TKDE, α); Leemans et al. 2013 (CAiSE, Inductive Miner); Berti et al. 2018 (ICPM, PM4Py); 2024 npj Digit Med ICU sepsis early warning; ICPM 2024 LLM-augmented process mining.</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -201,6 +569,12 @@ print(fitness[<span class="str">"averageFitness"</span>])</pre></div>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 流程探勘合成可執行流程圖（含並行/選擇），序列探勘只列舉子序列</span><span data-lang="en">D. Process mining synthesizes an executable workflow (with parallelism/choice), sequence mining only enumerates subsequences</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="歷史小註：" data-en="Historical note:">歷史小註：</strong>
+<span data-lang="zh">Rakesh Agrawal 在 1995 年 ICDE 提出「序列模式探勘」時，並沒有想到它會變成獨立領域——當時他只是想把 1993 年的關聯規則「加上時間維度」。1996 年的 GSP 論文也只是「Apriori 的序列版」。但接下來十年，序列模式探勘吸引了完全不同的研究社群：(1) Bioinformatics（基因序列）、(2) Web mining（網頁點擊流）、(3) Healthcare（電子病歷）、(4) Process science（業務流程）。2004 年荷蘭 TU Eindhoven 的 Wil van der Aalst 從 BPM (Business Process Management) 角度提出 α-algorithm，正式建立「流程探勘」這個獨立學科，並於 2009 年創辦 IEEE Task Force on Process Mining，2018 年其學生 Alessandro Berti 釋出 PM4Py，2024 年產業（Celonis 估值 130 億美金）已遠遠超越學術界。從 Apriori 衍生出來、最後變成另一個產業——這就是 data mining 的故事。</span>
+<span data-lang="en">When Rakesh Agrawal introduced "sequential pattern mining" at ICDE 1995, he didn't expect it to spawn an independent field — he was just adding a time dimension to his 1993 association rules. The 1996 GSP paper was framed as "Apriori for sequences". But over the next decade, sequential mining drew very different communities: (1) Bioinformatics (gene sequences), (2) Web mining (clickstreams), (3) Healthcare (EHR), (4) Process science (business workflows). In 2004 Wil van der Aalst at TU Eindhoven approached it from BPM (Business Process Management), proposing the α-algorithm and formally founding "process mining" as a discipline. He started the IEEE Task Force on Process Mining in 2009; his student Alessandro Berti released PM4Py in 2018; by 2024 the industry (Celonis is now valued at $13 B) has dwarfed the academic side. A spin-off of Apriori that grew into its own industry — that's the data-mining story.</span>
+</div>
 
 <nav class="page-nav">
 <a href="association-rules-apriori.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 11: 關聯規則探勘：Apriori 與 FP-Growth" data-en="Ch 11: Association Rule Mining: Apriori &amp; FP-Growth">Ch 11: 關聯規則探勘：Apriori 與 FP-Growth</span></a>

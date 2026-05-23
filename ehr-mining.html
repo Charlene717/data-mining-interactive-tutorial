@@ -18,6 +18,168 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+  <strong data-zh="本章學習地圖" data-en="Chapter Roadmap">本章學習地圖</strong>
+  <div class="pill-row">
+    <span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+    <span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+    <span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+    <span class="pill teal">⏱ ~45 min</span>
+    <span class="pill amber">📖 17 / 20</span>
+    <span class="pill violet">🏥 Module E</span>
+  </div>
+  <ol>
+    <li><a href="#story" data-zh="開場故事：五家醫院的糖尿病足潰瘍" data-en="Story: Diabetic Foot Ulcers Across 5 Hospitals">開場故事</a></li>
+    <li><a href="#glossary" data-zh="術語小卡：從 ICD 到 OMOP" data-en="Glossary: From ICD to OMOP">術語小卡</a></li>
+    <li><a href="#history" data-zh="時間軸：EHR 與存活分析的 130 年" data-en="Timeline: 130 Years of EHR & Survival">時間軸</a></li>
+    <li><a href="#walkthrough" data-zh="完整實例：30 天再住院預測" data-en="Worked Example: 30-Day Readmission">完整實例</a></li>
+    <li><a href="#discussion" data-zh="爭論：OMOP vs FHIR、AI 醫療可解釋性" data-en="Debates: OMOP vs FHIR, AI Explainability">爭論</a></li>
+    <li><a href="#pitfalls" data-zh="陷阱：5 個易犯錯誤" data-en="Pitfalls: 5 Common Mistakes">陷阱</a></li>
+    <li><a href="#reflection" data-zh="反思題" data-en="Reflection Questions">反思題</a></li>
+    <li><a href="#advanced" data-zh="進階：2024–2026 前沿" data-en="Advanced: 2024–2026 Frontiers">進階</a></li>
+  </ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="故事" data-en="STORY">故事</div>
+<h2 data-zh="開場：五家醫院的糖尿病足潰瘍" data-en="Opening: Diabetic Foot Ulcers Across Five Hospitals">開場：五家醫院的糖尿病足潰瘍</h2>
+<div class="story-block">
+<span class="story-tag" data-zh="情境" data-en="SCENARIO">情境</span>
+<h3 data-zh="🩺 Maria 的合作計畫" data-en="🩺 Maria's Collaboration">🩺 Maria 的合作計畫</h3>
+<div data-lang="zh">
+<p>Maria 是醫療資訊學家。她想合作 5 家醫院、共 <strong>12,400 名</strong>糖尿病足潰瘍 (DFU) 病人，比較截肢率與長期存活。第一天打開資料，她哭笑不得：A 醫院用 <code>L97.519</code>、B 醫院寫成 <code>E11.621 + L97.5</code>、C 醫院只有自由文字「右足蜂窩性組織炎 c/o DM」、D 醫院還在用 <strong>ICD-9 707.14</strong>、E 醫院已升級到 <strong>ICD-11 EE3Z</strong>。光是「誰是 DFU 病人」就有五種寫法。</p>
+<p>她安裝 <strong>OHDSI ATLAS</strong>，把所有醫院 ETL 進 <strong>OMOP CDM 5.4</strong>，用 <strong>Athena</strong> 把雜亂代碼全映射到 SNOMED <code>33334006</code>；E 醫院的自由文字用 <strong>cTAKES</strong> 抽出 phenotype。三週後，她跑 <strong>Kaplan-Meier + Cox PH</strong>，得到風險比 HR=0.72 (95% CI 0.61–0.85)：穿 total-contact cast 的病人，一年截肢率下降 28%。論文上了 <em>Diabetes Care</em>。OMOP 不是學術玩具——是讓<strong>不同醫院的書能被一起讀</strong>的通用譯本。</p>
+</div>
+<div data-lang="en">
+<p>Maria is a health informaticist. She wants to combine 5 hospitals — <strong>12,400 patients</strong> with diabetic foot ulcers (DFU) — to compare amputation rates and long-term survival. Day one she nearly cries: Hospital A uses <code>L97.519</code>, B writes <code>E11.621 + L97.5</code>, C has free text "R foot cellulitis c/o DM," D is still on <strong>ICD-9 707.14</strong>, E upgraded to <strong>ICD-11 EE3Z</strong>. Defining "who has DFU" has five different answers.</p>
+<p>She installs <strong>OHDSI ATLAS</strong>, ETLs each site into <strong>OMOP CDM 5.4</strong>, uses <strong>Athena</strong> to map every messy code to SNOMED <code>33334006</code>; Hospital E's narratives go through <strong>cTAKES</strong> NLP. Three weeks later <strong>Kaplan-Meier + Cox PH</strong> gives hazard ratio HR=0.72 (95% CI 0.61–0.85): patients in total-contact casts have a 28% lower amputation rate at one year. The paper lands in <em>Diabetes Care</em>. OMOP is not academic theater — it is the universal translator that lets the five hospitals' books be read as one.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="術語" data-en="GLOSSARY">術語</div>
+<h2 data-zh="術語小卡：從 ICD 到 OMOP" data-en="Glossary: From ICD to OMOP">術語小卡：從 ICD 到 OMOP</h2>
+<div class="glossary-grid">
+  <div class="glossary-card">
+    <div class="term-en">EHR</div>
+    <div class="term-zh">電子病歷</div>
+    <div class="term-kid" data-lang="zh">就像醫院的「成長日記」：每次看病、抽血、吃藥都會被記下來。</div>
+    <div class="term-kid" data-lang="en">The hospital's "growth diary" — every visit, blood test, and pill gets written down.</div>
+    <div class="term-tech" data-lang="zh">Longitudinal patient record (demographics + encounters + diagnoses + meds + labs + notes), stored in EHR systems (Epic, Cerner/Oracle, Allscripts).</div>
+    <div class="term-tech" data-lang="en">Longitudinal patient record (demographics + encounters + diagnoses + meds + labs + notes), stored in Epic, Cerner/Oracle, Allscripts, etc.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">ICD-10-CM / ICD-11</div>
+    <div class="term-zh">疾病分類碼</div>
+    <div class="term-kid" data-lang="zh">每種病有「身分證號」：糖尿病是 E11、流感是 J11。</div>
+    <div class="term-kid" data-lang="en">Every disease has an "ID number" — diabetes is E11, flu is J11.</div>
+    <div class="term-tech" data-lang="zh">WHO 國際疾病分類；ICD-10-CM ~70k 碼 (US 臨床擴充)；ICD-11 2022 上路，含 BodySystem & extension codes。</div>
+    <div class="term-tech" data-lang="en">WHO International Classification of Diseases; ICD-10-CM has ~70k US clinical codes; ICD-11 went live 2022 with BodySystem & extension codes.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">SNOMED CT</div>
+    <div class="term-zh">臨床概念本體</div>
+    <div class="term-kid" data-lang="zh">最完整的「醫學維基」，比 ICD 更細，能描述「左腳第三趾骨折」。</div>
+    <div class="term-kid" data-lang="en">The most complete "medical Wikipedia" — finer than ICD, can describe "fracture of left foot 3rd phalanx."</div>
+    <div class="term-tech" data-lang="zh">~350k+ active concepts；OMOP 預設目標詞彙；支援多層 is-a 階層與後組合 (post-coordination)。</div>
+    <div class="term-tech" data-lang="en">~350k+ active concepts; OMOP's default target vocabulary; supports multi-level is-a hierarchy and post-coordination.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">LOINC</div>
+    <div class="term-zh">檢驗代碼</div>
+    <div class="term-kid" data-lang="zh">每項實驗室檢驗的「條碼」，HbA1c 是 4548-4，血鉀是 6298-4。</div>
+    <div class="term-kid" data-lang="en">A "barcode" for each lab test — HbA1c is 4548-4, blood potassium is 6298-4.</div>
+    <div class="term-tech" data-lang="zh">Logical Observation Identifiers Names and Codes；含 ~98k codes；6-axis (Component, Property, Time, System, Scale, Method)。</div>
+    <div class="term-tech" data-lang="en">Logical Observation Identifiers Names and Codes; ~98k codes; 6-axis (Component, Property, Time, System, Scale, Method).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">RxNorm</div>
+    <div class="term-zh">藥物標準化詞彙</div>
+    <div class="term-kid" data-lang="zh">把「百憂解」「Prozac」「fluoxetine 20 mg」都對到同一個藥物 ID。</div>
+    <div class="term-kid" data-lang="en">Maps "Prozac," "百憂解," "fluoxetine 20 mg" all to one drug ID.</div>
+    <div class="term-tech" data-lang="zh">NLM 維護的藥物正規化詞彙；含 ingredient / clinical-drug / branded-drug 層級；OMOP drug_exposure 的目標 concept。</div>
+    <div class="term-tech" data-lang="en">NLM-maintained drug normalization vocabulary; ingredient / clinical-drug / branded-drug levels; target concept for OMOP drug_exposure.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">OMOP CDM</div>
+    <div class="term-zh">共通資料模型</div>
+    <div class="term-kid" data-lang="zh">把不同醫院的雜亂表格，全部變成同一個樣子的「樂高積木」。</div>
+    <div class="term-kid" data-lang="en">Turns each hospital's messy tables into the same shape of "Lego bricks."</div>
+    <div class="term-tech" data-lang="zh">OHDSI 的開源 schema (v5.4 2023, v6 in 2026 review)；標準化 person / observation_period / condition / drug / measurement / procedure 等表。</div>
+    <div class="term-tech" data-lang="en">OHDSI's open-source schema (v5.4 2023, v6 in 2026 review); standard person / observation_period / condition / drug / measurement / procedure tables.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Computable Phenotype</div>
+    <div class="term-zh">可計算表型</div>
+    <div class="term-kid" data-lang="zh">把「這個人有沒有糖尿病」的判斷寫成電腦可以執行的規則。</div>
+    <div class="term-kid" data-lang="en">Turns "does this patient have diabetes?" into a rule a computer can run.</div>
+    <div class="term-tech" data-lang="zh">Executable algorithm combining codes, labs, meds, dates；PheKB / eMERGE / ATLAS 提供經驗證版本；以 PPV (≥80%) 驗證。</div>
+    <div class="term-tech" data-lang="en">Executable algorithm combining codes, labs, meds, dates; PheKB / eMERGE / ATLAS curate validated versions; verified by chart-review PPV (≥80%).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Kaplan-Meier / Cox PH</div>
+    <div class="term-zh">存活曲線 / 比例風險</div>
+    <div class="term-kid" data-lang="zh">KM 畫出「存活機率隨時間的階梯」；Cox 告訴你「治療讓風險變成幾倍」。</div>
+    <div class="term-kid" data-lang="en">KM draws the "staircase" of survival probability; Cox tells you "how many times the hazard changes" under treatment.</div>
+    <div class="term-tech" data-lang="zh">KM 1958 Kaplan-Meier 非參數估計 S(t)；Cox 1972 半參數比例風險模型 λ(t|X)=λ₀(t)exp(βᵀX)，HR=exp(β)。</div>
+    <div class="term-tech" data-lang="en">KM (1958) non-parametric S(t); Cox (1972) semi-parametric proportional-hazards λ(t|X)=λ₀(t)exp(βᵀX), HR=exp(β).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Censoring / Competing Risks</div>
+    <div class="term-zh">截斷 / 競爭風險</div>
+    <div class="term-kid" data-lang="zh">在研究結束前還沒發生事件 = 截斷；發生了「別的結局」搶先 = 競爭風險。</div>
+    <div class="term-kid" data-lang="en">Event hasn't happened by study end = censored; another outcome happens first = competing risk.</div>
+    <div class="term-tech" data-lang="zh">Right-censoring 為 Cox 基本假設；competing risks (e.g., death vs discharge) 需 Fine-Gray subdistribution hazard。</div>
+    <div class="term-tech" data-lang="en">Right-censoring underlies standard Cox; competing risks (e.g., death vs discharge) require Fine-Gray subdistribution hazards.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">MIMIC-IV / All of Us</div>
+    <div class="term-zh">公開大型病人資料集</div>
+    <div class="term-kid" data-lang="zh">兩個「世界級沙盒」：練習真實 ICU / 全美研究都用它們。</div>
+    <div class="term-kid" data-lang="en">Two world-class "sandboxes" — the practice arena for real ICU and US-wide research.</div>
+    <div class="term-tech" data-lang="zh">MIMIC-IV 2023: 299k ICU/ED admissions from BIDMC；All of Us 2018–: 1M+ multi-omics + EHR US-wide cohort。</div>
+    <div class="term-tech" data-lang="en">MIMIC-IV 2023: 299k ICU/ED admissions from BIDMC; All of Us 2018–: 1M+ multi-omics + EHR US-wide cohort.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">PheKB / eMERGE</div>
+    <div class="term-zh">表型演算法庫</div>
+    <div class="term-kid" data-lang="zh">免費發放「如何挑出 XX 病人」的官方食譜書。</div>
+    <div class="term-kid" data-lang="en">Free cookbooks of "how to identify XX patients" with validated recipes.</div>
+    <div class="term-tech" data-lang="zh">PheKB phenotype library；eMERGE Network 10+ 主要中心；每個演算法附 PPV / NPV 跨機構驗證。</div>
+    <div class="term-tech" data-lang="en">PheKB phenotype library; eMERGE Network 10+ major sites; each algorithm published with cross-site PPV / NPV validation.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Hazard Ratio (HR)</div>
+    <div class="term-zh">風險比</div>
+    <div class="term-kid" data-lang="zh">HR=0.5 = 「治療把風險砍一半」；HR=2 = 「風險倍增」。</div>
+    <div class="term-kid" data-lang="en">HR=0.5 = "treatment cuts the hazard in half"; HR=2 = "doubles the hazard."</div>
+    <div class="term-tech" data-lang="zh">HR=exp(β̂) from Cox；前提是 PH 假設成立 (Schoenfeld residual test, log(-log(S)) plot)。</div>
+    <div class="term-tech" data-lang="en">HR=exp(β̂) from Cox; valid only if PH holds (Schoenfeld residuals, log(-log(S)) plot).</div>
+  </div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間軸" data-en="TIMELINE">時間軸</div>
+<h2 data-zh="EHR 與存活分析 130 年" data-en="130 Years of EHR & Survival Mining">EHR 與存活分析的 130 年</h2>
+<div class="timeline">
+  <div class="timeline-item"><span class="tl-year">1893</span><span class="tl-title" data-zh="ICD 首版" data-en="First ICD">ICD 首版</span><span class="tl-desc" data-zh="Bertillon Classification of Causes of Death 由 IIS 採納。" data-en="Bertillon Classification of Causes of Death adopted by ISI."></span></div>
+  <div class="timeline-item"><span class="tl-year">1958</span><span class="tl-title">Kaplan-Meier</span><span class="tl-desc" data-zh="JASA 論文奠定非參數存活函數估計 (>72k 引用)。" data-en="JASA paper establishes non-parametric survival estimation (>72k citations)."></span></div>
+  <div class="timeline-item"><span class="tl-year">1965</span><span class="tl-title" data-zh="Medicare → 早期 EHR" data-en="Medicare → Early EHR">Medicare → 早期 EHR</span><span class="tl-desc" data-zh="美國 Medicare 推動診斷與帳務電子化。" data-en="US Medicare drives diagnostic & billing electronification."></span></div>
+  <div class="timeline-item"><span class="tl-year">1972</span><span class="tl-title">Cox Proportional Hazards</span><span class="tl-desc" data-zh="David Cox JRSS-B paper；半參數方法成為臨床標準。" data-en="David Cox JRSS-B paper; semi-parametric model becomes the clinical standard."></span></div>
+  <div class="timeline-item"><span class="tl-year">1979</span><span class="tl-title">SNOMED → SNOMED CT</span><span class="tl-desc" data-zh="College of American Pathologists 推出 SNOMED；2002 與 NHS Clinical Terms 合併為 SNOMED CT。" data-en="CAP launches SNOMED; merged with NHS Clinical Terms in 2002 to form SNOMED CT."></span></div>
+  <div class="timeline-item"><span class="tl-year">1994</span><span class="tl-title">LOINC</span><span class="tl-desc" data-zh="Regenstrief Institute 開發；今日 ~98k codes，是檢驗 / 觀察的全球標準。" data-en="Regenstrief launches LOINC; today ~98k codes, the global standard for labs/observations."></span></div>
+  <div class="timeline-item"><span class="tl-year">2008</span><span class="tl-title">OMOP CDM v1.0</span><span class="tl-desc" data-zh="FDA-funded Observational Medical Outcomes Partnership 發布第一版 CDM。" data-en="FDA-funded Observational Medical Outcomes Partnership publishes first CDM."></span></div>
+  <div class="timeline-item"><span class="tl-year">2009</span><span class="tl-title">HITECH Act</span><span class="tl-desc" data-zh="美國推動 meaningful-use 補助；EHR 採用率自 2008 的 9% 飆升至 2017 的 86%。" data-en="US meaningful-use incentives; EHR adoption surges from 9% in 2008 to 86% in 2017."></span></div>
+  <div class="timeline-item"><span class="tl-year">2011</span><span class="tl-title">PheKB launches</span><span class="tl-desc" data-zh="eMERGE Network 啟動 phenotype 知識庫，論文 ~150 篇驗證表型。" data-en="eMERGE Network launches the phenotype KB; today ~150 validated algorithms."></span></div>
+  <div class="timeline-item"><span class="tl-year">2014</span><span class="tl-title">MIMIC-III</span><span class="tl-desc" data-zh="MIT-LCP 公開首個大型 ICU 資料集，~46k stays；引用 >9k。" data-en="MIT-LCP releases the first large public ICU dataset, ~46k stays; >9k citations."></span></div>
+  <div class="timeline-item"><span class="tl-year">2018</span><span class="tl-title" data-zh="All of Us 啟動" data-en="All of Us launches">All of Us 啟動</span><span class="tl-desc" data-zh="NIH 目標 1M+ 多元美國人，包含 EHR + WGS + biosamples。" data-en="NIH targets 1M+ diverse Americans; EHR + WGS + biosamples."></span></div>
+  <div class="timeline-item"><span class="tl-year">2023</span><span class="tl-title">MIMIC-IV v2.2 + OMOP 5.4</span><span class="tl-desc" data-zh="MIMIC-IV 含 299k 入院；OMOP CDM 5.4 加入 episode / cost / specimen。" data-en="MIMIC-IV holds 299k admissions; OMOP CDM 5.4 adds episode / cost / specimen."></span></div>
+  <div class="timeline-item"><span class="tl-year">2024–2026</span><span class="tl-title" data-zh="聯邦 EHR + 多模態" data-en="Federated EHR + Multimodal">聯邦 EHR + 多模態</span><span class="tl-desc" data-zh="OpenSAFELY 跑於 NHS 內；OMOP CDM v6 草案；多模態 (text+image+structured) 基礎模型 (Med-Gemini, GatorTron-X)。" data-en="OpenSAFELY runs inside NHS firewall; OMOP CDM v6 draft; multimodal (text+image+structured) foundation models (Med-Gemini, GatorTron-X)."></span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="EHR 資料的雙重結構" data-en="The Dual Structure of EHR Data">EHR 資料的雙重結構</h2>
@@ -33,6 +195,25 @@
 <span data-lang="zh"><strong>Charting bias：</strong>「沒有記錄 ≠ 沒有發生」。一個 ICU 病人沒有 GCS 紀錄，往往代表他清醒，而不是缺失。直接 mean-impute 會嚴重失真。</span>
 <span data-lang="en"><strong>Charting bias:</strong> "Not charted ≠ did not happen." A missing GCS in an ICU patient often means alert, not missing. Naive mean-imputation will badly distort signal.</span>
 </div></div>
+
+<div class="analogy-box">
+  <div class="ana-icon">📚</div>
+  <div class="ana-body">
+    <span class="ana-tag" data-zh="比喻" data-en="ANALOGY">比喻</span>
+    <h4 data-zh="EHR 探勘 = 多語圖書館的考古" data-en="EHR Mining = Archaeology in a Multilingual Library">EHR 探勘 = 多語圖書館的考古</h4>
+    <p data-lang="zh">每家醫院的 EHR 就像一間用<strong>不同方言寫成的圖書館</strong>——同一個診斷可能寫在 ICD-9、ICD-10、ICD-11、SNOMED、自由文字註記，甚至只是一個藥單的線索。OMOP CDM 是「<strong>萬國音標</strong>」：先把每個方言映到 Athena vocabulary 的同一個 concept_id，所有書才讀得一樣；然後分析師才能像在同一張地圖上挖寶。</p>
+    <p data-lang="en">Each hospital's EHR is a library written in a different dialect — the same diagnosis may live in ICD-9, ICD-10, ICD-11, SNOMED, a free-text note, or just a hint in a prescription. OMOP CDM is the <strong>universal phonetic alphabet</strong>: every dialect maps to one Athena concept_id, so every book reads alike — only then can the analyst dig on the same map.</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card"><span class="kpi-num">38M+</span><span class="kpi-label" data-zh="PubMed 引用 (NLM)" data-en="PubMed citations">PubMed 引用</span></div>
+  <div class="kpi-card"><span class="kpi-num">~70k</span><span class="kpi-label" data-zh="ICD-10-CM 代碼數" data-en="ICD-10-CM codes">ICD-10-CM</span></div>
+  <div class="kpi-card"><span class="kpi-num">350k+</span><span class="kpi-label" data-zh="SNOMED CT 概念" data-en="SNOMED CT concepts">SNOMED CT</span></div>
+  <div class="kpi-card"><span class="kpi-num">86%</span><span class="kpi-label" data-zh="2017 美國 EHR 採用率" data-en="2017 US EHR adoption">EHR adoption</span></div>
+  <div class="kpi-card"><span class="kpi-num">299k</span><span class="kpi-label" data-zh="MIMIC-IV 入院數" data-en="MIMIC-IV admissions">MIMIC-IV</span></div>
+  <div class="kpi-card"><span class="kpi-num">1M+</span><span class="kpi-label" data-zh="All of Us 受試者" data-en="All of Us participants">All of Us</span></div>
+</div>
 </section>
 
 <section class="section">
@@ -173,6 +354,248 @@ net, im, fm = pm4py.discover_petri_net_inductive(log)</pre></div>
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="完整實例" data-en="WALKTHROUGH">完整實例</div>
+<h2 data-zh="心衰 30 天再住院預測 (Step-by-Step)" data-en="Heart-Failure 30-Day Readmission Prediction (Step-by-Step)">心衰 30 天再住院預測 (Step-by-Step)</h2>
+<div class="walkthrough">
+  <div class="walkthrough-header">
+    <div class="wt-num">HF</div>
+    <h3 data-zh="從原始 EHR 到 AUROC 0.74 模型" data-en="From Raw EHR to AUROC 0.74 Model">從原始 EHR 到 AUROC 0.74 模型</h3>
+    <span class="wt-tag" data-zh="目標：30-day readmission" data-en="Target: 30-day readmission">目標：30-day readmission</span>
+  </div>
+  <div class="wt-step"><div class="wt-label">Step 1</div><div class="wt-body" data-lang="zh"><strong>定義 cohort：</strong>從 OMOP <code>condition_occurrence</code> 抽取 <code>condition_concept_id ∈ {4329847 (CHF), 4127295 (HFrEF), 4023479 (HFpEF)}</code>，限定 2018-01-01 ~ 2024-12-31，且具至少 365 天 <code>observation_period</code>。結果：<strong>n = 18,432</strong> 住院。</div><div class="wt-body" data-lang="en"><strong>Define cohort:</strong> from OMOP <code>condition_occurrence</code> extract <code>condition_concept_id ∈ {4329847 (CHF), 4127295 (HFrEF), 4023479 (HFpEF)}</code>, restricted to 2018-01-01 to 2024-12-31, with ≥365-day <code>observation_period</code>. Result: <strong>n = 18,432</strong> admissions.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 2</div><div class="wt-body" data-lang="zh"><strong>定 index admission：</strong>每位病人取「第一次以心衰為主診斷的住院」；排除轉院 (transfer) 及計畫性住院 (planned)。</div><div class="wt-body" data-lang="en"><strong>Index admission:</strong> first hospitalization with HF as primary diagnosis per patient; exclude transfers and planned admissions.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 3</div><div class="wt-body" data-lang="zh"><strong>建立 outcome：</strong>look-ahead 0–30 天內任何 acute readmission（OMOP <code>visit_occurrence.visit_type=ER + Inpatient</code> 且 primary HF concept_id 命中），<strong>positive rate ≈ 18.4%</strong>。</div><div class="wt-body" data-lang="en"><strong>Build outcome:</strong> any acute readmission within 0–30 days (OMOP <code>visit_occurrence.visit_type=ER + Inpatient</code> with primary HF concept_id), <strong>positive rate ≈ 18.4%</strong>.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 4</div><div class="wt-body" data-lang="zh"><strong>特徵工程：</strong>(a) Charlson Comorbidity Index (CCI) — 用過去 1 年的 OMOP condition；(b) 年齡、性別、保險、SDoH (z-code)；(c) LOS、ICU stay、past-year admissions；(d) admission lab values (BNP, creatinine, sodium)；(e) 出院用藥 (beta-blocker, ACEi/ARB, MRA, SGLT2i — 2024 ESC guideline) 的指標變項；(f) 出院後 7-day follow-up 安排 (boolean)。共 142 個 features。</div><div class="wt-body" data-lang="en"><strong>Feature engineering:</strong> (a) Charlson Comorbidity Index (CCI) over the past year; (b) age, sex, insurance, SDoH (z-codes); (c) LOS, ICU stay, past-year admissions; (d) admission labs (BNP, creatinine, sodium); (e) discharge med indicators (beta-blocker, ACEi/ARB, MRA, SGLT2i per 2024 ESC); (f) 7-day post-discharge follow-up booked. Total: 142 features.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 5</div><div class="wt-body" data-lang="zh"><strong>切分：</strong>絕對<em>不要</em> random split。<strong>Group-K-fold by hospital_id</strong>（5 折）+ time-based hold-out (2024)。理由：同一家醫院的病人不獨立（同一群醫師、護理流程、編碼員）。</div><div class="wt-body" data-lang="en"><strong>Split:</strong> never random-split. Use <strong>group-K-fold by hospital_id</strong> (5-fold) + temporal hold-out (2024). Reason: patients within a hospital are non-independent (same physicians, nursing protocols, coders).</div></div>
+  <div class="wt-step"><div class="wt-label">Step 6</div><div class="wt-body" data-lang="zh"><strong>三個基準模型：</strong>(i) <strong>Cox PH</strong> (time-to-readmission)；(ii) <strong>logistic regression + LASSO</strong>；(iii) <strong>XGBoost + SHAP</strong>。XGBoost 訓練：<code>max_depth=6, learning_rate=0.05, n_estimators=500, early_stopping=20</code>。</div><div class="wt-body" data-lang="en"><strong>Three baselines:</strong> (i) <strong>Cox PH</strong> (time-to-readmission); (ii) <strong>logistic regression + LASSO</strong>; (iii) <strong>XGBoost + SHAP</strong>. XGBoost: <code>max_depth=6, learning_rate=0.05, n_estimators=500, early_stopping=20</code>.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 7</div><div class="wt-body" data-lang="zh"><strong>驗證 PH 假設：</strong>對 Cox 模型畫 Schoenfeld residual vs time，<code>cox.zph()</code> p > 0.05 通過；對年齡用 <code>tt()</code> 做 time-varying coefficient。</div><div class="wt-body" data-lang="en"><strong>Validate PH assumption:</strong> Schoenfeld residuals vs time, <code>cox.zph()</code> p > 0.05; age modeled with time-varying coefficient via <code>tt()</code>.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 8</div><div class="wt-body" data-lang="zh"><strong>結果：</strong>2024 hold-out AUROC = <strong>0.74 (95% CI 0.71–0.77)</strong>；AUPRC 0.36 (base rate 0.18 → 2× lift)；C-statistic (Cox) 0.71；Brier 0.13；calibration slope 0.96。SHAP top features：past-year admissions、BNP、無 7-day follow-up、SGLT2i absent。</div><div class="wt-body" data-lang="en"><strong>Results:</strong> 2024 hold-out AUROC = <strong>0.74 (95% CI 0.71–0.77)</strong>; AUPRC 0.36 (2× lift over base rate 0.18); C-index (Cox) 0.71; Brier 0.13; calibration slope 0.96. Top SHAP features: past-year admissions, BNP, no 7-day follow-up, SGLT2i absent.</div></div>
+</div>
+
+<details class="detail-toggle">
+  <summary data-zh="🔬 進階：為何不能用 LOS 當特徵？" data-en="🔬 Advanced: why LOS leaks the outcome?">🔬 進階：為何不能用 LOS 當特徵？</summary>
+  <div class="detail-body" data-lang="zh"><p>住院長度 (LOS) 看似強預測因子，但它常常<strong>反映了 outcome 本身</strong>：複雜病情 → 長 LOS → 也更可能再住院。更危險的是，許多 EHR 系統的 <code>length_of_stay</code> 欄位在出院前還會被續更新——你可能在不知情下把<em>未來資訊</em>放進訓練集（target leakage）。安全做法：只用入院後前 24/48 小時內可觀測到的 LOS proxy（如 GCS at 24h、ICU admission flag、creatinine peak）。</p></div>
+  <div class="detail-body" data-lang="en"><p>Length-of-stay (LOS) looks like a strong predictor but often <strong>reflects the outcome itself</strong>: complex cases → long LOS → also more likely to be readmitted. Worse, many EHRs update <code>length_of_stay</code> until discharge — you may unknowingly leak the future into training. Safe alternative: use only LOS proxies observable in the first 24/48 hours (GCS at 24h, ICU admission flag, creatinine peak).</p></div>
+</details>
+</section>
+
+<section class="section">
+<div class="spotlight">
+  <div class="sp-icon">🦠</div>
+  <div class="sp-body">
+    <span class="sp-tag" data-zh="案例" data-en="CASE STUDY">案例</span>
+    <h4 data-zh="2018 Duke Sepsis Watch — 早 5 小時的代價" data-en="2018 Duke Sepsis Watch — The Price of 5 Hours Early">2018 Duke Sepsis Watch — 早 5 小時的代價</h4>
+    <p data-lang="zh">Duke 大學 2018 部署 <strong>Sepsis Watch</strong>：deep-learning + EHR vital streams 預測 sepsis，平均提早 <strong>~5 小時</strong>，在 200+ 個臨床介入中啟動了快速 reaction team。<strong>JAMIA 2020</strong> 報告 in-hospital mortality 略降。但 2022 多中心外部驗證發現：模型在<strong>新地點 AUROC 從 0.87 跌到 0.71</strong>，主因為 vital sign chart 慣例不同（同一個 0.71 在 Duke 內也因 COVID-19 期間特殊收治流程而出現 model drift）。</p>
+    <p data-lang="zh">教訓：<strong>內部 AUROC ≠ 部署後表現</strong>；MLOps、prospective recalibration、外部跨機構驗證、與 EU AI Act post-market monitoring 都是必要配備。</p>
+    <p data-lang="en">Duke deployed <strong>Sepsis Watch</strong> in 2018: a deep-learning model over EHR vital-sign streams, alerting ~<strong>5 hours</strong> earlier and used in 200+ rapid-response interventions. <strong>JAMIA 2020</strong> reported a small in-hospital mortality drop. But a 2022 multi-site validation showed AUROC fell from 0.87 → <strong>0.71 at new sites</strong> (different vitals-charting conventions), plus drift inside Duke during COVID-19's altered admission flow.</p>
+    <p data-lang="en">Lesson: <strong>internal AUROC ≠ deployed performance</strong>; MLOps, prospective recalibration, external validation, and EU AI Act post-market monitoring are all required.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論" data-en="DEBATES">爭論</div>
+<h2 data-zh="三個正在燒的爭論" data-en="Three Debates Burning Now">三個正在燒的爭論</h2>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+  <h3 data-zh="OMOP CDM vs FHIR：到底哪一個贏？" data-en="OMOP CDM vs FHIR: Who Wins?">OMOP CDM vs FHIR：到底哪一個贏？</h3>
+  <div class="disc-q" data-lang="zh">FHIR 是 HL7 的<strong>互通標準</strong>（傳輸 / API）；OMOP 是 OHDSI 的<strong>分析 schema</strong>。研究人員爭論：為了臨床決策應該以 FHIR 為基底建模，還是先 ETL 到 OMOP 跑跨機構研究？</div>
+  <div class="disc-q" data-lang="en">FHIR is HL7's <strong>interoperability standard</strong> (transport / API); OMOP is OHDSI's <strong>analytics schema</strong>. Researchers argue: should clinical decision-support live on FHIR directly, or be ETL'd into OMOP first?</div>
+  <div class="disc-pov" data-lang="zh"><strong>支持 FHIR：</strong>即時、與 EHR 系統原生整合、有 SMART on FHIR app ecosystem，適合 CDS Hooks 觸發。</div>
+  <div class="disc-pov" data-lang="en"><strong>Pro-FHIR:</strong> real-time, EHR-native, SMART on FHIR app ecosystem, ideal for CDS Hooks.</div>
+  <div class="disc-pov" data-lang="zh"><strong>支持 OMOP：</strong>跨機構聯邦分析、固定 schema 不會隨 vendor 飄、Athena 詞彙統一、OHDSI 工具鏈完整 (ATLAS, ACHILLES, PatientLevelPrediction)。</div>
+  <div class="disc-pov" data-lang="en"><strong>Pro-OMOP:</strong> federated multi-site analytics, fixed schema not vendor-drifting, unified Athena vocabulary, mature OHDSI toolchain (ATLAS, ACHILLES, PatientLevelPrediction).</div>
+  <div class="disc-pov" data-lang="zh"><strong>2024–2026 現況：</strong>多家機構採「FHIR 為臨床 API + OMOP 為研究後端」雙軌；OHDSI 已釋出 FHIR-to-OMOP ETL 工具。</div>
+  <div class="disc-pov" data-lang="en"><strong>2024–2026 reality:</strong> many sites adopt a dual-track model — FHIR for clinical APIs, OMOP as the research back-end. OHDSI now ships FHIR-to-OMOP ETL tools.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+  <h3 data-zh="表型可否真正可重現？" data-en="Are Computable Phenotypes Truly Reproducible?">表型可否真正可重現？</h3>
+  <div class="disc-q" data-lang="zh">同一個 PheKB T2DM 表型，在 5 家醫院跑出的 PPV 在不同論文落於 79%–94%。是表型不夠精確，還是底層編碼實務不同？2024 Khera et al. <em>JAMIA</em> 發現：即使 OMOP 標準化後，<strong>concept_id 命中率仍有 15–20% 跨機構差異</strong>。</div>
+  <div class="disc-q" data-lang="en">The same PheKB T2DM phenotype yields PPVs from 79% to 94% across five hospitals. Is the phenotype too loose, or do underlying coding practices differ? Khera et al. <em>JAMIA</em> 2024 found that even after OMOP standardization, <strong>concept_id hit-rates vary 15–20% across sites</strong>.</div>
+  <div class="disc-pov" data-lang="zh">改善路線：(1) phenotype + chart-review feedback loop；(2) 用 Clinical-Longformer 對自由文字補強；(3) phecode 2.0 (2024) 對 ICD-10-CM 做更穩定的群組化。</div>
+  <div class="disc-pov" data-lang="en">Improvement paths: (1) phenotype + chart-review feedback loop; (2) augment with Clinical-Longformer on free text; (3) phecode 2.0 (2024) for more stable ICD-10-CM grouping.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+  <h3 data-zh="可解釋是否阻礙了好模型？" data-en="Does Explainability Block Better Models?">可解釋是否阻礙了好模型？</h3>
+  <div class="disc-q" data-lang="zh">部分學者主張：醫療場景<strong>應</strong>放棄黑盒，固守 interpretable models (LR, GAMs, EBM)；另一派則主張 SHAP/LIME + post-hoc explanation 足夠，且強加可解釋會犧牲精度。Rudin 2019 <em>Nat MI</em> 經典論文「<strong>停止解釋黑盒、改用本來就可解釋的模型</strong>」與 2024 NeurIPS workshops 仍在辯。</div>
+  <div class="disc-q" data-lang="en">Some argue medicine <strong>must</strong> forbid black-boxes (use LR, GAMs, EBM); others argue SHAP/LIME post-hoc is enough and forced interpretability sacrifices accuracy. Rudin's 2019 <em>Nat MI</em> manifesto "<strong>Stop explaining black boxes, use inherently interpretable models</strong>" is still debated at NeurIPS 2024 workshops.</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="五個 EHR 探勘的常見陷阱" data-en="Five Common EHR Mining Pitfalls">五個 EHR 探勘的常見陷阱</h2>
+<div class="pitfall-grid">
+  <div class="pitfall-card">
+    <h4 data-zh="假設 ICD 碼準確" data-en="Assuming ICD codes are accurate">假設 ICD 碼準確</h4>
+    <p data-lang="zh">ICD-10 在許多診斷的 <strong>sensitivity ≈ 80%</strong>，但 specificity 變動更大；糖尿病 ~92%，但精神病、罕病可低於 60%。記得做 chart-review PPV。</p>
+    <p data-lang="en">ICD-10 sensitivity is often ≈ <strong>80%</strong>; diabetes ~92% but psychiatric/rare diseases can be &lt;60%. Always validate with chart-review PPV.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="未做 group-CV by 醫院" data-en="No group-CV by hospital">未做 group-CV by 醫院</h4>
+    <p data-lang="zh">Random K-fold 會洩漏：同一個醫師、同一個編碼員、同一個 EHR 模板會把訓練集和測試集綁在一起。一定要 <code>GroupKFold(groups=hospital_id)</code> 或 <code>StratifiedGroupKFold</code>。</p>
+    <p data-lang="en">Random K-fold leaks: same physician, coder, EHR template tie train and test together. Use <code>GroupKFold(groups=hospital_id)</code> or <code>StratifiedGroupKFold</code>.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="忽略 informative censoring" data-en="Ignoring informative censoring">忽略 informative censoring</h4>
+    <p data-lang="zh">Cox / KM 假設 censoring 與事件獨立。但「病人因病況惡化轉院」會被當成 censored，這個假設立刻破功。檢查 Schoenfeld residuals + IPCW (inverse probability of censoring weights)。</p>
+    <p data-lang="en">Cox/KM assume censoring independent of event. "Transfer due to deterioration" treated as censored breaks this. Check Schoenfeld residuals + use IPCW (inverse probability of censoring weights).</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="把 LOS 當特徵 → outcome leakage" data-en="LOS as feature → outcome leakage">把 LOS 當特徵 → outcome leakage</h4>
+    <p data-lang="zh">LOS 是「出院後才知道」的變項；放進 readmission 模型等於把答案抄到題目。只能用 admission window 內可觀測的代理。</p>
+    <p data-lang="en">LOS is only known at discharge; using it in a readmission model copies the answer onto the question. Use only admission-window proxies.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="PH 不成立還跑 Cox" data-en="Running Cox when PH fails">PH 不成立還跑 Cox</h4>
+    <p data-lang="zh">如果某共變數的 effect 隨時間改變（如治療效果初期強、後期消退），Cox 報出來的 HR 會誤導。要先 <code>cox.zph()</code>，必要時改 time-varying coefficient、stratified Cox、或 AFT 模型。</p>
+    <p data-lang="en">If a covariate's effect changes over time (e.g., early treatment effect fading), Cox HR misleads. Run <code>cox.zph()</code> first; switch to time-varying coefficient, stratified Cox, or AFT models.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="忽略 SDoH (social determinants)" data-en="Ignoring SDoH">忽略 SDoH</h4>
+    <p data-lang="zh">缺少保險、住址、ZIP-level 社經因子，可能讓模型在弱勢族群表現變差。OMOP 5.4 加入 SDoH domain；ICD-10 Z55–Z65 系列也別忽略。</p>
+    <p data-lang="en">Without insurance, address, ZIP-level socioeconomic factors, models perform worse on underserved groups. OMOP 5.4 added an SDoH domain; ICD-10 Z55–Z65 codes also count.</p>
+  </div>
+</div>
+
+<div class="contrast-2col">
+  <div class="con-card bad">
+    <h4 data-zh="壞範例" data-en="Bad Practice">壞範例</h4>
+    <p data-lang="zh">用 random 80/20 split 訓練再住院模型，AUROC 0.86 → 部署到新醫院掉到 0.62。Reviewer 在 supplementary 才看到 split 方式，論文已被引用 80 次。</p>
+    <p data-lang="en">Random 80/20 split for the readmission model, AUROC 0.86 → drops to 0.62 at a new hospital. The split method was only revealed in supplementary; the paper had 80 citations.</p>
+  </div>
+  <div class="con-card good">
+    <h4 data-zh="好範例" data-en="Good Practice">好範例</h4>
+    <p data-lang="zh">Group-K-fold by hospital + temporal hold-out + external validation at 2 new sites + Model Card + 公開 cohort definition JSON。AUROC 0.74 但部署穩定，TRIPOD-AI 2024 合規。</p>
+    <p data-lang="en">Group-K-fold by hospital + temporal hold-out + external validation at 2 new sites + Model Card + public cohort-definition JSON. AUROC 0.74 but stable in deployment, TRIPOD-AI 2024 compliant.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+  <h4 data-zh="反思題（讀完想 5 分鐘）" data-en="Reflection (think for 5 minutes)">反思題（讀完想 5 分鐘）</h4>
+  <ol data-lang="zh">
+    <li>若你只有一家醫院 80 萬筆 EHR，沒有跨機構合作，<strong>還需要做 OMOP ETL 嗎</strong>？利與弊？</li>
+    <li>同一個 phenotype 在 5 家醫院 PPV 落於 80–94%，你願意接受這個變異發表嗎？若不，要怎麼縮窄？</li>
+    <li>當 EU AI Act 2027 高風險條款生效，你的再住院預測模型該歸為 Annex III 哪一類？需要什麼 post-market monitoring？</li>
+    <li>Cox PH 假設不成立時你會：(a) 放棄 Cox；(b) 改 time-varying coefficient；(c) 用 RSF / DeepSurv；(d) 都試。為什麼？</li>
+    <li>若你的模型對非裔病人 AUROC 0.78、對白人 0.81，這個 0.03 差距該被視為「可接受的雜訊」還是「需要修正的偏差」？</li>
+  </ol>
+  <ol data-lang="en">
+    <li>If you have 800k EHRs from one hospital and no multi-site partner, <strong>do you still need OMOP ETL</strong>? Pros and cons?</li>
+    <li>The same phenotype yields PPV 80–94% across 5 hospitals — would you publish? If not, how to tighten?</li>
+    <li>When EU AI Act 2027 high-risk provisions kick in, where does your readmission model fall under Annex III? What post-market monitoring is required?</li>
+    <li>When PH fails, do you (a) abandon Cox, (b) use time-varying coefficients, (c) switch to RSF / DeepSurv, or (d) try all? Justify.</li>
+    <li>Your model's AUROC is 0.78 for Black patients vs 0.81 for White — is that 0.03 gap "acceptable noise" or "bias to correct"?</li>
+  </ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+  <span class="adv-label" data-zh="進階 / 2024–2026 前沿" data-en="ADVANCED / 2024–2026 FRONTIERS">進階 / 2024–2026 前沿</span>
+  <h4 data-zh="EHR mining 的下一個五年" data-en="The Next Five Years of EHR Mining">EHR mining 的下一個五年</h4>
+  <p data-lang="zh"><strong>OMOP CDM v5.4 → v6 (2026 review)：</strong>加入 <code>specimen</code>、<code>cost</code>、<code>episode</code> 已成主流；v6 草案討論增加 <code>genomic</code> 與 <code>medical_image</code> 領域以對接 multi-omics + radiology。</p>
+  <p data-lang="zh"><strong>OHDSI ATLAS & PatientLevelPrediction (PLP):</strong> 2025 PLP 4.0 釋出，支援 LightGBM + Transformer baseline；Strategus 框架可以跨網絡跑 cohort study + diagnostics + 校正。</p>
+  <p data-lang="zh"><strong>聯邦 EHR mining：</strong>OpenSAFELY (2020, UK NHS)、FedML-Health (2023)、N3C (NCATS, 2020)、MELODY (Europe, 2024) 都採「程式進資料、不是資料出資料」模式，符合 GDPR & HIPAA。</p>
+  <p data-lang="zh"><strong>多模態 + 基礎模型：</strong>Med-Gemini (2024 NEJM AI)、GatorTron-X (2024 UF Health)、Foresight (2024 KCL) 把 EHR text + image + 結構化整合進單一 transformer；早期論文顯示在 30+ task 上比逐 task 微調更好。</p>
+  <p data-lang="zh"><strong>因果推論 in EHR：</strong>2024 MedRECord 工具鏈整合 g-computation、IPW、TMLE、target trial emulation (Hernán)；2025 多篇 <em>JAMA</em> 論文以 target-trial 取代 RCT 不可行情境。</p>
+  <p data-lang="zh"><strong>監管：</strong>FDA SaMD + PCCP (2024 final)、EU AI Act 2024/1689、ICMJE 2025 AI policy；2026 起 GPAI 透明度報告 & data summary 強制；TRIPOD-AI 2024 + STARD-AI 2025 為發表共同標準。</p>
+  <p data-lang="en"><strong>OMOP CDM v5.4 → v6 (2026 in review):</strong> <code>specimen</code>, <code>cost</code>, <code>episode</code> mainstream; v6 draft adds <code>genomic</code> and <code>medical_image</code> domains for multi-omics + radiology.</p>
+  <p data-lang="en"><strong>OHDSI ATLAS & PatientLevelPrediction (PLP):</strong> 2025 PLP 4.0 supports LightGBM + Transformer baselines; the Strategus framework runs cohort studies + diagnostics + calibration across the network.</p>
+  <p data-lang="en"><strong>Federated EHR mining:</strong> OpenSAFELY (2020 UK NHS), FedML-Health (2023), N3C (NCATS 2020), MELODY (Europe 2024) all bring "code to data," compliant with GDPR & HIPAA.</p>
+  <p data-lang="en"><strong>Multimodal + foundation models:</strong> Med-Gemini (2024 NEJM AI), GatorTron-X (2024 UF Health), Foresight (2024 KCL) fuse EHR text + image + structured into one transformer; early papers show gains over task-specific fine-tuning on 30+ tasks.</p>
+  <p data-lang="en"><strong>Causal inference in EHR:</strong> 2024 MedRECord toolchain integrates g-computation, IPW, TMLE, target trial emulation (Hernán); 2025 <em>JAMA</em> papers replace infeasible RCTs with target-trial designs.</p>
+  <p data-lang="en"><strong>Regulation:</strong> FDA SaMD + PCCP (2024 final), EU AI Act 2024/1689, ICMJE 2025 AI policy; 2026 GPAI transparency reports + data summaries mandatory; TRIPOD-AI 2024 + STARD-AI 2025 set the publication bar.</p>
+</div>
+</section>
+
+<section id="pitfalls">
+<h2><span data-zh="常見錯誤陷阱" data-en="Common Pitfalls">常見錯誤陷阱</span> / <span data-zh="Common Pitfalls" data-en="常見錯誤陷阱">Common Pitfalls</span></h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="假設 ICD 碼準確無誤" data-en="Assuming ICD codes are accurate"></h4><div data-lang="zh"><p><strong>症狀：</strong>把 ICD-10 當成 ground truth label，但很多疾病 ICD 敏感度僅 ~80%（敗血症甚至更低）。<strong>修正：</strong>用 PheKB / eMERGE 已驗證的可計算表型；高風險研究結合 chart review 抽樣校驗。</p></div><div data-lang="en"><p><strong>Symptom:</strong> treating ICD-10 as ground-truth labels; many conditions have only ~80% sensitivity (sepsis even lower). <strong>Fix:</strong> use PheKB / eMERGE validated computable phenotypes; for high-stakes studies, sample chart-review for calibration.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="未按病人 / 醫院做 group-CV" data-en="No group-CV by patient or hospital"></h4><div data-lang="zh"><p><strong>症狀：</strong>同一病人多次就診出現在 train 與 test，導致內部 AUROC 虛高，外部 drop 0.2+。<strong>修正：</strong>用 <code>GroupShuffleSplit</code> 或 <code>GroupKFold</code> 按 patient_id（甚至 hospital_id）分群；報告外部 (external) validation。</p></div><div data-lang="en"><p><strong>Symptom:</strong> same patient appears in both train and test; internal AUROC inflates, external drops 0.2+. <strong>Fix:</strong> <code>GroupShuffleSplit</code> / <code>GroupKFold</code> on patient_id (or hospital_id); always report external validation.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="忽略 informative censoring" data-en="Ignoring informative censoring"></h4><div data-lang="zh"><p><strong>症狀：</strong>失訪 (lost to follow-up) 不是隨機的——病情惡化的病人更可能轉院。視為「censoring at random」會嚴重低估事件率。<strong>修正：</strong>敏感性分析（worst-case / IPCW），或用 multi-state model。</p></div><div data-lang="en"><p><strong>Symptom:</strong> loss-to-follow-up is non-random — sicker patients transfer out. Assuming "censoring at random" underestimates event rates. <strong>Fix:</strong> sensitivity analysis (worst-case / IPCW) or multi-state model.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="LOS 當特徵→洩漏結果" data-en="LOS as feature leaks outcome"></h4><div data-lang="zh"><p><strong>症狀：</strong>用「住院天數 (LOS)」預測「30 天死亡」——LOS 本身已經包含結果信號（死掉的人 LOS 較短或更長）。<strong>修正：</strong>只用 index time（入院第 24 小時）以前可得的特徵；明確定義時間窗口。</p></div><div data-lang="en"><p><strong>Symptom:</strong> using length-of-stay to predict 30-day mortality — LOS already encodes outcome signal. <strong>Fix:</strong> only use features available before the index time (e.g., first 24h of admission); precisely define the time window.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="非比例風險仍用 Cox PH" data-en="Cox PH on non-proportional hazards"></h4><div data-lang="zh"><p><strong>症狀：</strong>Kaplan-Meier 曲線交叉、Schoenfeld 殘差 p<0.05，卻仍報告單一 HR。<strong>修正：</strong>檢查 PH 假設（<code>cox.zph</code>）；違反時用 time-varying coefficients、stratified Cox、或 Fine-Gray (競爭風險) / AFT 模型。</p></div><div data-lang="en"><p><strong>Symptom:</strong> KM curves cross, Schoenfeld p<0.05, yet a single HR is still reported. <strong>Fix:</strong> check PH (<code>cox.zph</code>); use time-varying coefficients, stratified Cox, or Fine-Gray / AFT when violated.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="部署後忽略 concept drift" data-en="Ignoring concept drift in deployment"></h4><div data-lang="zh"><p><strong>症狀：</strong>Epic Sepsis Watch 部署兩年後 AUROC 從 0.76 (廠商宣稱) 降到 0.63（Wong 2021）——病人組成、編碼習慣、臨床流程都在漂移。<strong>修正：</strong>建立 monitoring 儀表板，週/月度報告 PPV / sensitivity / alert burden；FDA PCCP 預設變更控制計畫。</p></div><div data-lang="en"><p><strong>Symptom:</strong> Epic Sepsis Watch dropped from vendor-claimed 0.76 to 0.63 AUROC after deployment (Wong 2021) — patient mix, coding habits and workflow drift. <strong>Fix:</strong> monitoring dashboard reporting weekly/monthly PPV / sensitivity / alert burden; FDA PCCP for pre-specified change control.</p></div></div>
+</div>
+</section>
+
+<section>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="錯誤做法：隨機切分病人資料" data-en="Wrong: random split on patient data"></h4><div data-lang="zh"><pre><code class="language-python">from sklearn.model_selection import train_test_split
+X_tr, X_te, y_tr, y_te = train_test_split(EHR_df, y, test_size=0.2, random_state=42)
+# 同一病人多次就診出現在 train + test
+# 內部 AUROC 0.94，外部驟降到 0.63</code></pre></div><div data-lang="en"><pre><code class="language-python">from sklearn.model_selection import train_test_split
+X_tr, X_te, y_tr, y_te = train_test_split(EHR_df, y, test_size=0.2, random_state=42)
+# Same patient appears in both train and test
+# Internal AUROC 0.94, external collapses to 0.63</code></pre></div></div>
+<div class="con-card good"><h4 data-zh="正確做法：依病人分組 + 時間外部驗證" data-en="Correct: group-CV by patient + temporal external validation"></h4><div data-lang="zh"><pre><code class="language-python">from sklearn.model_selection import GroupShuffleSplit
+gss = GroupShuffleSplit(test_size=0.2, random_state=42)
+tr_idx, te_idx = next(gss.split(EHR_df, y, groups=EHR_df['patient_id']))
+# 再用「2024 後資料」做 temporal external validation
+external = EHR_df[EHR_df['admit_year'] >= 2024]
+auroc_external = roc_auc_score(external['y'], model.predict_proba(external)[:,1])</code></pre></div><div data-lang="en"><pre><code class="language-python">from sklearn.model_selection import GroupShuffleSplit
+gss = GroupShuffleSplit(test_size=0.2, random_state=42)
+tr_idx, te_idx = next(gss.split(EHR_df, y, groups=EHR_df['patient_id']))
+# Then evaluate on "2024+" data for temporal external validation
+external = EHR_df[EHR_df['admit_year'] >= 2024]
+auroc_external = roc_auc_score(external['y'], model.predict_proba(external)[:,1])</code></pre></div></div>
+</div>
+</section>
+
+<section id="discussion">
+<h2><span data-zh="引人入勝的討論點" data-en="Engaging Discussion Points">引人入勝的討論點</span> / <span data-zh="Engaging Discussion Points" data-en="引人入勝的討論點">Engaging Discussion Points</span></h2>
+
+<div class="discussion-card"><span class="disc-label">DEBATE</span><h3 data-zh="OMOP CDM vs FHIR — 哪一個贏？" data-en="OMOP CDM vs FHIR — which wins?"></h3><div class="disc-q" data-lang="zh">在 2026 年，研究團隊要選 OMOP CDM 還是 FHIR 作為 EHR 資料整合的核心？</div><div class="disc-q" data-lang="en">In 2026, should research teams adopt OMOP CDM or FHIR as the core EHR integration standard?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">OMOP CDM — 研究友好、單一 schema、OHDSI 全球聯盟、ATLAS 與 PatientLevelPrediction 工具鏈成熟，是回溯式研究的首選。</span><span data-lang="en">OMOP CDM — research-friendly, single schema, OHDSI global federation, mature ATLAS + PatientLevelPrediction tooling; first choice for retrospective studies.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">FHIR — 臨床即時、顆粒度細、EHR 廠商（Epic, Cerner）原生支援、SMART on FHIR 可內嵌應用，是部署交付的首選。</span><span data-lang="en">FHIR — clinical-realtime, granular, natively supported by Epic/Cerner, SMART on FHIR enables embedded apps; first choice for deployment.</span></div><div class="disc-pov"><strong data-zh="觀點三（折衷）：" data-en="View 3 (compromise):">觀點三（折衷）：</strong> <span data-lang="zh">混合 — 2025+ 多數現代專案兩者並用：OMOP 做分析、FHIR 做交付。ETL 工具（如 OHDSI's FHIR2OMOP）讓兩者可互轉。</span><span data-lang="en">Hybrid — most modern 2025+ projects use both: OMOP for analytics, FHIR for delivery. ETL tools (e.g., OHDSI's FHIR2OMOP) bridge them.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">REPRODUCIBILITY</span><h3 data-zh="可計算表型在不同站點之間真的可再現嗎？" data-en="Is computable phenotyping reproducible across sites?"></h3><div class="disc-q" data-lang="zh">PheKB 的 case definition 在不同醫院 / 不同 EHR 系統執行，得到的盛行率差異有多大？</div><div class="disc-q" data-lang="en">When PheKB case definitions run across different hospitals / EHR systems, how much does estimated prevalence diverge?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">混合結果——eMERGE 多站研究顯示同一 phenotype 在不同站點盛行率變異 5–20%，主因是 ICD coding 習慣 + 局部臨床流程。</span><span data-lang="en">Mixed — eMERGE multi-site studies show 5–20% prevalence variation for the same phenotype across sites, mostly due to local coding habits and workflows.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">針對「sharp」phenotype（如 T1D）一致性較高（差異 <5%）；對「fuzzy」phenotype（如 chronic pain）差異可達 30%+。</span><span data-lang="en">For "sharp" phenotypes (e.g., T1D) consistency is high (<5%); for "fuzzy" phenotypes (e.g., chronic pain), divergence can exceed 30%.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">XAI</span><h3 data-zh="沒有可解釋性的 AI 醫療決策，該被信任嗎？" data-en="Should we trust AI medical decisions without explainability?"></h3><div class="disc-q" data-lang="zh">當 AI 模型給出敗血症預警，但無法說明「為什麼」，臨床醫師應該採用嗎？</div><div class="disc-q" data-lang="en">When an AI flags sepsis but cannot explain "why," should clinicians act on it?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">不應—FDA SaMD + PCCP 2025 明確要求 transparency；臨床醫師越來越堅持 SHAP / LIME 局部解釋，否則拒絕採信。</span><span data-lang="en">No — FDA SaMD + PCCP 2025 require transparency; clinicians increasingly demand SHAP/LIME local explanations or refuse to act.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">應該—只要前瞻 RCT 證實臨床受益（mortality 下降），「黑箱」也可接受（如同我們不要求 aspirin 每次都解釋分子機制）。</span><span data-lang="en">Yes — if prospective RCTs prove clinical benefit (mortality reduction), a black box is acceptable (we do not require aspirin to explain itself molecularly each time).</span></div></div>
+</section>
+
+<section>
+<div class="spotlight"><div class="sp-icon">🌟</div><div class="sp-body"><span class="sp-tag">CASE STUDY</span><h4 data-zh="2018 Duke Sepsis Watch — 最常被引用的臨床 ML 警世故事" data-en="2018 Duke Sepsis Watch — the most-cited cautionary tale in clinical ML"></h4><div data-lang="zh"><p>2018 年 Duke University Hospital 部署 Sepsis Watch（基於 LSTM 的早期敗血症預警系統），用於 200+ 例病人介入。最初內部報告 AUROC <strong>0.94</strong>，宣稱能在發病前 ~5 小時偵測敗血症。18 個月後外部驗證揭露：<strong>AUROC 僅 0.63、敏感度 33%、警報負擔達 18% 病人</strong>（Wong et al. 2021 JAMA Intern Med）。</p><p>解剖失敗原因：(1) 病人未分組的隨機 k-fold CV；(2) 事後 threshold 最佳化；(3) 沒有時間外部驗證；(4) 訓練資料的 label 來自事後 chart review，部署時的 label 來自 ICD billing——兩者分佈不同。這個案例催生了 FDA 對 SaMD + PCCP 的明確規範，也是<strong>每一篇 TRIPOD-AI 教科書必引</strong>的範例。</p></div><div data-lang="en"><p>In 2018 Duke University Hospital deployed Sepsis Watch (an LSTM-based early-warning system) to 200+ patient interventions. Initial internal report: <strong>AUROC 0.94</strong>, predicting sepsis ~5h before onset. 18 months later external validation revealed: <strong>AUROC just 0.63, sensitivity 33%, alert burden 18% of patients</strong> (Wong et al. 2021 JAMA Intern Med).</p><p>Autopsy of the failure: (1) random k-fold CV without patient grouping; (2) post-hoc threshold optimization; (3) no temporal validation; (4) training labels came from retrospective chart review while deployment labels came from ICD billing — different distributions. This case drove FDA's explicit SaMD + PCCP rules and is <strong>cited in every TRIPOD-AI textbook</strong>.</p></div></div></div>
+</section>
+
+<section id="reflection">
+<h2><span data-zh="延伸思考題" data-en="Reflection Questions">延伸思考題</span> / <span data-zh="Reflection Questions" data-en="延伸思考題">Reflection Questions</span></h2>
+<div class="reflection-q"><h4 data-zh="自我檢測" data-en="Self-test"></h4>
+<ol data-lang="zh">
+<li>如何外部驗證一個敗血症預測模型？至少列出 3 個必須報告的指標與 2 個可能的偏差來源。</li>
+<li>OMOP CDM v5.4 與正在發展中的 v6 主要差別是什麼？對研究人員的影響？</li>
+<li>ICD-10 編碼能否區分第一型與第二型糖尿病？敏感度與特異性大概是多少？</li>
+<li>Fine-Gray sub-distribution hazard 模型與 Cox PH 模型在面對「競爭風險」時的差別？</li>
+<li>什麼是「competing risk」（競爭風險）？舉一個 EHR 研究中常見的範例。</li>
+</ol>
+<ol data-lang="en">
+<li>How would you externally validate a sepsis prediction model? List at least 3 required metrics and 2 likely bias sources.</li>
+<li>What are the main differences between OMOP CDM v5.4 and the in-development v6? What does this mean for researchers?</li>
+<li>Can ICD-10 codes distinguish Type 1 vs Type 2 diabetes? What are approximate sensitivity / specificity?</li>
+<li>How does Fine-Gray sub-distribution hazards differ from Cox PH when competing risks are present?</li>
+<li>What is "competing risk" in survival analysis? Give an EHR example.</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced">
+<h2><span data-zh="進階研究員筆記" data-en="Advanced Researcher Notes">進階研究員筆記</span> / <span data-zh="Advanced Researcher Notes" data-en="進階研究員筆記">Advanced Researcher Notes</span></h2>
+<div class="advanced-note"><span class="adv-label">2024–2026 SOTA</span><h4 data-zh="EHR 探勘的 2024–2026 前沿" data-en="EHR mining at the 2024–2026 frontier"></h4><div data-lang="zh"><p><strong>標準與工具：</strong>OMOP CDM v5.4 為現行標準，v6 開發中（加強 measurement / cost / time-zone 處理）；OHDSI ATLAS 用於 cohort 定義 + 公開 phenotype library；R package <code>PatientLevelPrediction</code> (Reps 2018) 是最完整的多站點 prediction pipeline。</p><p><strong>聯邦學習：</strong>2025 FedML-Health、OpenSafely（NHS UK）、CMS Beneficiary Claims Data 提供跨醫院 / 跨國家不外洩 PHI 的聯邦 EHR 探勘平台；2026 federated TRIPOD-AI 報告框架正在草擬中。</p><p><strong>因果推論：</strong>MedRECord toolchain 整合 g-computation / IPW / TMLE / Target Trial Emulation (Hernán)；2025 JAMA 多篇用 target trial 取代不可行 RCT。</p><p><strong>多模態：</strong>2026 PaLM-Med、Med-Gemini、Mistral-Med 把 EHR 結構化資料 + 影像 + 臨床 NLP（BioGPT + UMLS linker）整合於同一模型；BioGPT 的 UMLS linker 可將自由文本對應到 CUI，解決同義詞與縮寫問題。</p></div><div data-lang="en"><p><strong>Standards & tooling:</strong> OMOP CDM v5.4 is current; v6 in development (better handling of measurements, cost, time zones). OHDSI ATLAS for cohort definition + open phenotype library; R package <code>PatientLevelPrediction</code> (Reps 2018) is the most complete multi-site prediction pipeline.</p><p><strong>Federated learning:</strong> 2025 FedML-Health, OpenSafely (NHS UK), CMS Beneficiary Claims Data enable cross-hospital / cross-country EHR mining without PHI egress; a 2026 federated TRIPOD-AI reporting framework is being drafted.</p><p><strong>Causal inference:</strong> MedRECord integrates g-computation, IPW, TMLE, target trial emulation (Hernán); 2025 JAMA papers replace infeasible RCTs with target-trial designs.</p><p><strong>Multimodal:</strong> 2026 PaLM-Med, Med-Gemini, Mistral-Med unify structured EHR + imaging + clinical NLP (BioGPT + UMLS linker); the UMLS linker maps free text to CUIs, solving synonym/abbreviation problems.</p></div></div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -205,6 +628,8 @@ net, im, fm = pm4py.discover_petri_net_inductive(log)</pre></div>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 自動選 covariates</span><span data-lang="en">D. Auto-select covariates</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note"><strong data-zh="歷史小故事：" data-en="History Note:">歷史小故事：</strong><span data-lang="zh">1980 年代 — Larry Weed 醫師在佛蒙特大學 (University of Vermont) 發明「問題導向病歷」(Problem-Oriented Medical Record, POMR)，也就是今天的 SOAP note 結構：Subjective（主觀）/ Objective（客觀）/ Assessment（評估）/ Plan（計畫）。早在 1969 年他就預言「電腦終將改變醫療紀錄」，當時被當笑話。40 年後，美國每一間使用 Epic 或 Cerner 的醫院都用 SOAP note 結構。Weed 2017 年過世，未能親眼見證他完整的願景——但他發明的這個結構，仍在每一份現代電子病歷中悄悄運作。額外一筆：1958 年 Edward Kaplan 與 Paul Meier 各自獨立投稿 JASA 同主題論文，編輯 William Madow 將兩篇合併，成就今日 72,000+ 引用的 Kaplan-Meier 估計式。</span><span data-lang="en">1980s — Dr. Larry Weed at the University of Vermont invented the "Problem-Oriented Medical Record" (POMR), the SOAP note structure: Subjective, Objective, Assessment, Plan. As early as 1969 he predicted "computers will transform medical records" — people laughed. 40 years later every Epic and Cerner instance in the US uses SOAP notes. Weed died in 2017 without seeing his full vision realized — yet the structure he invented quietly powers every modern EHR. Footnote: in 1958 Edward Kaplan and Paul Meier independently submitted JASA papers on the same topic; editor William Madow merged them into the 72,000+ cited Kaplan-Meier estimator.</span></div>
 
 <nav class="page-nav">
 <a href="graph-network-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 16: 圖與網路探勘" data-en="Ch 16: Graph &amp; Network Mining">Ch 16: 圖與網路探勘</span></a>

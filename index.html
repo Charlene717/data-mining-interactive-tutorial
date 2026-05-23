@@ -30,9 +30,132 @@
 </div></nav>
 <header class="hub-hero"><div style="position:relative;z-index:1;">
 <h1 data-zh="資料探勘 互動式教學" data-en="Data Mining Interactive Tutorial">資料探勘 互動式教學</h1>
-<p data-lang="zh">從 CRISP-DM 方法論到生物醫學應用——20 章節帶你掌握分類、分群、關聯規則、異常偵測、文本與圖網絡探勘，並附 R / Python 並列範例與互動模擬。</p>
-<p data-lang="en">From CRISP-DM methodology to biomedical applications — master classification, clustering, association rules, anomaly detection, text and graph mining in 20 chapters with parallel R / Python examples and interactive simulations.</p>
+<p data-lang="zh">從 CRISP-DM 方法論到生物醫學應用——20 章節 × 5 大模組，深入淺出帶你掌握分類、分群、關聯、異常、文本、圖網絡探勘。每章內含故事化導讀、12+ 雙語名詞詳解、9+ 歷史里程碑、Σ-步驟手算範例、互動模擬、討論點、案例聚光燈、常見陷阱、自我檢測與 2024-2026 進階前沿。</p>
+<p data-lang="en">From CRISP-DM methodology to biomedical applications — 20 chapters × 5 modules. Each chapter packs story-driven intros, 12+ bilingual glossary cards, 9+ historical milestones, Σ-stepped worked examples, interactive sims, debates, case spotlights, pitfalls, reflections, and 2024–2026 SOTA notes.</p>
 </div></header>
+
+<!-- ===== Learning paths (3 tiers) ===== -->
+<div style="max-width:1100px;margin:48px auto 20px;padding:0 24px">
+<h2 class="hub-section-title" style="margin:0 0 8px 0;padding:0"><span>🎯</span> <span data-zh="三條學習路徑" data-en="Three Learning Paths">三條學習路徑</span></h2>
+<p style="font-size:.95rem;color:var(--c-ink-light);margin-bottom:18px;padding:0" data-lang="zh">每個人的起點與目的不同。下方推薦三條依程度量身打造的學習路徑——選一條最適合你的開始。</p>
+<p style="font-size:.95rem;color:var(--c-ink-light);margin-bottom:18px;padding:0;display:none" data-lang="en">Different starting points, different goals. Pick whichever path fits your level — three curated routes, each tuned to a tier.</p>
+
+<div class="path-card">
+<span class="path-tag" data-zh="🌱 初學者 (Beginner)" data-en="🌱 Beginner">🌱 初學者 (Beginner)</span>
+<h4 data-zh="從零開始的資料探勘速成" data-en="Zero-to-One Data Mining Crash Course">從零開始的資料探勘速成</h4>
+<div class="path-meta" data-lang="zh">⏱️ 預計 12–18 小時 · 適合：學生 / 剛入門的資料分析師 / 跨域研究者</div>
+<div class="path-meta" data-lang="en" style="display:none">⏱️ Est. 12–18 hours · For: students / data-analyst beginners / cross-field researchers</div>
+<div class="path-steps" data-lang="zh"><strong>建議閱讀順序：</strong>
+Ch 1 CRISP-DM（看故事+概覽） → Ch 3 EDA（建立直覺） → Ch 2 資料準備（避開陷阱） → Ch 4 距離（理解基礎） → Ch 5 分類（KNN+Logistic） → Ch 9 K-Means（最簡單的分群） → Ch 8 模型評估（為什麼 AUROC 0.99 是壞兆頭） → Ch 11 關聯規則（直觀有趣）。<br><br>
+<strong>跳過：</strong>Ch 7 SVM 數學、Ch 10 高階密度型分群、Ch 16 GNN——日後再回頭。
+</div>
+<div class="path-steps" data-lang="en" style="display:none"><strong>Suggested order:</strong>
+Ch 1 CRISP-DM (story + overview) → Ch 3 EDA (build intuition) → Ch 2 Data Prep (avoid pitfalls) → Ch 4 Distance (foundation) → Ch 5 Classification (KNN+Logistic) → Ch 9 K-Means (simplest clustering) → Ch 8 Evaluation (why 0.99 AUROC is a red flag) → Ch 11 Association Rules (intuitive and fun).<br><br>
+<strong>Skip for now:</strong> Ch 7 SVM math, Ch 10 advanced density clustering, Ch 16 GNN.
+</div>
+</div>
+
+<div class="path-card">
+<span class="path-tag" style="background:#1e40af" data-zh="🌿 中階 (Intermediate)" data-en="🌿 Intermediate">🌿 中階 (Intermediate)</span>
+<h4 data-zh="實務探勘工程師路徑" data-en="Practitioner / Engineer Path">實務探勘工程師路徑</h4>
+<div class="path-meta" data-lang="zh">⏱️ 預計 25–35 小時 · 適合：在職資料工程師 / ML 研究助理 / 醫療資訊師</div>
+<div class="path-meta" data-lang="en" style="display:none">⏱️ Est. 25–35 hours · For: working data engineers / ML research assistants / health informaticians</div>
+<div class="path-steps" data-lang="zh"><strong>建議閱讀順序：</strong>
+全 Module A（4 章 — 打底）→ Module B 全部（4 章 — 重點補上 Ch 6 RF/XGBoost 與 Ch 8 評估方法）→ 跳到 Ch 13 異常偵測與 Ch 14 文本探勘（業界常用）→ Ch 11 關聯規則 → 回過頭 Ch 9 → 10 完整分群 → 最後讀 Ch 18 Omics 應用、Ch 20 倫理與重現性。<br><br>
+<strong>實戰提示：</strong>每章先做互動模擬 → 看 walkthrough 計算 → 跑 R/Python 範例 → 完成 quiz 章節 → 嘗試把該章方法套用到自己的資料集。
+</div>
+<div class="path-steps" data-lang="en" style="display:none"><strong>Order:</strong>
+All of Module A (4) → All of Module B (4 — especially Ch 6 RF/XGBoost & Ch 8 evaluation) → jump to Ch 13 anomaly & Ch 14 text mining (industry-popular) → Ch 11 → back to Ch 9 → 10 → finish with Ch 18 omics & Ch 20 ethics.<br><br>
+<strong>Practice tip:</strong> Each chapter: interactive sim → walkthrough math → run R/Python sample → finish quiz → apply to your own data.
+</div>
+</div>
+
+<div class="path-card">
+<span class="path-tag" style="background:#9d174d" data-zh="🌳 進階研究員 (Advanced)" data-en="🌳 Advanced">🌳 進階研究員 (Advanced)</span>
+<h4 data-zh="生醫資料探勘研究員路徑" data-en="Biomedical Research Path">生醫資料探勘研究員路徑</h4>
+<div class="path-meta" data-lang="zh">⏱️ 預計 40–60 小時 · 適合：博士生 / postdoc / 臨床資訊研究員 / ML 科學家</div>
+<div class="path-meta" data-lang="en" style="display:none">⏱️ Est. 40–60 hours · For: PhD students / postdocs / clinical informaticians / ML scientists</div>
+<div class="path-steps" data-lang="zh"><strong>建議閱讀順序：</strong>
+跳過基礎概覽，深讀<strong>每章的進階研究員筆記 (advanced-note)</strong> — 那裡集中 2024-2026 最新 SOTA 與論文連結。重點章節：
+Ch 6 XGBoost 2.x + LightGBM 4.x → Ch 8 nested CV / conformal prediction → Ch 10 HDBSCAN + Spectral → Ch 13 PyOD 3 / deep anomaly → Ch 16 GNN + Hetionet/PrimeKG → Ch 17 OMOP CDM + survival → Ch 18 多組學整合 + 基模 (Geneformer/scGPT) → Ch 19 RAG + 醫療 LLM → Ch 20 EU AI Act 2026 / 公平性審查 / TRIPOD-AI 2024。<br><br>
+<strong>研究啟發：</strong>每章「引人入勝的討論點」是 paper-worthy 議題；「進階研究員筆記」附 DOI；「歷史小故事」適合作為演講開場。
+</div>
+<div class="path-steps" data-lang="en" style="display:none"><strong>Order:</strong>
+Skip basics — go straight to each chapter's <strong>advanced-note</strong> for 2024–2026 SOTA with DOIs. Focus chapters:
+Ch 6 XGBoost 2.x + LightGBM 4.x → Ch 8 nested CV / conformal → Ch 10 HDBSCAN + Spectral → Ch 13 PyOD 3 / deep anomaly → Ch 16 GNN + Hetionet/PrimeKG → Ch 17 OMOP + survival → Ch 18 multi-omics + foundation models (Geneformer/scGPT) → Ch 19 medical LLM + RAG → Ch 20 EU AI Act 2026 / fairness audits / TRIPOD-AI 2024.<br><br>
+<strong>Research hooks:</strong> "Discussion points" are paper-worthy debates; "advanced-notes" come with DOIs; "history notes" make great talk openers.
+</div>
+</div>
+</div>
+
+<!-- ===== Concept map ===== -->
+<div style="max-width:1100px;margin:60px auto 20px;padding:0 24px">
+<h2 class="hub-section-title" style="margin:0 0 8px 0;padding:0"><span>🗺️</span> <span data-zh="20 章節概念地圖" data-en="20-Chapter Concept Map">20 章節概念地圖</span></h2>
+<p style="font-size:.95rem;color:var(--c-ink-light);padding:0;margin-bottom:18px" data-lang="zh">本教程涵蓋的核心知識領域。各模組之間並非孤立——例如 Ch 4 距離度量是 Ch 5 KNN、Ch 9 K-Means、Ch 10 DBSCAN 的基礎；Ch 8 評估是貫穿全教程的橫切主題。</p>
+<p style="font-size:.95rem;color:var(--c-ink-light);padding:0;margin-bottom:18px;display:none" data-lang="en">The tutorial's core knowledge domains. Modules aren't isolated — e.g. Ch 4 distance underpins Ch 5 KNN, Ch 9 K-Means, Ch 10 DBSCAN; Ch 8 evaluation is a cross-cutting theme.</p>
+<div class="kpi-grid">
+<div class="kpi-card"><span class="kpi-num">20</span><span class="kpi-label" data-zh="章節" data-en="Chapters">章節</span></div>
+<div class="kpi-card"><span class="kpi-num">5</span><span class="kpi-label" data-zh="大模組" data-en="Modules">大模組</span></div>
+<div class="kpi-card"><span class="kpi-num">240+</span><span class="kpi-label" data-zh="名詞卡" data-en="Glossary">名詞卡</span></div>
+<div class="kpi-card"><span class="kpi-num">180+</span><span class="kpi-label" data-zh="歷史里程碑" data-en="Milestones">歷史里程碑</span></div>
+<div class="kpi-card"><span class="kpi-num">60+</span><span class="kpi-label" data-zh="互動小工具" data-en="Interactives">互動小工具</span></div>
+<div class="kpi-card"><span class="kpi-num">200</span><span class="kpi-label" data-zh="測驗題" data-en="Quiz Qs">測驗題</span></div>
+<div class="kpi-card"><span class="kpi-num">110+</span><span class="kpi-label" data-zh="DOI 引用" data-en="DOI Citations">DOI 引用</span></div>
+<div class="kpi-card"><span class="kpi-num">100%</span><span class="kpi-label" data-zh="雙語" data-en="Bilingual">雙語</span></div>
+</div>
+</div>
+
+<!-- ===== Featured spotlights ===== -->
+<div style="max-width:1100px;margin:50px auto 20px;padding:0 24px">
+<h2 class="hub-section-title" style="margin:0 0 8px 0;padding:0"><span>🌟</span> <span data-zh="精選實例聚光燈" data-en="Featured Case Spotlights">精選實例聚光燈</span></h2>
+<p style="font-size:.95rem;color:var(--c-ink-light);padding:0;margin-bottom:18px" data-lang="zh">每章皆包含真實世界案例。以下挑選幾個關鍵——點擊對應章節閱讀完整故事。</p>
+<p style="font-size:.95rem;color:var(--c-ink-light);padding:0;margin-bottom:18px;display:none" data-lang="en">Each chapter has real-world cases. A few highlights:</p>
+
+<div class="spotlight" style="margin:14px 0;">
+<div class="sp-icon">🦠</div>
+<div class="sp-body">
+<span class="sp-tag">CH 3</span>
+<h4 data-zh="1854 倫敦霍亂——史上第一張資料探勘地圖" data-en="1854 London Cholera — The First Data-Mining Map">1854 倫敦霍亂</h4>
+<div data-lang="zh"><p>John Snow 醫師在 Broad Street 街口畫了一張死亡地圖，揭穿了「瘴氣理論」、確認了水井污染。<strong>視覺化拯救生命</strong>的原型故事。</p></div>
+<div data-lang="en" style="display:none"><p>Dr. John Snow drew a death map at the Broad Street intersection — overturned miasma theory and identified contaminated wells. The original <strong>visualization-saves-lives</strong> story.</p></div>
+</div>
+</div>
+
+<div class="spotlight" style="margin:14px 0;background:linear-gradient(135deg,#dbeafe,#bfdbfe);border-color:#1e40af">
+<div class="sp-icon">🚀</div>
+<div class="sp-body">
+<span class="sp-tag" style="background:#1e40af">CH 1</span>
+<h4 data-zh="2009 Netflix 百萬美元挑戰" data-en="2009 Netflix $1M Challenge">2009 Netflix 百萬美元挑戰</h4>
+<div data-lang="zh"><p>BellKor's Pragmatic Chaos 團隊集合 800+ 模型奪冠——示範完整 CRISP-DM 循環在規模化下的價值。後續啟發了一整個世代的 ensemble 工程。</p></div>
+<div data-lang="en" style="display:none"><p>BellKor's Pragmatic Chaos won by combining 800+ models — demonstrating CRISP-DM's value at scale; inspired a generation of ensemble engineering.</p></div>
+</div>
+</div>
+
+<div class="spotlight" style="margin:14px 0;background:linear-gradient(135deg,#fce7f3,#fbcfe8);border-color:#9d174d">
+<div class="sp-icon">⚖️</div>
+<div class="sp-body">
+<span class="sp-tag" style="background:#9d174d">CH 20</span>
+<h4 data-zh="2019 Obermeyer Science——種族偏差的健康演算法" data-en="2019 Obermeyer — Racially Biased Health Algorithm">2019 Obermeyer Science</h4>
+<div data-lang="zh"><p>一個服務 2 億美國人的健康演算法——黑人病人被低估需求 50%。原因：用「醫療花費」當「醫療需求」的代理變數。引爆整個演算法公平性研究領域。</p></div>
+<div data-lang="en" style="display:none"><p>A US healthcare algorithm serving 200M Americans systematically under-served Black patients by 50% — used "cost" as proxy for "need." Sparked the field of algorithmic fairness.</p></div>
+</div>
+</div>
+</div>
+
+<!-- ===== Tips for using this tutorial ===== -->
+<div style="max-width:1100px;margin:50px auto 20px;padding:0 24px">
+<h2 class="hub-section-title" style="margin:0 0 8px 0;padding:0"><span>💡</span> <span data-zh="如何高效運用本教程" data-en="How to Get the Most Out of This Tutorial">如何高效運用本教程</span></h2>
+<div class="tip-bar" data-lang="zh">每章右上角可切換中英文。橘色「⚡ 互動」面板拖滑桿可即時看效果。</div>
+<div class="tip-bar" data-lang="en" style="display:none">Top-right button switches zh/en. Orange "⚡ Interactive" panels respond live to sliders.</div>
+<div class="card-grid cols-3" style="margin-top:14px">
+<div class="card"><div class="card-icon">📖</div><h4 data-zh="① 故事先導，再讀概覽" data-en="① Story First, Then Concept">① 故事先導，再讀概覽</h4><div data-lang="zh"><p>每章開頭的「故事化導讀」5 分鐘讓你抓住主題情境，再進入概念與公式時更有畫面感。</p></div><div data-lang="en"><p>Each chapter opens with a 5-min story to anchor the theme. Concepts feel less abstract after.</p></div></div>
+<div class="card"><div class="card-icon">🎮</div><h4 data-zh="② 滑桿、按按鈕、玩起來" data-en="② Slide, Click, Play">② 滑桿、按按鈕、玩起來</h4><div data-lang="zh"><p>每章有 2-3 個互動模擬。理論看完後動手拉拉滑桿，立刻知道參數變動的影響。</p></div><div data-lang="en"><p>Each chapter has 2-3 interactive sims. After theory, drag sliders to see parameter effects live.</p></div></div>
+<div class="card"><div class="card-icon">📐</div><h4 data-zh="③ 跟著 Σ-步驟手算" data-en="③ Hand-Compute the Σ-Walkthrough">③ 跟著 Σ-步驟手算</h4><div data-lang="zh"><p>每章 walkthrough 列出 6-10 個帶具體數字的步驟。拿紙筆跟著算一次，理解深度立刻翻倍。</p></div><div data-lang="en"><p>Each walkthrough lists 6-10 numbered steps with concrete numbers. Compute by hand once — depth doubles.</p></div></div>
+<div class="card"><div class="card-icon">⚠️</div><h4 data-zh="④ 認真看「常見陷阱」" data-en="④ Take Pitfalls Seriously">④ 認真看「常見陷阱」</h4><div data-lang="zh"><p>每章列出 5-6 個業界踩過的坑——這些不是學術問題，是真的會讓你 production 系統爆炸的錯誤。</p></div><div data-lang="en"><p>Each chapter lists 5-6 real-world pitfalls — these aren't academic issues, they crash production systems.</p></div></div>
+<div class="card"><div class="card-icon">💬</div><h4 data-zh="⑤ 與「討論點」對話" data-en="⑤ Engage with Discussions">⑤ 與「討論點」對話</h4><div data-lang="zh"><p>每章 2-3 個「DEBATE」卡片提出開放問題並給出多角度。寫下你自己的立場，作為深度學習的證據。</p></div><div data-lang="en"><p>Each chapter has 2-3 DEBATE cards with multi-perspective views. Write down your stance as evidence of deep learning.</p></div></div>
+<div class="card"><div class="card-icon">🧪</div><h4 data-zh="⑥ 進階研究員直接跳到「ADVANCED」" data-en="⑥ Advanced Readers: Skip to ADVANCED">⑥ 進階研究員：直接跳到「ADVANCED」</h4><div data-lang="zh"><p>「進階研究員筆記」彙整 2024-2026 SOTA 與論文 DOI，是 paper-worthy 題目的種子。</p></div><div data-lang="en"><p>"Advanced researcher notes" curate 2024-2026 SOTA with DOIs — seeds for paper-worthy projects.</p></div></div>
+</div>
+</div>
 
 <h2 class="hub-section-title"><span>A</span> <span data-zh="基礎與方法論" data-en="Module A — Foundations">基礎與方法論</span></h2>
 <div class="hub-steps-grid">

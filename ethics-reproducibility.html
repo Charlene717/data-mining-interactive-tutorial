@@ -18,6 +18,170 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+  <strong data-zh="本章學習地圖" data-en="Chapter Roadmap">本章學習地圖</strong>
+  <div class="pill-row">
+    <span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+    <span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+    <span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+    <span class="pill teal">⏱ ~55 min</span>
+    <span class="pill amber">📖 20 / 20</span>
+    <span class="pill violet">⚖️ Module E</span>
+  </div>
+  <ol>
+    <li><a href="#story" data-zh="開場：0.97 AUROC 之後的一封信" data-en="Story: The Letter After 0.97 AUROC">開場故事</a></li>
+    <li><a href="#glossary" data-zh="術語小卡：HIPAA 到 Model Card" data-en="Glossary: HIPAA to Model Card">術語小卡</a></li>
+    <li><a href="#history" data-zh="時間軸：1979 Belmont 到 2027 EU AI Act" data-en="Timeline: 1979 Belmont → 2027 EU AI Act">時間軸</a></li>
+    <li><a href="#walkthrough" data-zh="完整實例：稽核再住院模型公平性" data-en="Worked Example: Auditing a Readmission Model">完整實例</a></li>
+    <li><a href="#discussion" data-zh="爭論：公平 vs 準確、DP、EU AI Act 影響" data-en="Debates: Fairness vs Accuracy, DP, EU AI Act">爭論</a></li>
+    <li><a href="#pitfalls" data-zh="陷阱：5 個常見錯誤" data-en="Pitfalls: 5 Common Mistakes">陷阱</a></li>
+    <li><a href="#reflection" data-zh="反思題" data-en="Reflection Questions">反思題</a></li>
+    <li><a href="#advanced" data-zh="進階：TRIPOD-AI、STARD-AI、PCCP" data-en="Advanced: TRIPOD-AI, STARD-AI, PCCP">進階</a></li>
+  </ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="故事" data-en="STORY">故事</div>
+<h2 data-zh="開場：0.97 AUROC 後收到的一封信" data-en="Opening: The Letter That Came After 0.97 AUROC">開場：0.97 AUROC 之後的一封信</h2>
+<div class="story-block">
+<span class="story-tag" data-zh="情境" data-en="SCENARIO">情境</span>
+<h3 data-zh="🚨 「為什麼我兒子的血氧 88% 還被分到非緊急？」" data-en="🚨 'Why was my son with SpO₂ 88% routed to non-urgent?'">🚨 「為什麼我兒子的血氧 88% 還被分到非緊急？」</h3>
+<div data-lang="zh">
+<p>一支機器學習團隊在一家美國大型醫院開發了 sepsis 預測模型，內部 AUROC 0.97。論文發表在頂級期刊，被三家醫院引進部署。六個月後，一封信寄到開發者：「我兒子 19 歲，黑人，血氧 88%、心率 132，他在急診被你的模型評為『非緊急』，等了 4 小時才見到醫師。他現在 ICU 第 11 天，雙肺炎合併敗血症。為什麼？」</p>
+<p>團隊調出資料：模型訓練資料 85% 是白人；對黑人病人的 sensitivity 0.61，對白人 0.78；vital sign baseline 對種族未做調整（黑人 baseline heart rate 略高被視為「正常」）；training 時 LOS 是 feature → outcome leakage；race 雖未被當 feature，但 ZIP code 與保險型態實質代表了種族（fairness through unawareness 失敗）。他們重新訓練、加入 fairness constraint、設置 monitoring、發 retraction、改 Model Card 公開所有限制。但<strong>一條生命已被改寫</strong>。</p>
+<p>這個故事不是虛構——它的原型是 2019 Obermeyer et al. <em>Science</em> 揭露的 Optum 健康風險演算法事件，影響全美 2 億人。本章的所有規則、指引、技術，最後都要回到這個問題：<strong>當你的模型錯了，誰會付出代價？</strong></p>
+</div>
+<div data-lang="en">
+<p>A team built a sepsis predictor at a large US hospital, internal AUROC 0.97. The paper hit a top journal; three hospitals deployed it. Six months later: "My 19-year-old Black son had SpO₂ 88%, HR 132. Your model rated him 'non-urgent.' He waited 4 hours. He's now Day 11 in the ICU with bilateral pneumonia and sepsis. Why?"</p>
+<p>The team digs in: training data was 85% White; sensitivity 0.61 for Black patients vs 0.78 for White; vital-sign baselines weren't race-adjusted (Black baseline HR slightly higher counted as "normal"); LOS was a feature → outcome leakage; race was dropped but ZIP code + insurance encoded it anyway (fairness-through-unawareness fails). They retrain, add fairness constraints, set monitoring, post a retraction, publish a Model Card disclosing all limits. <strong>But a life is already rewritten.</strong></p>
+<p>This isn't fiction — its template is Obermeyer et al. <em>Science</em> 2019, the Optum risk-score audit affecting 200M Americans. Every rule, guideline, and technique in this chapter ultimately answers one question: <strong>when your model is wrong, who pays?</strong></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="術語" data-en="GLOSSARY">術語</div>
+<h2 data-zh="術語小卡：HIPAA 到 Model Card" data-en="Glossary: HIPAA to Model Card">術語小卡：HIPAA 到 Model Card</h2>
+<div class="glossary-grid">
+  <div class="glossary-card">
+    <div class="term-en">HIPAA Privacy Rule</div>
+    <div class="term-zh">健康資訊隱私規則</div>
+    <div class="term-kid" data-lang="zh">美國的「醫療資料保密法」，1996 通過。</div>
+    <div class="term-kid" data-lang="en">The US "medical data secrecy law," passed 1996.</div>
+    <div class="term-tech" data-lang="zh">45 CFR Parts 160 + 164；定義 PHI、covered entities、permitted uses；Safe Harbor (18 identifiers) 或 Expert Determination 兩種 de-identification 路徑。</div>
+    <div class="term-tech" data-lang="en">45 CFR Parts 160 + 164; defines PHI, covered entities, permitted uses; two de-identification routes: Safe Harbor (18 identifiers) or Expert Determination.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Safe Harbor / 18 Identifiers</div>
+    <div class="term-zh">安全港 / 18 項識別碼</div>
+    <div class="term-kid" data-lang="zh">把姓名、生日、地址、社安號等 18 種<strong>標籤</strong>全拿掉就算「去識別化」。</div>
+    <div class="term-kid" data-lang="en">Remove the 18 obvious labels (name, DOB, address, SSN…) and the data counts as "de-identified."</div>
+    <div class="term-tech" data-lang="zh">含 ZIP (3-digit only, &gt;20k pop)、age &lt; 90、所有 dates 只到年；剩餘 quasi-identifiers 仍可能 re-identifiable (Sweeney 2000)。</div>
+    <div class="term-tech" data-lang="en">Includes ZIP (3-digit only, &gt;20k pop), age &lt; 90, dates to year only; residual quasi-identifiers can still re-identify (Sweeney 2000).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">GDPR Art. 9 / Art. 22</div>
+    <div class="term-zh">歐盟資料保護規則</div>
+    <div class="term-kid" data-lang="zh">健康資料屬「特殊類別」，原則上禁止；自動化決策必須允許「找人類審查」。</div>
+    <div class="term-kid" data-lang="en">Health data is a "special category" — prohibited unless excepted; automated decisions must allow human review.</div>
+    <div class="term-tech" data-lang="zh">GDPR 2016/679；Art. 9 禁止健康/種族/性取向/生物特徵處理除非明確同意或公共利益；Art. 22 right to human review；Art. 35 DPIA 評估。</div>
+    <div class="term-tech" data-lang="en">GDPR 2016/679; Art. 9 prohibits health/race/sexual-orientation/biometric processing except with explicit consent or public-interest exception; Art. 22 right to human review; Art. 35 DPIA.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Differential Privacy (DP)</div>
+    <div class="term-zh">差分隱私</div>
+    <div class="term-kid" data-lang="zh">在資料的答案上<strong>加一點亂數</strong>，讓壞人猜不出單一個人。</div>
+    <div class="term-kid" data-lang="en">Add a calibrated bit of <strong>random noise</strong> so an attacker can't pin down any individual.</div>
+    <div class="term-tech" data-lang="zh">Dwork 2006；ε-DP 保證 P(M(D)∈S) ≤ e^ε · P(M(D')∈S)；Laplace / Gaussian mechanism；ε ≤ 1 為強隱私、ε ≥ 10 弱。</div>
+    <div class="term-tech" data-lang="en">Dwork 2006; ε-DP guarantees P(M(D)∈S) ≤ e^ε · P(M(D')∈S); Laplace / Gaussian mechanisms; ε ≤ 1 strong, ε ≥ 10 weak.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">k-anonymity / l-diversity</div>
+    <div class="term-zh">k-匿名 / l-多樣性</div>
+    <div class="term-kid" data-lang="zh">每筆資料至少和其他 k-1 筆「長得一樣」，無法被獨自挑出。</div>
+    <div class="term-kid" data-lang="en">Each record looks like at least k-1 others on quasi-identifiers, so it can't be singled out.</div>
+    <div class="term-tech" data-lang="zh">Sweeney 2002 k-anonymity；Machanavajjhala 2007 l-diversity（每 k-group 至少 l 個 sensitive value）；t-closeness 2007 進一步要求 distribution 接近 overall。</div>
+    <div class="term-tech" data-lang="en">Sweeney 2002 k-anonymity; Machanavajjhala 2007 l-diversity (≥ l sensitive values per k-group); t-closeness 2007 requires distribution close to overall.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Demographic Parity</div>
+    <div class="term-zh">人口統計均等</div>
+    <div class="term-kid" data-lang="zh">不同族群被預測為「陽性」的<strong>比例相同</strong>。</div>
+    <div class="term-kid" data-lang="en">Different groups have <strong>the same rate</strong> of being predicted "positive."</div>
+    <div class="term-tech" data-lang="zh">P(Ŷ=1|A=a) = P(Ŷ=1|A=b)；不條件於 y_true；可能與 accuracy 衝突 (base rate disparity)。</div>
+    <div class="term-tech" data-lang="en">P(Ŷ=1|A=a) = P(Ŷ=1|A=b); unconditional on y_true; can conflict with accuracy under base-rate disparity.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Equalized Odds / Equal Opportunity</div>
+    <div class="term-zh">機率均等 / 機會均等</div>
+    <div class="term-kid" data-lang="zh">真實有病的人，<strong>不分族群</strong>都該以同樣機率被找到。</div>
+    <div class="term-kid" data-lang="en">Truly sick patients should be caught at the <strong>same rate</strong> across groups.</div>
+    <div class="term-tech" data-lang="zh">Hardt 2016 NeurIPS；Equalized Odds 要求各組 TPR 與 FPR 都相等；Equal Opportunity 只要求 TPR (弱化版)。</div>
+    <div class="term-tech" data-lang="en">Hardt 2016 NeurIPS; Equalized Odds requires equal TPR + FPR per group; Equal Opportunity only TPR (weaker).</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Disparate Impact / 4/5 Rule</div>
+    <div class="term-zh">差別影響 / 4/5 法則</div>
+    <div class="term-kid" data-lang="zh">弱勢族群的「陽性率 ÷ 優勢族群陽性率」< 0.8 就算差別影響。</div>
+    <div class="term-kid" data-lang="en">If unprivileged-group positive-rate ÷ privileged-group positive-rate &lt; 0.8, it's "disparate impact."</div>
+    <div class="term-tech" data-lang="zh">US EEOC 1978 Uniform Guidelines；DI = P(Ŷ=1|A=u)/P(Ŷ=1|A=p)；0.8 ≤ DI ≤ 1.25 為合規區間。</div>
+    <div class="term-tech" data-lang="en">US EEOC 1978 Uniform Guidelines; DI = P(Ŷ=1|A=u)/P(Ŷ=1|A=p); compliant zone 0.8 ≤ DI ≤ 1.25.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">SHAP / LIME</div>
+    <div class="term-zh">模型解釋方法</div>
+    <div class="term-kid" data-lang="zh">告訴你<strong>每個特徵對最終預測的貢獻</strong>有多少。</div>
+    <div class="term-kid" data-lang="en">Tell you <strong>how much each feature contributed</strong> to the prediction.</div>
+    <div class="term-tech" data-lang="zh">Lundberg-Lee 2017 NeurIPS SHAP (Shapley value)；Ribeiro 2016 KDD LIME；皆為 post-hoc 解釋，與本質可解釋模型 (Rudin 2019) 觀點對立。</div>
+    <div class="term-tech" data-lang="en">Lundberg-Lee 2017 NeurIPS SHAP (Shapley values); Ribeiro 2016 KDD LIME; both post-hoc, contra Rudin 2019's "inherently interpretable" stance.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">FAIR Principles</div>
+    <div class="term-zh">FAIR 資料原則</div>
+    <div class="term-kid" data-lang="zh">資料要能被<strong>找得到、拿得到、能對接、能再用</strong>。</div>
+    <div class="term-kid" data-lang="en">Data must be <strong>Findable, Accessible, Interoperable, Reusable</strong>.</div>
+    <div class="term-tech" data-lang="zh">Wilkinson et al. 2016 Sci Data；FAIR Maturity Indicators 2019；NIH DMS 2023 Policy 要求公開 metadata + DOI。</div>
+    <div class="term-tech" data-lang="en">Wilkinson et al. 2016 Sci Data; FAIR Maturity Indicators 2019; NIH DMS 2023 Policy mandates public metadata + DOI.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">EU AI Act 2024/1689</div>
+    <div class="term-zh">歐盟人工智慧法</div>
+    <div class="term-kid" data-lang="zh">2024 通過，<strong>2026 起對通用 AI、2027 起對高風險 AI</strong> 全面適用。</div>
+    <div class="term-kid" data-lang="en">Adopted 2024; <strong>2026 enforces GPAI, 2027 enforces high-risk AI</strong>.</div>
+    <div class="term-tech" data-lang="zh">Risk-based：unacceptable / high / limited / minimal；Annex III 列高風險領域（含醫療）；GPAI 含 frontier-LLM 透明度報告與訓練摘要。</div>
+    <div class="term-tech" data-lang="en">Risk-based: unacceptable / high / limited / minimal; Annex III lists high-risk domains (incl. medical); GPAI obligations cover frontier-LLM transparency reports and training-data summaries.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Model Card / Datasheet</div>
+    <div class="term-zh">模型卡 / 資料表</div>
+    <div class="term-kid" data-lang="zh">每個 AI 模型的「成分標示」——資料來源、限制、可預期錯誤模式。</div>
+    <div class="term-kid" data-lang="en">An AI model's "nutrition label" — data source, limits, expected failure modes.</div>
+    <div class="term-tech" data-lang="zh">Mitchell 2019 ACM FAccT Model Cards；Gebru 2021 CACM Datasheets；2024 TRIPOD-AI BMJ + 2025 STARD-AI Nat Med 把這些升級為發表標準。</div>
+    <div class="term-tech" data-lang="en">Mitchell 2019 ACM FAccT Model Cards; Gebru 2021 CACM Datasheets; 2024 TRIPOD-AI BMJ + 2025 STARD-AI Nat Med upgrade these into publication standards.</div>
+  </div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間軸" data-en="TIMELINE">時間軸</div>
+<h2 data-zh="從 Belmont (1979) 到 EU AI Act (2027)" data-en="From Belmont (1979) to EU AI Act (2027)">從 Belmont (1979) 到 EU AI Act (2027)</h2>
+<div class="timeline">
+  <div class="timeline-item"><span class="tl-year">1979</span><span class="tl-title">Belmont Report</span><span class="tl-desc" data-zh="美國 National Commission；三原則：尊重 / 利益 / 正義；現代 IRB 基礎。" data-en="US National Commission; three principles: respect, beneficence, justice — basis of modern IRB."></span></div>
+  <div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title">HIPAA</span><span class="tl-desc" data-zh="美國 Health Insurance Portability and Accountability Act；Privacy Rule + Security Rule。" data-en="US Health Insurance Portability and Accountability Act; Privacy Rule + Security Rule."></span></div>
+  <div class="timeline-item"><span class="tl-year">2000</span><span class="tl-title">Sweeney re-identification</span><span class="tl-desc" data-zh="(ZIP, DOB, sex) 可識別 87% 美國人；推動 Safe Harbor 18 identifiers 修訂。" data-en="(ZIP, DOB, sex) re-identifies 87% of Americans; spurs Safe Harbor 18-identifier revisions."></span></div>
+  <div class="timeline-item"><span class="tl-year">2003</span><span class="tl-title">Dwork concept</span><span class="tl-desc" data-zh="Cynthia Dwork 首次提出 calibrated noise 隱私概念。" data-en="Cynthia Dwork first proposes calibrated-noise privacy concept."></span></div>
+  <div class="timeline-item"><span class="tl-year">2006</span><span class="tl-title">Differential Privacy formalized</span><span class="tl-desc" data-zh="Dwork et al. ICALP/TCC；ε-DP 嚴格定義 + Laplace mechanism。" data-en="Dwork et al. ICALP/TCC; rigorous ε-DP + Laplace mechanism."></span></div>
+  <div class="timeline-item"><span class="tl-year">2016</span><span class="tl-title">GDPR adopted / FAIR principles</span><span class="tl-desc" data-zh="GDPR 通過 (2018 enforcement)；Wilkinson FAIR principles Sci Data。" data-en="GDPR adopted (enforced 2018); Wilkinson FAIR principles Sci Data."></span></div>
+  <div class="timeline-item"><span class="tl-year">2016</span><span class="tl-title">Equalized Odds (Hardt)</span><span class="tl-desc" data-zh="Hardt-Price-Srebro NeurIPS；公平機器學習轉折點。" data-en="Hardt-Price-Srebro NeurIPS; turning point for fair ML."></span></div>
+  <div class="timeline-item"><span class="tl-year">2019</span><span class="tl-title">Model Cards / Obermeyer audit</span><span class="tl-desc" data-zh="Mitchell ACM FAccT Model Cards；Obermeyer Science Optum bias case (200M Americans)。" data-en="Mitchell ACM FAccT Model Cards; Obermeyer Science Optum bias case (200M Americans)."></span></div>
+  <div class="timeline-item"><span class="tl-year">2021</span><span class="tl-title">Gebru Datasheets / Rudin Nat MI</span><span class="tl-desc" data-zh="Gebru CACM Datasheets for Datasets；Rudin 力倡 inherently interpretable。" data-en="Gebru CACM Datasheets for Datasets; Rudin pushes inherently interpretable models."></span></div>
+  <div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title">EU AI Act + TRIPOD-AI + FDA PCCP</span><span class="tl-desc" data-zh="EU AI Act 2024/1689 通過；TRIPOD-AI BMJ；FDA SaMD PCCP final guidance。" data-en="EU AI Act 2024/1689 adopted; TRIPOD-AI BMJ; FDA SaMD PCCP final guidance."></span></div>
+  <div class="timeline-item"><span class="tl-year">2025</span><span class="tl-title">ICMJE AI policy / STARD-AI</span><span class="tl-desc" data-zh="ICMJE 要求 AI 使用聲明；STARD-AI Nat Med 為診斷研究標準。" data-en="ICMJE mandates AI declaration; STARD-AI Nat Med becomes diagnostic-study standard."></span></div>
+  <div class="timeline-item"><span class="tl-year">2026/08/02</span><span class="tl-title" data-zh="EU AI Act：GPAI 義務上路" data-en="EU AI Act: GPAI obligations">EU AI Act：GPAI 義務上路</span><span class="tl-desc" data-zh="通用 AI 模型透明度報告、訓練資料摘要、版權合規義務生效。" data-en="GPAI transparency reports, training-data summaries, copyright compliance go live."></span></div>
+  <div class="timeline-item"><span class="tl-year">2027/08/02</span><span class="tl-title" data-zh="EU AI Act：高風險 AI 全面適用" data-en="EU AI Act: High-Risk Full Enforcement">EU AI Act：高風險 AI 全面適用</span><span class="tl-desc" data-zh="Annex III 含醫療診斷模型；風險管理 + 技術文件 + 上市後監測強制。" data-en="Annex III covers medical diagnosis models; risk-management + tech docs + post-market monitoring mandatory."></span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="四個支柱：法遵 / 公平 / 可解釋 / 再現" data-en="Four Pillars: Compliance / Fairness / Explainability / Reproducibility">四個支柱：法遵 / 公平 / 可解釋 / 再現</h2>
@@ -33,6 +197,25 @@
 <span data-lang="zh"><strong>Sweeney 1997：</strong>在美國，僅以 (5-digit ZIP, 生日, 性別) 三項，就能<strong>唯一識別 87% 的人口</strong>。看似匿名的資料其實高度可再識別。</span>
 <span data-lang="en"><strong>Sweeney 1997:</strong> in the US, the triple (5-digit ZIP, DOB, sex) <strong>uniquely identifies 87% of the population</strong>. "Anonymized" data is often highly re-identifiable.</span>
 </div></div>
+
+<div class="analogy-box">
+  <div class="ana-icon">🔐</div>
+  <div class="ana-body">
+    <span class="ana-tag" data-zh="比喻" data-en="ANALOGY">比喻</span>
+    <h4 data-zh="隱私 = 上鎖的日記、公平 = 應徵面試" data-en="Privacy = A Locked Diary; Fairness = A Job Interview">隱私 = 上鎖的日記、公平 = 應徵面試</h4>
+    <p data-lang="zh"><strong>隱私</strong>像一本上鎖的日記：HIPAA Safe Harbor 是把封面標籤撕掉（名字、社安號）；差分隱私是再灑上墨水，讓即使有專家想拼湊也猜不出某一頁是誰的——ε 是允許的墨水濃度。<strong>公平</strong>像應徵面試：你想要「同樣能力的應徵者，不管種族性別都拿到同樣機會」——這是 equal opportunity；「整體錄取率不同族群相同」是 demographic parity；兩者數學上有時不可能同時滿足 (Chouldechova 2017)。</p>
+    <p data-lang="en"><strong>Privacy</strong> is a locked diary. HIPAA Safe Harbor tears off the obvious label (name, SSN); differential privacy adds calibrated ink so no expert can reconstruct any one page — ε is the ink concentration allowed. <strong>Fairness</strong> is a job interview: you want "equally qualified applicants get equal chances regardless of race/sex" — that's equal opportunity; "overall hire rate equal across groups" is demographic parity; mathematically the two can be incompatible (Chouldechova 2017).</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card"><span class="kpi-num">18</span><span class="kpi-label" data-zh="HIPAA Safe Harbor 識別碼" data-en="HIPAA Safe Harbor IDs">識別碼</span></div>
+  <div class="kpi-card"><span class="kpi-num">87%</span><span class="kpi-label" data-zh="Sweeney re-id rate" data-en="Sweeney re-id rate">Sweeney</span></div>
+  <div class="kpi-card"><span class="kpi-num">0.8</span><span class="kpi-label" data-zh="4/5 rule DI 下限" data-en="4/5 rule DI floor">DI 下限</span></div>
+  <div class="kpi-card"><span class="kpi-num">2024</span><span class="kpi-label" data-zh="EU AI Act 通過年" data-en="EU AI Act adopted">EU AI Act</span></div>
+  <div class="kpi-card"><span class="kpi-num">200M</span><span class="kpi-label" data-zh="Obermeyer 影響人數" data-en="Obermeyer affected">Optum bias</span></div>
+  <div class="kpi-card"><span class="kpi-num">81</span><span class="kpi-label" data-zh="ACMG SF v3.2 genes" data-en="ACMG SF v3.2 genes">ACMG SF</span></div>
+</div>
 </section>
 
 <section class="section">
@@ -156,6 +339,270 @@ shap.summary_plot(sv, X_test)
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="完整實例" data-en="WALKTHROUGH">完整實例</div>
+<h2 data-zh="稽核一個再住院模型的公平性" data-en="Auditing a Readmission Model's Fairness">稽核一個再住院模型的公平性</h2>
+<div class="walkthrough">
+  <div class="walkthrough-header">
+    <div class="wt-num">FA</div>
+    <h3 data-zh="從 0.82 accuracy 到 0.04 disparity 的 6 步" data-en="From 0.82 Accuracy to 0.04 Disparity in 6 Steps">從 0.82 accuracy 到 0.04 disparity 的 6 步</h3>
+    <span class="wt-tag" data-zh="情境：30 天再住院模型上線前審查" data-en="Setting: Pre-deployment audit">情境：上線前審查</span>
+  </div>
+  <div class="wt-step"><div class="wt-label">Step 1</div><div class="wt-body" data-lang="zh"><strong>分層：</strong>把 hold-out 集按 race (Black / White / Asian / Hispanic) × sex × insurance (Medicare / Medicaid / Private / Uninsured) 切分。先檢查每組樣本數，避免某些組過小無法估計（rule of thumb: 每組 ≥ 100）。</div><div class="wt-body" data-lang="en"><strong>Stratify:</strong> split the hold-out by race (Black / White / Asian / Hispanic) × sex × insurance (Medicare / Medicaid / Private / Uninsured). Check sample size per group (rule of thumb: ≥ 100 per cell).</div></div>
+  <div class="wt-step"><div class="wt-label">Step 2</div><div class="wt-body" data-lang="zh"><strong>每組混淆矩陣：</strong>計算 TPR / FPR / PPV / NPV per subgroup；得到 TPR_White=0.78, TPR_Black=0.61, TPR_Hispanic=0.69, TPR_Asian=0.74。</div><div class="wt-body" data-lang="en"><strong>Per-group confusion matrices:</strong> compute TPR / FPR / PPV / NPV; obtain TPR_White=0.78, TPR_Black=0.61, TPR_Hispanic=0.69, TPR_Asian=0.74.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 3</div><div class="wt-body" data-lang="zh"><strong>量化差距：</strong>Equal Opportunity violation: max-min TPR = 0.78 - 0.61 = <strong>Δ = 0.17</strong>（業界常以 ≤ 0.10 為合規）。DI = P(Ŷ=1|Black) / P(Ŷ=1|White) = 0.58 → <strong>違反 4/5 rule</strong>。 用 <code>fairlearn.metrics.MetricFrame</code> 一次跑出所有指標。</div><div class="wt-body" data-lang="en"><strong>Quantify gap:</strong> Equal Opportunity violation: max-min TPR = 0.78 - 0.61 = <strong>Δ = 0.17</strong> (industry threshold ≤ 0.10). DI = P(Ŷ=1|Black) / P(Ŷ=1|White) = 0.58 → <strong>4/5 rule violated</strong>. Use <code>fairlearn.metrics.MetricFrame</code> to compute all metrics at once.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 4</div><div class="wt-body" data-lang="zh"><strong>根因分析：</strong>(a) 訓練資料 race 分布：White 76% / Black 12% / Hispanic 8% / Asian 4% → severe imbalance；(b) ZIP code 與 insurance 與 race 高度相關 → 即使 drop race，模型仍能 indirectly proxy；(c) base rate 不同 (Black readmission ~22% vs White ~16%) → 部分差距是真實 base rate。</div><div class="wt-body" data-lang="en"><strong>Root cause:</strong> (a) training race distribution White 76% / Black 12% / Hispanic 8% / Asian 4% — severe imbalance; (b) ZIP code + insurance highly correlated with race → dropping race doesn't help (proxies remain); (c) base rates differ (Black readmission ~22% vs White ~16%) — part of the gap is base-rate driven.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 5</div><div class="wt-body" data-lang="zh"><strong>加入公平性約束：</strong>用 <code>fairlearn.reductions.ExponentiatedGradient(LogisticRegression(), constraints=EqualizedOdds())</code> 重訓練；或 Hardt 2016 post-processing thresholding 法（per-group threshold 調整）。</div><div class="wt-body" data-lang="en"><strong>Add fairness constraint:</strong> retrain with <code>fairlearn.reductions.ExponentiatedGradient(LogisticRegression(), constraints=EqualizedOdds())</code>; or use Hardt 2016 post-processing thresholding (per-group threshold tuning).</div></div>
+  <div class="wt-step"><div class="wt-label">Step 6</div><div class="wt-body" data-lang="zh"><strong>結果：</strong>準確率從 0.82 → 0.79 (-3%)，但 TPR Δ 從 0.17 → 0.04，DI 從 0.58 → 0.91。Stakeholder review (含 community advisory board) 決定接受這個 trade-off：「3% 整體準確 vs 較不漏掉黑人病人」。發 Model Card 公開所有限制與決策。</div><div class="wt-body" data-lang="en"><strong>Result:</strong> accuracy 0.82 → 0.79 (-3%), but TPR Δ 0.17 → 0.04, DI 0.58 → 0.91. Stakeholder review (incl. community advisory board) accepts the trade-off: "3% accuracy for fewer missed Black patients." Publish a Model Card disclosing all limits and decisions.</div></div>
+</div>
+
+<details class="detail-toggle">
+  <summary data-zh="🔬 進階：fairness-accuracy 數學不可能性" data-en="🔬 Advanced: the fairness-accuracy impossibility">🔬 進階：fairness-accuracy 數學不可能性</summary>
+  <div class="detail-body" data-lang="zh"><p>Chouldechova 2017 與 Kleinberg-Mullainathan-Raghavan 2017 證明：當 base rate 不同時，<strong>calibration、equalized odds、demographic parity 三者不可能同時滿足</strong>（除非完美預測或 base rate 相同）。這是個數學定理，不是技術問題。所以實務上要：(1) 選擇優先指標（通常 equal opportunity 或 EO）；(2) 透明告訴所有 stakeholder 你犧牲了哪一個；(3) 由 community advisory board 做最終決策。</p></div>
+  <div class="detail-body" data-lang="en"><p>Chouldechova 2017 and Kleinberg-Mullainathan-Raghavan 2017 prove: when base rates differ, <strong>calibration, equalized odds, and demographic parity cannot all hold simultaneously</strong> (except trivially). It's a theorem, not engineering. So in practice: (1) pick one priority (often equal opportunity or EO); (2) be transparent about what you sacrifice; (3) let a community advisory board make the final call.</p></div>
+</details>
+</section>
+
+<section class="section">
+<div class="spotlight">
+  <div class="sp-icon">⚕️</div>
+  <div class="sp-body">
+    <span class="sp-tag" data-zh="案例" data-en="CASE STUDY">案例</span>
+    <h4 data-zh="2019 Obermeyer Science — 影響 2 億美國人的演算法偏差" data-en="2019 Obermeyer Science — A 200M-American Algorithmic Bias">2019 Obermeyer Science — 影響 2 億美國人的演算法偏差</h4>
+    <p data-lang="zh">Ziad Obermeyer (UC Berkeley) 與 Brian Powers (Brigham) 等人 2019 <em>Science</em> 〈Dissecting racial bias in an algorithm used to manage the health of populations〉揭露：美國一個被 200+ 大型健康系統使用、影響 2 億人的演算法（推測為 Optum/UnitedHealth）<strong>用「醫療花費」當作「醫療需求」的 proxy</strong>。但結構性歧視導致黑人病人在同樣健康程度下花費較少（缺乏保險、不信任系統、地理不便），因此演算法把這些「真正需要照護」的黑人排除在高需求 cohort 之外。</p>
+    <p data-lang="zh">作者估計：若改用真實健康變項取代花費，<strong>高需求黑人病人比例從 17.7% 翻倍到 46.5%</strong>。修正後，模型被多家公司採用。這個案例是當代 medical AI fairness 的<strong>分水嶺</strong>，激發了 2020 之後一系列 fairness audit、Model Card 政策與 EU AI Act 高風險範圍的擴張。</p>
+    <p data-lang="en">Obermeyer (UC Berkeley) and Powers (Brigham) et al. 2019 <em>Science</em> "Dissecting racial bias in an algorithm used to manage the health of populations" exposed: an algorithm used by 200+ health systems and influencing 200M Americans (widely understood to be Optum/UnitedHealth) used <strong>healthcare cost as a proxy for healthcare need</strong>. But structural discrimination means Black patients with equal disease incur less cost (less insurance, distrust, access), so the algorithm under-identified Black patients as "high need."</p>
+    <p data-lang="en">By switching to direct health proxies, the <strong>share of Black patients flagged for high-need care doubled from 17.7% to 46.5%</strong>. The fix was adopted across multiple vendors. The paper is the watershed moment for medical-AI fairness, catalyzing fairness audits, Model Card policies, and the broader scope of high-risk AI in the EU AI Act.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論" data-en="DEBATES">爭論</div>
+<h2 data-zh="三個正在燒的爭論" data-en="Three Debates Burning Now">三個正在燒的爭論</h2>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+  <h3 data-zh="公平 vs 準確 — 必須二擇一嗎？" data-en="Fairness vs Accuracy — Must We Choose?">公平 vs 準確 — 必須二擇一嗎？</h3>
+  <div class="disc-q" data-lang="zh">當 base rate 不同時，Chouldechova 2017 / Kleinberg 2017 證明<strong>多重 fairness 指標不可能同時滿足</strong>。但 Wick et al. 2019 指出許多現實案例「Pareto frontier」很平緩，<strong>實際上犧牲很少準確就能大幅改善公平</strong>（如 Step 4-6 的 3% vs 0.13 改善）。</div>
+  <div class="disc-q" data-lang="en">When base rates differ, Chouldechova 2017 / Kleinberg 2017 prove <strong>multiple fairness metrics can't hold simultaneously</strong>. But Wick et al. 2019 argue many real cases have a flat Pareto frontier — <strong>tiny accuracy loss buys large fairness gain</strong> (cf. our Step 4-6: 3% for 0.13).</div>
+  <div class="disc-pov" data-lang="zh"><strong>實務建議：</strong>(1) 量化 Pareto frontier；(2) 與 stakeholder + community advisory board 商討 trade-off；(3) Model Card 公開所有取捨。</div>
+  <div class="disc-pov" data-lang="en"><strong>Practical:</strong> (1) quantify the Pareto frontier; (2) discuss trade-offs with stakeholders + community advisory boards; (3) disclose all trade-offs in the Model Card.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+  <h3 data-zh="差分隱私在醫療 AI 實用嗎？" data-en="Is Differential Privacy Practical in Medical AI?">差分隱私在醫療 AI 實用嗎？</h3>
+  <div class="disc-q" data-lang="zh">DP 是<strong>數學上最強</strong>的隱私保證，US Census 2020 已採用 (ε ≈ 19.61)。但醫療 AI 訓練常需 ε &lt; 5 才有意義保護；在這 ε 下 accuracy 嚴重劣化 (Bagdasaryan 2019 證實 DP-SGD 對 minority class 影響更大)。Google Med-PaLM 2 paper 2023 提到 DP 仍是「未解的研究問題」。</div>
+  <div class="disc-q" data-lang="en">DP is the <strong>strongest mathematical</strong> privacy guarantee — US Census 2020 used ε ≈ 19.61. But medical AI typically needs ε &lt; 5 to be meaningful, where accuracy drops sharply (Bagdasaryan 2019: DP-SGD disproportionately hurts minority classes). Google Med-PaLM 2 paper 2023 calls DP "an open problem."</div>
+  <div class="disc-pov" data-lang="zh"><strong>2026 折衷：</strong>federated learning + secure aggregation + 部分 DP (high ε on noisy stats only) 為現實路線；嚴格 DP 留給 census-style 公開統計，不用於 model training。</div>
+  <div class="disc-pov" data-lang="en"><strong>2026 compromise:</strong> federated learning + secure aggregation + partial DP (high ε on noisy stats only); strict DP stays for census-style public statistics, not for model training.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+  <h3 data-zh="EU AI Act 2026/2027 — 阻礙創新還是保障病人？" data-en="EU AI Act 2026/2027 — Stifle Innovation or Protect Patients?">EU AI Act 2026/2027 — 阻礙創新還是保障病人？</h3>
+  <div class="disc-q" data-lang="zh">支持者：終於有可執行的 AI 法律，迫使廠商做 risk-management、技術文件、上市後監測——這是病人的勝利。反對者：小型新創無力負擔合規成本 (估計 €300k+/年)，創新會外流到美國 / 中國。Schaake 2024 <em>Nature</em> 評論認為「pull from US」是現實風險。</div>
+  <div class="disc-q" data-lang="en">Pro: finally an enforceable AI law — forces risk-management, technical docs, post-market monitoring — a win for patients. Con: small startups can't afford compliance (~€300k+/year), so innovation flees to US/China. Schaake 2024 <em>Nature</em> commentary notes the "pull from US" risk.</div>
+  <div class="disc-pov" data-lang="zh"><strong>實證觀察：</strong>2024 既有醫療 AI 公司已開始準備 ISO 13485 + EU AI Act 雙合規；歐洲新創比例下降已有跡象；2026 啟動後的真實影響仍待觀察。</div>
+  <div class="disc-pov" data-lang="en"><strong>Empirical signs:</strong> in 2024 existing medical-AI companies are aligning ISO 13485 + EU AI Act dual compliance; declining EU startup share is observable; the true 2026 impact remains to be seen.</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="五個倫理 / 再現性的常見陷阱" data-en="Five Common Ethics & Reproducibility Pitfalls">五個倫理 / 再現性的常見陷阱</h2>
+<div class="pitfall-grid">
+  <div class="pitfall-card">
+    <h4 data-zh="Fairness through unawareness" data-en="Fairness through unawareness">「不知種族」就是公平？</h4>
+    <p data-lang="zh">很多人以為「不用 race 當特徵就是公平」。但 ZIP code、保險型態、語言、姓氏、看診科別<strong>實質上 proxy race</strong>。dropping race 反而讓 bias 不可見、更難稽核。正解：保留 race 用於 audit，但 carefully constrain 訓練。</p>
+    <p data-lang="en">Many think "not using race = fairness." But ZIP code, insurance, language, surname, specialty <strong>proxy race</strong>. Dropping race hides bias and blocks audit. Better: keep race for audits, carefully constrain training.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="把 DI 當因果" data-en="Treating DI as causation">把 DI 當因果</h4>
+    <p data-lang="zh">DI=0.6 表示「比例不同」，<strong>不直接代表演算法歧視</strong>——可能反映真實 base rate 差異、或更上游的結構問題。要做 causal analysis (Plečko 2022 fairadapt)。</p>
+    <p data-lang="en">DI=0.6 means "rates differ" — <strong>not direct proof of algorithmic discrimination</strong>. It may reflect real base-rate differences or upstream structural issues. Use causal analysis (Plečko 2022 fairadapt).</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="缺 demographic data 卻聲稱公平" data-en="Claiming fairness without demographic data">沒人口資料就說「公平」</h4>
+    <p data-lang="zh">「我們沒蒐集 race，所以模型不可能有種族偏差」——這是錯的邏輯。沒蒐集 ≠ 沒偏差，反而是<strong>無法稽核的偏差</strong>。所有合規論文都必須提供 demographic table。</p>
+    <p data-lang="en">"We didn't collect race so no racial bias is possible" — logically wrong. No collection ≠ no bias; it's <strong>un-auditable bias</strong>. Every compliant paper must include a demographic table.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="只有 Model Card 沒 Datasheet" data-en="Model Card without Datasheet">只有 Model Card 沒 Datasheet</h4>
+    <p data-lang="zh">Mitchell 2019 Model Card 描述<strong>模型</strong>；Gebru 2021 Datasheet 描述<strong>資料集</strong>。少了 Datasheet，讀者無法評估資料的代表性、收集動機、清理過程。兩者缺一不可。</p>
+    <p data-lang="en">Mitchell 2019 Model Card describes the <strong>model</strong>; Gebru 2021 Datasheet describes the <strong>dataset</strong>. Without the datasheet, readers can't judge representativeness, motivation, cleaning. Both required.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="再現性宣稱沒 Docker" data-en="Reproducibility claim without containers">「可再現」沒 Docker</h4>
+    <p data-lang="zh">只 commit Python 程式碼到 git，沒鎖 numpy / pandas / sklearn 版本，沒 Dockerfile → 半年後跑不出來。reproducibility 需 git + lockfile (uv/pip-tools/renv) + container (Docker/Apptainer) + workflow (Snakemake/Nextflow) 四件套。</p>
+    <p data-lang="en">Commit Python to git without locking numpy / pandas / sklearn versions and no Dockerfile → it won't run six months later. Reproducibility needs git + lockfile (uv/pip-tools/renv) + container (Docker/Apptainer) + workflow (Snakemake/Nextflow).</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="忽略外部驗證" data-en="Skipping external validation">忽略外部驗證</h4>
+    <p data-lang="zh">許多臨床 AI 論文只報內部 5-fold CV AUROC 0.95，但<strong>外部一家新醫院 0.65</strong>。TRIPOD-AI 2024 + STARD-AI 2025 都把<strong>外部驗證列為必要</strong>。</p>
+    <p data-lang="en">Many clinical-AI papers report internal 5-fold CV AUROC 0.95, but <strong>0.65 at the next hospital</strong>. TRIPOD-AI 2024 + STARD-AI 2025 make external validation <strong>mandatory</strong>.</p>
+  </div>
+</div>
+
+<div class="contrast-2col">
+  <div class="con-card bad">
+    <h4 data-zh="壞範例" data-en="Bad Practice">壞範例</h4>
+    <p data-lang="zh">「我們的 sepsis 模型 AUROC 0.97，部署到 200 床醫院。」沒有 Model Card、沒有外部驗證、沒有 fairness audit、沒有 PCCP、沒有 stakeholder review。三個月後出現種族差距，撤回時已影響 1,200 病人。</p>
+    <p data-lang="en">"Our sepsis model is AUROC 0.97, deployed to a 200-bed hospital." No Model Card, no external validation, no fairness audit, no PCCP, no stakeholder review. Three months later, racial gap surfaces; by the time it's retracted, 1,200 patients affected.</p>
+  </div>
+  <div class="con-card good">
+    <h4 data-zh="好範例" data-en="Good Practice">好範例</h4>
+    <p data-lang="zh">Model Card + Datasheet + 外部 3-site validation + fairness audit (TPR Δ &lt; 0.05, DI ∈ [0.85, 1.15]) + PCCP for FDA + EU AI Act technical docs + community advisory board + Snakemake/Docker repo + 月度 drift monitoring。</p>
+    <p data-lang="en">Model Card + Datasheet + external 3-site validation + fairness audit (TPR Δ &lt; 0.05, DI ∈ [0.85, 1.15]) + PCCP for FDA + EU AI Act technical docs + community advisory board + Snakemake/Docker repo + monthly drift monitoring.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+  <h4 data-zh="反思題（讀完想 5 分鐘）" data-en="Reflection (think for 5 minutes)">反思題（讀完想 5 分鐘）</h4>
+  <ol data-lang="zh">
+    <li>你的模型 base rate 在不同族群差異很大（Black 22% vs White 16%）——你會選 demographic parity、equalized odds 還是 equal opportunity？為什麼？</li>
+    <li>你能說服 IRB 允許在 ε = 8 的「弱差分隱私」下發表你的 EHR 研究結果嗎？理由？</li>
+    <li>EU AI Act 2027 上路後，你想把一個生醫 AI 公司賣到歐洲——你需要哪些文件 / 流程？</li>
+    <li>面對 Rudin 2019「停止解釋黑盒」的呼籲，你會放棄 XGBoost 改用 EBM / GAM 嗎？臨床場景該如何取捨？</li>
+    <li>你的論文發表後三個月，有讀者投書指出模型對非英語病人 sensitivity 顯著較低。你的下一步是什麼？</li>
+  </ol>
+  <ol data-lang="en">
+    <li>If base rates differ across groups (Black 22% vs White 16%), do you pick demographic parity, equalized odds, or equal opportunity? Why?</li>
+    <li>Can you convince an IRB to publish your EHR study under "weak DP" with ε = 8? Justify.</li>
+    <li>To sell a biomedical AI startup into the EU under the 2027 AI Act, what documentation / processes do you need?</li>
+    <li>In response to Rudin 2019's "stop explaining black boxes," would you drop XGBoost for EBM / GAM? When does the trade-off favor interpretability?</li>
+    <li>Three months after publication, a reader letter shows your model's sensitivity is significantly lower for non-English-speaking patients. What's your next step?</li>
+  </ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+  <span class="adv-label" data-zh="進階 / 2024–2026 前沿" data-en="ADVANCED / 2024–2026 FRONTIERS">進階 / 2024–2026 前沿</span>
+  <h4 data-zh="倫理與再現性的下一個五年" data-en="The Next Five Years of Ethics & Reproducibility">倫理與再現性的下一個五年</h4>
+  <p data-lang="zh"><strong>EU AI Act 2024/1689 階段啟動：</strong>2025/02 prohibited practice 禁令生效；2025/08 GPAI 義務開始 (transparency, copyright)；<strong>2026/08/02</strong> 完整 GPAI 規定；<strong>2027/08/02</strong> 高風險 AI (Annex III, 含醫療) 全面適用，需 risk-management system + 技術文件 + conformity assessment + post-market monitoring。</p>
+  <p data-lang="zh"><strong>ICMJE 2025 AI 政策：</strong>所有頂級醫學期刊要求 AI 使用聲明、明確指出 AI 不能列為作者、必須揭露所用工具與版本。</p>
+  <p data-lang="zh"><strong>FDA Predetermined Change Control Plans (PCCP) 2024 final：</strong>允許 AI/ML SaMD 在預先核可的範圍內更新而不需重新申請；前提是要在 510(k) / De Novo / PMA 申請時提交詳細 modification protocol + performance limit。</p>
+  <p data-lang="zh"><strong>TRIPOD-AI 2024 BMJ + STARD-AI 2025 Nat Med：</strong>把 TRIPOD (2015) + STARD (2015) 升級為 AI/ML 專用發表標準；包含 fairness audit、external validation、Model Card、Datasheet for Datasets 必填欄位。</p>
+  <p data-lang="zh"><strong>聯邦 + 隱私運算：</strong>OpenMined PySyft 2024、Substra Owkin (Apheris)、NVIDIA FLARE、Federated Med-PaLM；DP-SGD 已可在 ε=8 下達 90% baseline accuracy；2026 預計多家醫療 AI 採用 federated + secure aggregation 為標配。</p>
+  <p data-lang="zh"><strong>反事實公平 (Counterfactual Fairness)：</strong>Kusner 2017、Plečko 2022 fairadapt；2024 越來越多 fairness 論文採用因果結構而非統計比例；Pearl 因果框架對醫療 fairness 影響日深。</p>
+  <p data-lang="zh"><strong>多 stakeholder 治理：</strong>2025–2026 興起 community advisory board、patient ombudsperson、AI ethics review board 並列 IRB 為標配；NIH All of Us、UK NHS Synthetic Data Pilot、Google DeepMind Health partnerships 為示範案例。</p>
+  <p data-lang="en"><strong>EU AI Act 2024/1689 phased enforcement:</strong> 2025/02 prohibited-practice ban; 2025/08 GPAI obligations (transparency, copyright); <strong>2026/08/02</strong> full GPAI; <strong>2027/08/02</strong> high-risk AI (Annex III, incl. medical) — risk-management system + technical docs + conformity assessment + post-market monitoring.</p>
+  <p data-lang="en"><strong>ICMJE 2025 AI policy:</strong> top medical journals require AI declarations, prohibit AI authorship, mandate disclosure of tools and versions.</p>
+  <p data-lang="en"><strong>FDA PCCP 2024 final:</strong> AI/ML SaMD can update within pre-approved scope without re-submission, provided 510(k) / De Novo / PMA includes a detailed modification protocol + performance bounds.</p>
+  <p data-lang="en"><strong>TRIPOD-AI 2024 BMJ + STARD-AI 2025 Nat Med:</strong> upgrade TRIPOD (2015) + STARD (2015) into AI/ML publication standards — fairness audit, external validation, Model Card, Datasheets are now mandatory fields.</p>
+  <p data-lang="en"><strong>Federated + privacy-preserving computing:</strong> OpenMined PySyft 2024, Substra Owkin (Apheris), NVIDIA FLARE, Federated Med-PaLM; DP-SGD now hits 90% baseline accuracy at ε=8; by 2026 federated + secure aggregation is becoming standard in clinical AI.</p>
+  <p data-lang="en"><strong>Counterfactual fairness:</strong> Kusner 2017, Plečko 2022 fairadapt; 2024 papers increasingly use causal structures over statistical ratios; Pearl's causal framework reshapes medical fairness.</p>
+  <p data-lang="en"><strong>Multi-stakeholder governance:</strong> 2025–2026 sees community advisory boards, patient ombudspersons, and AI ethics review boards alongside IRB; NIH All of Us, UK NHS Synthetic Data Pilot, Google DeepMind Health partnerships exemplify the model.</p>
+</div>
+</section>
+
+<section id="pitfalls">
+<h2><span data-zh="常見錯誤陷阱" data-en="Common Pitfalls">常見錯誤陷阱</span> / <span data-zh="Common Pitfalls" data-en="常見錯誤陷阱">Common Pitfalls</span></h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="無意間用 race 當特徵" data-en="Using race as a feature without intent"></h4><div data-lang="zh"><p><strong>症狀：</strong>模型輸入包含 race 欄位；做完訓練後仍出現顯著 disparate impact。<strong>修正：</strong>把 race 從預測特徵中拿出，但保留用於 <strong>fairness audit</strong>；race-blind 不等於 fair（proxy 仍存在）。</p></div><div data-lang="en"><p><strong>Symptom:</strong> race is in the feature set; significant disparate impact persists post-training. <strong>Fix:</strong> remove race from prediction features but keep it for <strong>fairness audits</strong>; race-blind is NOT fair (proxies persist).</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="把 disparate impact 當作 causation" data-en="Treating disparate impact as causation"></h4><div data-lang="zh"><p><strong>症狀：</strong>觀察到「Black 病人 sensitivity 低 10%」就斷言「模型有種族歧視」；但 disparity 可能源自 sampling、label 偏差或實際 prevalence 差異。<strong>修正：</strong>causal fairness（counterfactual fairness, Kusner 2017）區分 association vs causation。</p></div><div data-lang="en"><p><strong>Symptom:</strong> observing "10% lower sensitivity for Black patients" → concluding "the model is racist"; but disparity can stem from sampling, label bias, or true prevalence differences. <strong>Fix:</strong> causal fairness (counterfactual fairness, Kusner 2017) separates association from causation.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="Fairness through unawareness 是假象" data-en="'Fairness through unawareness' fails"></h4><div data-lang="zh"><p><strong>症狀：</strong>「我們不放 race 進模型，所以模型 fair」——但 ZIP code、insurance type、preferred language 都是 race 的 proxy，bias 依舊。<strong>修正：</strong>用 equalized odds / equality of opportunity 等 outcome-based 公平指標分層檢測。</p></div><div data-lang="en"><p><strong>Symptom:</strong> "we don't put race in the model, so it's fair" — but ZIP code, insurance type, preferred language are race proxies; bias remains. <strong>Fix:</strong> apply outcome-based fairness metrics (equalized odds / equality of opportunity) and stratify the audit.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="缺乏 demographic data 反而不公平" data-en="Missing demographic data isn't 'fair'"></h4><div data-lang="zh"><p><strong>症狀：</strong>「我們連 race 都沒收」——但沒有 demographic data 就<strong>無法做 fairness audit</strong>；不能修補你看不見的問題。<strong>修正：</strong>主動收集 self-reported demographics（含 opt-out），用 audit-only 模式儲存於與訓練資料分離的安全層。</p></div><div data-lang="en"><p><strong>Symptom:</strong> "we don't even collect race" — but without demographic data you <strong>cannot audit fairness</strong>; you can't fix what you can't see. <strong>Fix:</strong> actively collect self-reported demographics (with opt-out), store in an audit-only secure layer separate from training data.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="Model card 缺 datasheet" data-en="Model card without datasheet"></h4><div data-lang="zh"><p><strong>症狀：</strong>只發布 model card（描述模型行為），但沒有 datasheet（描述訓練資料來源、人口組成、限制）——外部使用者無法判斷模型是否適用其族群。<strong>修正：</strong>Mitchell 2019 Model Card + Gebru 2021 Datasheets for Datasets 兩者必須並行。</p></div><div data-lang="en"><p><strong>Symptom:</strong> only a model card is released (describing behavior) but no datasheet (describing training data provenance, demographics, limitations) — external users can't judge applicability. <strong>Fix:</strong> Mitchell 2019 Model Card and Gebru 2021 Datasheets for Datasets must travel together.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="部署前未做 retrospective fairness audit" data-en="No retrospective fairness audit before deployment"></h4><div data-lang="zh"><p><strong>症狀：</strong>新模型部署一年後才發現 Hispanic 族群 FPR 高 2 倍；本應在部署前用 historical data 模擬。<strong>修正：</strong>FDA PCCP 要求 pre-deployment fairness audit；報告 stratified TPR / FPR / PPV by 各 sensitive subgroup。</p></div><div data-lang="en"><p><strong>Symptom:</strong> the new model is deployed; a year later you discover Hispanic FPR is 2× higher — it should have been simulated pre-deployment on historical data. <strong>Fix:</strong> FDA PCCP requires pre-deployment fairness audits; report stratified TPR / FPR / PPV per sensitive subgroup.</p></div></div>
+</div>
+</section>
+
+<section>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="錯誤做法：宣稱「race-blind」就是公平" data-en="Wrong: claim 'race-blind' equals fair"></h4><div data-lang="zh"><pre><code class="language-text">「我們的模型是 race-blind——
+ 我們完全沒把 race 放入特徵。」
+
+# 但 ZIP code、insurance、language 都是 race proxy
+# Obermeyer 2019 Science：演算法仍對 Black 病人服務不足 50%</code></pre></div><div data-lang="en"><pre><code class="language-text">"Our model is 'race-blind' —
+ we don't use race as an input feature."
+
+# But ZIP, insurance, language are all race proxies
+# Obermeyer 2019 Science: the algorithm still under-served Black patients by ~50%</code></pre></div></div>
+<div class="con-card good"><h4 data-zh="正確做法：race for audit, not prediction" data-en="Correct: race for audit, not prediction"></h4><div data-lang="zh"><pre><code class="language-python">from fairlearn.reductions import EqualizedOdds, ExponentiatedGradient
+from fairlearn.metrics import (MetricFrame, true_positive_rate,
+                                false_positive_rate)
+
+# 1. race 只用於 audit，不放入訓練特徵
+X_train = features.drop(columns=['race'])
+mitigator = ExponentiatedGradient(
+    estimator=base_clf, constraints=EqualizedOdds()
+).fit(X_train, y_train, sensitive_features=race_train)
+
+# 2. 分層報告 TPR / FPR
+audit = MetricFrame(
+    metrics={'TPR': true_positive_rate, 'FPR': false_positive_rate},
+    y_true=y_test, y_pred=y_pred,
+    sensitive_features=race_test
+)
+print(audit.by_group)</code></pre></div><div data-lang="en"><pre><code class="language-python">from fairlearn.reductions import EqualizedOdds, ExponentiatedGradient
+from fairlearn.metrics import (MetricFrame, true_positive_rate,
+                                false_positive_rate)
+
+# 1. Race for audit only, NOT in training features
+X_train = features.drop(columns=['race'])
+mitigator = ExponentiatedGradient(
+    estimator=base_clf, constraints=EqualizedOdds()
+).fit(X_train, y_train, sensitive_features=race_train)
+
+# 2. Stratified TPR / FPR by race
+audit = MetricFrame(
+    metrics={'TPR': true_positive_rate, 'FPR': false_positive_rate},
+    y_true=y_test, y_pred=y_pred,
+    sensitive_features=race_test
+)
+print(audit.by_group)</code></pre></div></div>
+</div>
+</section>
+
+<section id="discussion">
+<h2><span data-zh="引人入勝的討論點" data-en="Engaging Discussion Points">引人入勝的討論點</span> / <span data-zh="Engaging Discussion Points" data-en="引人入勝的討論點">Engaging Discussion Points</span></h2>
+
+<div class="discussion-card"><span class="disc-label">TRADE-OFF</span><h3 data-zh="公平 vs 精確 — 一定要 trade off 嗎？" data-en="Fairness vs accuracy — must we trade off?"></h3><div class="disc-q" data-lang="zh">追求 fairness 是否必然犧牲 overall accuracy？</div><div class="disc-q" data-lang="en">Does pursuing fairness necessarily sacrifice overall accuracy?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">通常會——若原模型 accuracy 來自<strong>已有偏差的 label</strong>，加 fairness constraint 會略降 overall accuracy（~1–3%）。</span><span data-lang="en">Often yes — if the original accuracy came from <strong>biased labels</strong>, adding fairness constraints reduces overall accuracy slightly (~1–3%).</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">不一定——Obermeyer 2019 案例中，修正 label proxy（用 future need 而非 past cost），<strong>fairness 與 accuracy 同時改善</strong>。</span><span data-lang="en">Not necessarily — in Obermeyer 2019, fixing the label proxy (future need, not past cost) improved <strong>both fairness AND accuracy</strong>.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">DP</span><h3 data-zh="差分隱私在醫療 AI 實用嗎？" data-en="Is differential privacy practical in medical AI?"></h3><div class="disc-q" data-lang="zh">ε=1, ε=3, ε=10 差分隱私在 EHR / genomics 上是否會嚴重影響效能？</div><div class="disc-q" data-lang="en">Do ε=1, 3, 10 levels of DP severely degrade utility in EHR / genomics?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">aggregate 統計可用——US Census 2020 已用 ε≈19；公衛 dashboard 多用 ε=1–3。個別 prediction 較困難。</span><span data-lang="en">For aggregate stats it works — US Census 2020 used ε≈19; public-health dashboards use ε=1–3. Individual prediction is much harder.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">Bayesian DP 正在崛起——2024 paper 顯示 personalized ε 與 DP-SGD 可在 ε=3 達到接近 non-private 的 AUROC。</span><span data-lang="en">Bayesian DP is rising — 2024 papers show personalized ε + DP-SGD reach near-non-private AUROC at ε=3.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">REGULATION</span><h3 data-zh="EU AI Act 2026 — 阻礙創新還是保護病人？" data-en="EU AI Act 2026 — does it stifle innovation or protect patients?"></h3><div class="disc-q" data-lang="zh">EU AI Act 2024/1689 高風險條款 2027 年完整生效，對 medical AI 業界的真實衝擊？</div><div class="disc-q" data-lang="en">Once EU AI Act 2024/1689 high-risk provisions fully apply in 2027, what's the actual impact on medical AI?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">早期跡象——部分美國公司退出 EU 市場（compliance 成本太高）；EU local 廠商獲利。</span><span data-lang="en">Early signs — some US firms exit the EU market (compliance cost too high); EU-local vendors benefit.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">長期看是 moat——通過 EU AI Act 認證的廠商在全球 BAA 談判中佔優勢；如同 GDPR 後的 ISO 27701。</span><span data-lang="en">Long term it's a moat — EU AI Act-certified vendors have an edge in global BAA negotiations; similar to ISO 27701 after GDPR.</span></div></div>
+</section>
+
+<section>
+<div class="spotlight"><div class="sp-icon">🌟</div><div class="sp-body"><span class="sp-tag">CASE STUDY</span><h4 data-zh="2019 Obermeyer et al. Science — 醫療 AI 史上最被引用的公平失敗" data-en="2019 Obermeyer et al. Science — the most-cited fairness failure in healthcare AI"></h4><div data-lang="zh"><p>2019 年 Obermeyer 等在 <em>Science</em> 揭露：一個被全美 200 million 病人使用的 care-management 演算法，存在嚴重種族偏差。問題出在 label——演算法用「過去醫療花費」當作「未來醫療需求」的 proxy。但 Black 病人歷史上因 systemic bias，被花在他們身上的錢就比較少。</p><p>結果：演算法<strong>低估 Black 病人需求達 50%</strong>——也就是他們必須病得「更嚴重」才能被分配到同等的 care management。光在這一個演算法上，每年就有 <strong>數百萬</strong> Black 病人被低估。這篇 Science 論文催生了整個 algorithmic fairness 研究領域，並影響了 FDA 對 SaMD 的 fairness audit 要求。</p></div><div data-lang="en"><p>In 2019 Obermeyer et al. exposed in <em>Science</em> that a US care-management algorithm used by 200M patients was racially biased. The problem was the label — it used "past healthcare cost" as a proxy for "future healthcare need". But due to systemic bias, Black patients historically had LESS spent on them.</p><p>Result: the algorithm <strong>under-served Black patients by ~50%</strong> — they had to be "sicker" to qualify for the same care management. From this single algorithm, <strong>millions</strong> of Black patients were under-served each year. The Science paper birthed the entire field of algorithmic fairness and influenced FDA's SaMD fairness-audit requirements.</p></div></div></div>
+</section>
+
+<section id="reflection">
+<h2><span data-zh="延伸思考題" data-en="Reflection Questions">延伸思考題</span> / <span data-zh="Reflection Questions" data-en="延伸思考題">Reflection Questions</span></h2>
+<div class="reflection-q"><h4 data-zh="自我檢測" data-en="Self-test"></h4>
+<ol data-lang="zh">
+<li>差分隱私的 ε 代表什麼？ε=0.1、ε=1、ε=10 三者意義為何？</li>
+<li>為什麼 demographic parity 有時與 equalized odds 互斥？</li>
+<li>美國雇用法的「4/5 rule」(80% rule) 在 disparate impact 上是如何運作的？</li>
+<li>EU AI Act 是否對非歐盟公司有約束力？（提示：extraterritorial reach）</li>
+<li>為什麼除了 Model Card 外，還需要 Datasheet for Datasets？</li>
+</ol>
+<ol data-lang="en">
+<li>What does ε mean in differential privacy? What are the implications of ε=0.1, ε=1, ε=10?</li>
+<li>Why does demographic parity sometimes conflict with equalized odds?</li>
+<li>How does the US employment-law "4/5 rule" (80% rule) work for disparate impact?</li>
+<li>Does the EU AI Act apply to non-EU companies? (Hint: extraterritorial reach)</li>
+<li>Why do we need a Datasheet for Datasets in addition to a Model Card?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced">
+<h2><span data-zh="進階研究員筆記" data-en="Advanced Researcher Notes">進階研究員筆記</span> / <span data-zh="Advanced Researcher Notes" data-en="進階研究員筆記">Advanced Researcher Notes</span></h2>
+<div class="advanced-note"><span class="adv-label">2024–2026 SOTA</span><h4 data-zh="倫理、公平性與再現性的 2024–2026 前沿" data-en="Ethics, fairness & reproducibility at the 2024–2026 frontier"></h4><div data-lang="zh"><p><strong>監管：</strong>EU AI Act 2024/1689 分階段生效——GPAI 2026/8/2、高風險條款 2027/8/2；ICMJE 2025 AI 作者政策；FDA Predetermined Change Control Plans (PCCP) 2025 終版；TRIPOD-AI 2024 BMJ、STARD-AI 2025 Nat Med 重塑報告標準。</p><p><strong>Federated fairness：</strong>FedFair 2024 在 federated learning 中加入 group fairness constraint；2026 multi-stakeholder governance frameworks（含 patient ombudsperson、AI ethics review board）。</p><p><strong>Counterfactual fairness：</strong>Kusner 2017 → Plečko 2022 fairadapt → 2024 因果結構導向公平已從 niche 走向主流；Pearl framework 在 medical fairness 重塑論述。</p><p><strong>FAIR Data 2.0：</strong>FAIR Digital Objects（FDO）；2025 NIH All of Us、UK NHS Synthetic Data Pilot、Google DeepMind Health partnerships 都採此設計。</p></div><div data-lang="en"><p><strong>Regulation:</strong> EU AI Act 2024/1689 phased enforcement — GPAI 2026/8/2, high-risk 2027/8/2; ICMJE 2025 AI authorship policy; FDA Predetermined Change Control Plans (PCCP) 2025 final guidance; TRIPOD-AI 2024 BMJ and STARD-AI 2025 Nat Med reshape reporting.</p><p><strong>Federated fairness:</strong> FedFair 2024 adds group fairness constraints to federated learning; 2026 multi-stakeholder governance frameworks (with patient ombudspersons, AI ethics review boards).</p><p><strong>Counterfactual fairness:</strong> Kusner 2017 → Plečko 2022 fairadapt → 2024 causal-structure fairness goes mainstream; Pearl's framework reshapes medical-fairness discourse.</p><p><strong>FAIR Data 2.0:</strong> FAIR Digital Objects (FDO); 2025 NIH All of Us, UK NHS Synthetic Data Pilot, Google DeepMind Health partnerships all adopt this design.</p></div></div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -188,6 +635,8 @@ shap.summary_plot(sv, X_test)
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. Immutable</span><span data-lang="en">D. Immutable</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note"><strong data-zh="歷史小故事：" data-en="History Note:">歷史小故事：</strong><span data-lang="zh">2000 年 — 當時還在 Carnegie Mellon 念博士的 Latanya Sweeney 證明：只需要 ZIP code、生日、性別三個欄位，就能<strong>唯一辨識 87% 的美國人</strong>。她用 Massachusetts 州政府「去識別化」的員工醫療資料，<strong>實地重新識別了當時的州長 William Weld 的住院紀錄</strong>，並把紀錄寄到州長辦公室。這篇論文催生了 HIPAA Safe Harbor 的「18 個 identifier」清單。Sweeney 後來成為 Harvard Data Privacy Lab 主任——她的 87% 論文是隱私領域引用次數最多的單篇。額外一筆：1979 年 Belmont Report 由 7 位委員在 Maryland Belmont Conference Center 4 天閉門會議起草，當時為了「Justice」要不要列為第三原則激辯一整夜，最後 Beauchamp 與 Childress 投了關鍵票；差分隱私的「ε」則是 Dwork 在 2006 ICALP 論文隨手用的希臘字母（「小量」之意），意外成為現代隱私運算的通用符號。</span><span data-lang="en">2000 — Latanya Sweeney, then a Carnegie Mellon PhD student, proved that just three fields (ZIP code, birthdate, sex) could <strong>uniquely re-identify 87% of Americans</strong>. She demonstrated this on Massachusetts' "de-identified" state-employee medical data by <strong>re-identifying Governor William Weld's hospital records</strong> and mailing them to his office. The paper birthed HIPAA Safe Harbor's "18-identifier" list. Sweeney went on to direct Harvard's Data Privacy Lab — her 87% paper is the single most-cited privacy paper ever. Footnote: the 1979 Belmont Report was drafted by 7 commissioners during a 4-day retreat at Maryland's Belmont Conference Center; they argued through the night over whether "Justice" should be the third principle — Beauchamp and Childress cast the deciding votes. Differential privacy's "ε" was Dwork's casual Greek-letter choice in the 2006 ICALP paper ("small"); it became the universal symbol of privacy computing.</span></div>
 
 <nav class="page-nav">
 <a href="pubmed-literature-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 19: PubMed 與文獻探勘" data-en="Ch 19: PubMed &amp; Literature Mining">Ch 19: PubMed 與文獻探勘</span></a>

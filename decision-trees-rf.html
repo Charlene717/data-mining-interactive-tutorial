@@ -18,6 +18,163 @@
 </header>
 <main class="content-wrap">
 
+<aside class="section-toc">
+<strong data-zh="本章閱讀地圖 · ~40 min" data-en="Reading Map · ~40 min">本章閱讀地圖 · ~40 min</strong>
+<div class="pill-row">
+<span class="pill teal" data-zh="⏱ 估時 40 分" data-en="⏱ ~40 min">⏱ 估時 40 分</span>
+<span class="level-badge l-beg" data-zh="初學友善" data-en="Beginner">初學友善</span>
+<span class="level-badge l-mid" data-zh="進階深入" data-en="Intermediate">進階深入</span>
+<span class="level-badge l-adv" data-zh="研究員彩蛋" data-en="Advanced">研究員彩蛋</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場：銀行從 Logistic 換到 XGBoost 之後" data-en="Story: After the bank switched to XGBoost">開場：銀行的故事</a></li>
+<li><a href="#glossary" data-zh="關鍵詞 ×14（小孩+專家）" data-en="Glossary ×14 (kid + tech)">關鍵詞 ×14</a></li>
+<li><a href="#history" data-zh="ID3 1986 → XGBoost 2.x 2024 → LightGBM 4.x 2025" data-en="ID3 1986 → XGBoost 2.x 2024 → LightGBM 4.x 2025">時間軸</a></li>
+<li><a href="#walkthrough" data-zh="手算 Gini：100 病人的糖尿病樹" data-en="Worked Gini: 100-patient diabetes tree">手算 Gini</a></li>
+<li><a href="#widget2" data-zh="新互動：min_samples_leaf vs 過擬合" data-en="New widget: min_samples_leaf vs overfit">第二個互動</a></li>
+<li><a href="#discussion" data-zh="爭論：RF vs XGBoost vs CatBoost" data-en="Debate: RF vs XGBoost vs CatBoost">三題爭論</a></li>
+<li><a href="#pitfalls" data-zh="陷阱 6 連發" data-en="Six pitfalls">陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題 ×5" data-en="Reflection ×5">反思</a></li>
+<li><a href="#advanced" data-zh="XGBoost 2.x device API / GPUTreeShap / NGBoost" data-en="XGBoost 2.x device API / GPUTreeShap / NGBoost">進階彩蛋</a></li>
+</ol>
+</aside>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="情境劇" data-en="SCENE">情境劇</span>
+<h3 data-zh="信貸風控 09:47 — AUROC 從 0.78 跳到 0.91 之後" data-en="Credit Risk 09:47 — When AUROC Jumped from 0.78 to 0.91">信貸風控的 09:47</h3>
+<div data-lang="zh">
+<p>2023 年 11 月，某銀行信貸風控團隊把 baseline Logistic Regression 換成 XGBoost——線下 AUROC 從 0.78 跳到 <strong>0.91</strong>，違約預測前 10% 截止 lift 提升 1.4×。團隊 lead Emma 興奮地給總部報告，三週後上線。</p>
+<p>第二週，<em>監管單位</em>來信：「請解釋為什麼這位客戶 Mr. 王被拒絕，並列出每一個被使用的特徵。」Emma 攤開模型——600 棵樹、每棵 8 層、150 個特徵交互——她寫了 12 頁回信，最後是 SHAP value 條形圖。監管說：「我們需要 3 行能講給客戶聽的話。」</p>
+<p>從這天起，Emma 的部門新增了一個職位：<strong>tree explainer engineer</strong>。本章不只教你怎麼訓 XGBoost，更教你訓完之後 <em>怎麼向人類交差</em>。</p>
+</div>
+<div data-lang="en">
+<p>November 2023. A bank's credit-risk team swaps the baseline Logistic Regression for XGBoost — offline AUROC jumps from 0.78 to <strong>0.91</strong>, top-10% lift up 1.4×. Lead Emma proudly reports to HQ; three weeks later it's deployed.</p>
+<p>Week 2 post-deployment, the <em>regulator</em> writes: "Explain why customer Mr Wang was rejected. List every feature used." Emma opens the model — 600 trees, 8 levels deep, 150 feature interactions — and writes a 12-page letter ending with a SHAP bar chart. The regulator replies: "We need 3 sentences a customer can understand."</p>
+<p>That day, Emma's team added a new role: <strong>tree explainer engineer</strong>. This chapter teaches you not just how to train XGBoost, but how to hand the result over <em>to humans</em> afterwards.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="關鍵詞彙" data-en="GLOSSARY">關鍵詞彙</div>
+<h2 data-zh="樹模型詞彙表 · 小孩 + 專家版" data-en="Tree-Model Glossary · Kid + Tech">樹模型詞彙表</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Decision Tree</div><div class="term-zh">決策樹</div>
+<div class="term-kid" data-lang="zh">一連串 yes/no 問題像 20 questions 遊戲。</div>
+<div class="term-kid" data-lang="en">A sequence of yes/no questions, like 20 questions.</div>
+<div class="term-tech" data-lang="zh">遞迴二元切分使每個葉子節點純化；分裂選擇最大化資訊增益 (Gini ↓ / Entropy ↓)。</div>
+<div class="term-tech" data-lang="en">Recursive binary split maximising information gain at each node (Gini ↓ / Entropy ↓).</div></div>
+
+<div class="glossary-card"><div class="term-en">Gini Impurity</div><div class="term-zh">Gini 不純度</div>
+<div class="term-kid" data-lang="zh">隨機抓兩顆球顏色不同的機率——越小越「純」。</div>
+<div class="term-kid" data-lang="en">Probability of picking two different-colour balls — lower = purer.</div>
+<div class="term-tech" data-lang="zh">Gini = 1 − Σp<sub>k</sub>²；二元時範圍 [0, 0.5]。比 Entropy 計算快 ~30%。</div>
+<div class="term-tech" data-lang="en">Gini = 1 − Σp<sub>k</sub>²; binary range [0, 0.5]. ~30% faster than Entropy.</div></div>
+
+<div class="glossary-card"><div class="term-en">Entropy / Information Gain</div><div class="term-zh">熵 / 資訊增益</div>
+<div class="term-kid" data-lang="zh">這個問題消除了多少不確定性？</div>
+<div class="term-kid" data-lang="en">How much uncertainty did this question remove?</div>
+<div class="term-tech" data-lang="zh">H=−Σp log p；Gain(S,A)=H(S)−Σ|S<sub>v</sub>|/|S|·H(S<sub>v</sub>)。Quinlan 1986 ID3 採用。</div>
+<div class="term-tech" data-lang="en">H=−Σp log p; Gain(S,A)=H(S)−Σ|S<sub>v</sub>|/|S|·H(S<sub>v</sub>). Used by Quinlan's 1986 ID3.</div></div>
+
+<div class="glossary-card"><div class="term-en">CART</div><div class="term-zh">CART</div>
+<div class="term-kid" data-lang="zh">最常見的單棵樹——二元分裂、Gini、剪枝。</div>
+<div class="term-kid" data-lang="en">The most common single tree — binary splits, Gini, pruning.</div>
+<div class="term-tech" data-lang="zh">Classification And Regression Tree (Breiman 1984)；sklearn / rpart 的核心演算法。</div>
+<div class="term-tech" data-lang="en">Classification And Regression Tree (Breiman 1984); core algorithm in sklearn / rpart.</div></div>
+
+<div class="glossary-card"><div class="term-en">Pruning</div><div class="term-zh">剪枝</div>
+<div class="term-kid" data-lang="zh">把樹過長的細枝修掉，避免太挑剔。</div>
+<div class="term-kid" data-lang="en">Trim the over-grown branches so the tree doesn't get picky.</div>
+<div class="term-tech" data-lang="zh">Cost-complexity pruning (CCP)：最小化 R(T)+α·|leaves(T)|；交叉驗證選 α。</div>
+<div class="term-tech" data-lang="en">Cost-complexity pruning (CCP): minimise R(T)+α·|leaves(T)|; pick α via CV.</div></div>
+
+<div class="glossary-card"><div class="term-en">Bagging</div><div class="term-zh">Bagging</div>
+<div class="term-kid" data-lang="zh">同一份料煮 500 鍋，每鍋食材稍微抽不同，平均味道。</div>
+<div class="term-kid" data-lang="en">Cook 500 pots from the same ingredients with slightly different samples, average the taste.</div>
+<div class="term-tech" data-lang="zh">Bootstrap Aggregating (Breiman 1996)；對 n 筆有放回抽 n 次，訓練多棵樹後投票/平均。</div>
+<div class="term-tech" data-lang="en">Bootstrap Aggregating (Breiman 1996); resample n-with-replacement, train multiple trees, average.</div></div>
+
+<div class="glossary-card"><div class="term-en">Random Forest</div><div class="term-zh">隨機森林</div>
+<div class="term-kid" data-lang="zh">500 個有點偏見的醫生投票——共識最聰明。</div>
+<div class="term-kid" data-lang="en">500 slightly-biased doctors voting — consensus is wise.</div>
+<div class="term-tech" data-lang="zh">Bagging + 每次分裂隨機選 √p 特徵 (Breiman 2001)；去相關性顯著減少變異。</div>
+<div class="term-tech" data-lang="en">Bagging + random √p feature subset per split (Breiman 2001); decorrelation cuts variance.</div></div>
+
+<div class="glossary-card"><div class="term-en">OOB Error</div><div class="term-zh">袋外誤差</div>
+<div class="term-kid" data-lang="zh">每棵樹「沒抽到」的資料，剛好可以拿來驗證。</div>
+<div class="term-kid" data-lang="en">The samples each tree "didn't pick" can serve as its validation.</div>
+<div class="term-tech" data-lang="zh">每筆 bootstrap 抽樣中約 36.8% 不被抽中；用這些 OOB 樣本估泛化誤差，免額外 CV。</div>
+<div class="term-tech" data-lang="en">~36.8% of samples are not drawn in each bootstrap; use these OOB points to estimate generalization without CV.</div></div>
+
+<div class="glossary-card"><div class="term-en">Gradient Boosting</div><div class="term-zh">梯度提升</div>
+<div class="term-kid" data-lang="zh">接力賽——每個跑者修正前一棒的錯誤。</div>
+<div class="term-kid" data-lang="en">A relay race — each runner fixes the previous runner's mistakes.</div>
+<div class="term-tech" data-lang="zh">序列加性模型 F<sub>m</sub>(x)=F<sub>m-1</sub>(x)+η·h<sub>m</sub>(x)；h<sub>m</sub> 擬合負梯度 (Friedman 2001)。</div>
+<div class="term-tech" data-lang="en">Additive sequential model F<sub>m</sub>(x)=F<sub>m-1</sub>(x)+η·h<sub>m</sub>(x); h<sub>m</sub> fits negative gradient (Friedman 2001).</div></div>
+
+<div class="glossary-card"><div class="term-en">XGBoost</div><div class="term-zh">XGBoost</div>
+<div class="term-kid" data-lang="zh">為比賽而生的梯度提升加強版——又快又準。</div>
+<div class="term-kid" data-lang="en">Competition-grade GBM — fast and accurate.</div>
+<div class="term-tech" data-lang="zh">2nd-order Taylor 展開 + 正則化 Ω(f)=γT+λ‖w‖²；hist + 加權分位數 sketch (Chen-Guestrin 2016)。</div>
+<div class="term-tech" data-lang="en">2nd-order Taylor + regularizer Ω(f)=γT+λ‖w‖²; histogram + weighted quantile sketch (Chen-Guestrin 2016).</div></div>
+
+<div class="glossary-card"><div class="term-en">LightGBM</div><div class="term-zh">LightGBM</div>
+<div class="term-kid" data-lang="zh">大資料界的閃電——超快、葉子優先成長。</div>
+<div class="term-kid" data-lang="en">Lightning for big data — fastest, leaf-wise growth.</div>
+<div class="term-tech" data-lang="zh">Histogram-based + Gradient-One-Side Sampling (GOSS) + Exclusive Feature Bundling (EFB)。Ke 2017 NIPS。</div>
+<div class="term-tech" data-lang="en">Histogram + Gradient-One-Side Sampling (GOSS) + Exclusive Feature Bundling (EFB). Ke 2017 NeurIPS.</div></div>
+
+<div class="glossary-card"><div class="term-en">CatBoost</div><div class="term-zh">CatBoost</div>
+<div class="term-kid" data-lang="zh">擅長處理「類別資料」的提升器，俄羅斯 Yandex 出品。</div>
+<div class="term-kid" data-lang="en">Booster that handles categoricals natively, from Yandex.</div>
+<div class="term-tech" data-lang="zh">Ordered Target Statistics 編碼 + Oblivious Trees + 抗 target leakage (Prokhorenkova 2018 NIPS)。</div>
+<div class="term-tech" data-lang="en">Ordered Target-Statistic encoding + Oblivious Trees + leakage-resistant (Prokhorenkova 2018 NeurIPS).</div></div>
+
+<div class="glossary-card"><div class="term-en">Leaf-wise vs Level-wise</div><div class="term-zh">葉優先 vs 層優先</div>
+<div class="term-kid" data-lang="zh">葉優先：把最賺的葉子優先擴；層優先：每層所有葉子都擴。</div>
+<div class="term-kid" data-lang="en">Leaf-wise: expand the most-gain leaf first. Level-wise: expand every leaf at a level.</div>
+<div class="term-tech" data-lang="zh">Leaf-wise (LightGBM) 收斂快但易過擬合，需 num_leaves 限制；Level-wise (XGBoost 預設) 較穩。</div>
+<div class="term-tech" data-lang="en">Leaf-wise (LightGBM) converges fast but overfits — limit num_leaves; Level-wise (XGBoost default) is more stable.</div></div>
+
+<div class="glossary-card"><div class="term-en">SHAP value</div><div class="term-zh">SHAP 值</div>
+<div class="term-kid" data-lang="zh">公平分配「這筆預測中每個特徵貢獻多少」。</div>
+<div class="term-kid" data-lang="en">Fairly attribute "how much each feature contributed to this prediction."</div>
+<div class="term-tech" data-lang="zh">基於合作賽局 Shapley value 公理化分解；TreeSHAP (Lundberg 2018, 2020) 為樹模型 O(LD²) 精確解。</div>
+<div class="term-tech" data-lang="en">Axiomatic decomposition based on cooperative game Shapley values; TreeSHAP (Lundberg 2018, 2020) exact O(LD²) for trees.</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史脈絡" data-en="HISTORY">歷史脈絡</div>
+<h2 data-zh="從 ID3 到 XGBoost 2.x / LightGBM 4.x" data-en="From ID3 to XGBoost 2.x / LightGBM 4.x">樹模型的 40 年演化</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1984</span><span class="tl-title" data-zh="Breiman-Friedman CART" data-en="Breiman-Friedman CART">Breiman-Friedman CART</span><span class="tl-desc" data-zh="《Classification and Regression Trees》專書出版；Gini + 二元切分成為標準。" data-en="CART book published; Gini + binary splits become standard.">CART book published.</span></div>
+<div class="timeline-item"><span class="tl-year">1986</span><span class="tl-title" data-zh="Quinlan ID3" data-en="Quinlan ID3">Quinlan ID3</span><span class="tl-desc" data-zh="Machine Learning Journal 創刊文；Information Gain 作為分裂準則。" data-en="ML Journal inaugural paper; Information Gain as split criterion.">First ML Journal paper.</span></div>
+<div class="timeline-item"><span class="tl-year">1993</span><span class="tl-title" data-zh="Quinlan C4.5" data-en="Quinlan C4.5">Quinlan C4.5</span><span class="tl-desc" data-zh="增加連續特徵處理、缺失值、剪枝；至今工業界仍見其變體。" data-en="Adds continuous features, missing-value handling, pruning; variants still used.">Continuous features, missing, pruning.</span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="Breiman Bagging" data-en="Breiman Bagging">Breiman Bagging</span><span class="tl-desc" data-zh="Bootstrap Aggregating 論文；變異降低的第一個系統化方法。" data-en="Bootstrap Aggregating paper; first systematic variance reducer.">Bootstrap aggregating.</span></div>
+<div class="timeline-item"><span class="tl-year">2001</span><span class="tl-title" data-zh="Breiman Random Forest + Friedman GBM" data-en="Breiman Random Forest + Friedman GBM">Random Forest & GBM</span><span class="tl-desc" data-zh="Breiman 在 Machine Learning 發表 RF；同年 Friedman 在 Annals of Statistics 發表 Gradient Boosting。" data-en="Breiman RF in Machine Learning; Friedman GBM in Annals of Statistics — same year.">Both in 2001 — the tree decade begins.</span></div>
+<div class="timeline-item"><span class="tl-year">2016</span><span class="tl-title" data-zh="Chen-Guestrin XGBoost" data-en="Chen-Guestrin XGBoost">XGBoost @ KDD</span><span class="tl-desc" data-zh="2nd-order Taylor + 加權分位數 sketch + 缺失值自動處理；霸佔 Kaggle 排行。" data-en="2nd-order Taylor + weighted quantile sketch + sparsity-aware; dominates Kaggle.">Dominates Kaggle.</span></div>
+<div class="timeline-item"><span class="tl-year">2017</span><span class="tl-title" data-zh="Ke et al. LightGBM" data-en="Ke et al. LightGBM">LightGBM @ NeurIPS</span><span class="tl-desc" data-zh="Microsoft 出品；GOSS+EFB 在大資料快 5–10×。" data-en="Microsoft; GOSS+EFB make it 5–10× faster on big data.">5–10× faster on big data.</span></div>
+<div class="timeline-item"><span class="tl-year">2018</span><span class="tl-title" data-zh="Prokhorenkova CatBoost" data-en="Prokhorenkova CatBoost">CatBoost @ NeurIPS</span><span class="tl-desc" data-zh="Yandex 出品；Ordered TS 解決 target-leakage；oblivious trees 推論飛快。" data-en="Yandex; Ordered TS solves target-leakage; oblivious trees blazing inference.">Ordered TS + oblivious trees.</span></div>
+<div class="timeline-item"><span class="tl-year">2022</span><span class="tl-title" data-zh="Grinsztajn et al. NeurIPS" data-en="Grinsztajn et al. NeurIPS">Tabular still belongs to trees</span><span class="tl-desc" data-zh="系統 benchmark：XGBoost / RF 在多數表格任務上勝過 Transformer/TabNet。" data-en="Systematic benchmark: XGBoost / RF beat Transformer/TabNet on most tabular tasks.">Trees beat transformers on tabular.</span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="XGBoost 2.x device API" data-en="XGBoost 2.x device API">XGBoost 2.x device API</span><span class="tl-desc" data-zh="原生 categorical、device=cuda/mps、external memory；Tianqi Chen 紀念十年。" data-en="Native categorical, device=cuda/mps, external memory; 10th anniversary by Tianqi Chen.">Native categorical + CUDA/MPS.</span></div>
+<div class="timeline-item"><span class="tl-year">2025</span><span class="tl-title" data-zh="LightGBM 4.x + NGBoost 0.5" data-en="LightGBM 4.x + NGBoost 0.5">LightGBM 4.x + NGBoost</span><span class="tl-desc" data-zh="LightGBM 4 加 quantized training；NGBoost 提供原生機率分布預測。" data-en="LightGBM 4 quantized training; NGBoost native probabilistic predictions.">Quantized training & native uncertainty.</span></div>
+</div>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">🏥</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="500 個醫生 vs 接力賽" data-en="500 Doctors vs Relay Race">500 個醫生 vs 接力賽</h4>
+<p data-lang="zh">Random Forest 就像「拿同一份病例給 500 位醫生看，每位只看其中一部分症狀、給出獨立診斷，最後投票」——每個都有偏見，但平均之後極其穩定。Gradient Boosting 像「接力賽——第一棒 (淺樹) 給粗略答案，第二棒 (殘差樹) 修正第一棒漏掉的，第三棒再修第二棒漏掉的……」每棒擬合的是<em>剩下的錯誤</em>。RF 是 parallel democracy，GBM 是 sequential teamwork。</p>
+<p data-lang="en">Random Forest is "give the same case to 500 doctors, each sees only some symptoms, each gives an independent diagnosis, then vote" — every doctor is biased, but the average is rock-solid. Gradient Boosting is "a relay race — the first runner (shallow tree) gives a rough answer, the second runner (residual tree) corrects what the first missed, the third runner corrects what the second missed…" each fits <em>what's left wrong</em>. RF = parallel democracy. GBM = sequential teamwork.</p>
+</div>
+</div>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="為什麼樹模型在表格資料上稱王？" data-en="Why Trees Dominate Tabular Data">為什麼樹模型在表格資料上稱王？</h2>
@@ -164,6 +321,159 @@ hgb = HistGradientBoostingClassifier(max_iter=<span class="num">500</span>, lear
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算範例" data-en="WORKED EXAMPLE">手算範例</div>
+<h2 data-zh="手算：100 病人 → 3 層糖尿病樹" data-en="Walkthrough: 100 patients → 3-level diabetes tree">手算：100 病人 → 3 層樹</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">2</div><h3 data-zh="親手算 Gini 與資訊增益" data-en="Compute Gini & Information Gain by hand">親手算 Gini 與資訊增益</h3><span class="wt-tag" data-zh="細到第三位小數" data-en="To 3 decimals">逐步</span></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>樣本：</strong>100 位病人，60 位無糖尿病 (Y=0)、40 位糖尿病 (Y=1)。<strong>根節點 Gini：</strong>1 − (0.6² + 0.4²) = 1 − (0.36 + 0.16) = <code>0.48</code>。</div><div class="wt-body" data-lang="en"><strong>Sample:</strong> 100 patients, 60 non-DM (Y=0), 40 DM (Y=1). <strong>Root Gini:</strong> 1 − (0.6² + 0.4²) = 1 − (0.36 + 0.16) = <code>0.48</code>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>候選分裂：glucose ≤ 126：</strong>左：65 人 (55 非 / 10 DM)、右：35 人 (5 非 / 30 DM)。</div><div class="wt-body" data-lang="en"><strong>Candidate split: glucose ≤ 126:</strong> Left 65 (55 non / 10 DM); Right 35 (5 non / 30 DM).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>左子 Gini：</strong>1 − (55/65)² − (10/65)² = 1 − 0.716 − 0.024 = <code>0.260</code>。<br><strong>右子 Gini：</strong>1 − (5/35)² − (30/35)² = 1 − 0.020 − 0.735 = <code>0.245</code>。</div><div class="wt-body" data-lang="en"><strong>Left Gini:</strong> 1 − (55/65)² − (10/65)² = 1 − 0.716 − 0.024 = <code>0.260</code>.<br><strong>Right Gini:</strong> 1 − (5/35)² − (30/35)² = 1 − 0.020 − 0.735 = <code>0.245</code>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>加權子節點 Gini：</strong>(65/100)·0.260 + (35/100)·0.245 = 0.169 + 0.0858 = <code>0.255</code>。<strong>資訊增益：</strong>0.48 − 0.255 = <code>0.225</code>。</div><div class="wt-body" data-lang="en"><strong>Weighted child Gini:</strong> (65/100)·0.260 + (35/100)·0.245 = 0.169 + 0.0858 = <code>0.255</code>. <strong>Information gain:</strong> 0.48 − 0.255 = <code>0.225</code>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>枚舉所有候選：</strong>試其他特徵 (BMI ≤ 30 → gain 0.18，age ≤ 50 → gain 0.09)。<strong>glucose ≤ 126 勝出</strong>。</div><div class="wt-body" data-lang="en"><strong>Enumerate candidates:</strong> try other features (BMI ≤ 30 → gain 0.18, age ≤ 50 → gain 0.09). <strong>glucose ≤ 126 wins.</strong></div></div>
+<div class="wt-step"><div class="wt-label">STEP 6</div><div class="wt-body" data-lang="zh"><strong>對右子 (35 人) 遞迴：</strong>candidate BMI ≤ 35 → gain 0.06 → 採用。對左子也同樣遞迴。停止準則：depth=3、min_samples_leaf=5 或 gain &lt; 0.01。</div><div class="wt-body" data-lang="en"><strong>Recurse on right child (35):</strong> candidate BMI ≤ 35 → gain 0.06 → accept. Same for left. Stop when depth=3, min_samples_leaf=5, or gain &lt; 0.01.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 7</div><div class="wt-body" data-lang="zh"><strong>葉子預測：</strong>葉子內多數類別作為輸出；機率 = p<sub>k</sub>。</div><div class="wt-body" data-lang="en"><strong>Leaf prediction:</strong> majority class is the output; probability = p<sub>k</sub>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 8</div><div class="wt-body" data-lang="zh"><strong>剪枝 (CCP)：</strong>計算每個內節點剪掉後的 R(T)+α·|T|；用 5-fold CV 找最佳 α。typically α=0.005–0.02。</div><div class="wt-body" data-lang="en"><strong>Pruning (CCP):</strong> compute R(T)+α·|T| for each candidate cut; pick α via 5-fold CV. Typical α=0.005–0.02.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 9</div><div class="wt-body" data-lang="zh"><strong>升級到 RF：</strong>同樣的演算法跑 500 次、每次抽 100 個 bootstrap、每個分裂只看 √p≈5 個特徵。OOB error 估計 ≈ 0.18。</div><div class="wt-body" data-lang="en"><strong>Scale to RF:</strong> repeat 500× with bootstrap-100 each, √p≈5 features per split. OOB error ≈ 0.18.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 10</div><div class="wt-body" data-lang="zh"><strong>升級到 XGBoost：</strong>η=0.05、max_depth=4、n_estimators=500 + early_stopping_rounds=30；val AUROC 從 0.82 → 0.89。</div><div class="wt-body" data-lang="en"><strong>Upgrade to XGBoost:</strong> η=0.05, max_depth=4, n_estimators=500 + early_stopping_rounds=30; val AUROC 0.82 → 0.89.</div></div>
+</div>
+</section>
+
+<section class="section" id="widget2">
+<div class="section-label" data-zh="新互動" data-en="NEW INTERACTIVE">新互動</div>
+<h2 data-zh="互動：min_samples_leaf 與 train/val gap" data-en="Interactive: min_samples_leaf vs train/val gap">互動：min_samples_leaf 對 gap 的影響</h2>
+<div data-lang="zh"><p>第一個互動探討 max_depth；這裡換個視角——固定 depth=8，調整 <code>min_samples_leaf</code>。葉子越大、模型越平滑、變異越小。觀察 KPI 卡片即時更新。</p></div>
+<div data-lang="en"><p>The first widget tuned max_depth; here we fix depth=8 and slide <code>min_samples_leaf</code>. Larger leaves = smoother model, lower variance. Watch the KPI cards update live.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label>min_samples_leaf = <span id="mslVal">5</span></label><input type="range" id="msl" min="1" max="100" value="5" step="1"></div>
+<div class="kpi-grid" id="mslKPI"></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論題" data-en="DEBATE">爭論題</div>
+<h2 data-zh="三個值得吵的問題" data-en="Three Worth-Arguing Questions">三題爭論</h2>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+<h3 data-zh="RF vs XGBoost — 什麼時候用哪一個？" data-en="RF vs XGBoost — When to use which?">RF vs XGBoost — 怎麼選？</h3>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong><span data-lang="zh">「<em>研究 baseline 一律 RF</em>」——平行可訓、抗過擬合、預設值就能用、有 OOB 估計。論文寫法：「RF 作為 baseline，AUROC = 0.84」。</span><span data-lang="en">"<em>Always RF as research baseline</em>" — parallelizable, robust, works at defaults, OOB built-in. Paper-friendly: "RF baseline, AUROC = 0.84".</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong><span data-lang="zh">「<em>競賽/生產直上 XGBoost</em>」——序列擬合殘差能逼近更低偏差，2nd-order Taylor 更精確。代價：要早停、要調 η + max_depth + subsample + colsample。</span><span data-lang="en">"<em>XGBoost in competitions and production</em>" — sequential residual fit lowers bias; 2nd-order Taylor is more precise. Cost: must early-stop, tune η + max_depth + subsample + colsample.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 C：" data-en="View C:">觀點 C：</strong><span data-lang="zh">「<em>跑兩個對比</em>」——Grinsztajn 2022 NeurIPS 發現 XGBoost 平均勝 RF 1–2% AUROC，但在高雜訊資料 RF 反勝。對你的資料兩個都跑一次。</span><span data-lang="en">"<em>Run both and compare</em>" — Grinsztajn 2022 NeurIPS finds XGBoost beats RF by 1–2% on average, but RF wins on noisy data. Just train both on your data.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+<h3 data-zh="樹模型可解釋還是只是「post-hoc 包裝」？" data-en="Are tree models interpretable, or just post-hoc dressed-up?">樹模型可解釋還是包裝？</h3>
+<div class="disc-pov"><strong data-zh="挺方：" data-en="Pro:">挺方：</strong><span data-lang="zh">單棵 CART (depth ≤ 4) 就是 if-else 規則——臨床指南可以直接抄。Random Forest 的 feature importance 給出 top-K 排序，<em>方向</em>明確。</span><span data-lang="en">A single CART (depth ≤ 4) is literally if-else rules — clinical guidelines copy them directly. RF feature importance gives top-K ranking with <em>direction</em>.</span></div>
+<div class="disc-pov"><strong data-zh="反方：" data-en="Con:">反方：</strong><span data-lang="zh">600 棵深度 8 的 XGBoost 等於 600 × 256 = 153,600 條規則，<em>沒人能讀</em>。所謂「特徵重要性」其實隨 seed 變動 ±15%；SHAP 也只是 local 解釋，無法陳述全域因果。</span><span data-lang="en">600 trees × depth 8 = 153,600 rules — <em>no human reads that</em>. Feature importance varies ±15% across seeds; SHAP is local, gives no global causal story.</span></div>
+<div class="disc-pov"><strong data-zh="折衷：" data-en="Middle ground:">折衷：</strong><span data-lang="zh">用 RuleFit (Friedman 2008) 或 EBM (Microsoft 2019, InterpretML) — 強制模型保持規則形式且可加性。準確率代價 ~2–4% AUROC，但能擺進監管報告。</span><span data-lang="en">Use RuleFit (Friedman 2008) or EBM (Microsoft 2019, InterpretML) — keep the model rule-shaped and additive. Cost ~2–4% AUROC, but fits in regulator reports.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+<h3 data-zh="CatBoost 在 2025 真的打贏 XGBoost 嗎？" data-en="Does CatBoost really beat XGBoost in 2025?">CatBoost 真的贏嗎？</h3>
+<div class="disc-pov"><strong data-zh="挺 CatBoost：" data-en="Pro CatBoost:">挺 CatBoost：</strong><span data-lang="zh">Ordered Target Statistics + oblivious trees 在<em>高基數類別資料</em> (郵遞區號、ICD、SKU) 上明顯勝出。推論飛快 (~6× XGBoost on CPU)。</span><span data-lang="en">Ordered Target Statistics + oblivious trees win on <em>high-cardinality categoricals</em> (zip code, ICD, SKU). Inference 6× faster than XGBoost on CPU.</span></div>
+<div class="disc-pov"><strong data-zh="挺 XGBoost：" data-en="Pro XGBoost:">挺 XGBoost：</strong><span data-lang="zh">XGBoost 2.x 加了原生 categorical，差距縮小到 ~1% AUROC。社群 + 文件 + GPU 成熟度 + 與 SHAP/Optuna 的整合，仍是工業界主流。</span><span data-lang="en">XGBoost 2.x added native categorical; gap shrank to ~1% AUROC. Community + docs + GPU maturity + SHAP/Optuna integration still make it the industry default.</span></div>
+<div class="disc-pov"><strong data-zh="結論：" data-en="Verdict:">結論：</strong><span data-lang="zh">如果資料有 &gt;5 個 cardinality &gt; 100 的類別欄、且樣本 &gt; 10k，<strong>CatBoost 值得試</strong>。其他情境兩個差距很小，跟團隊熟悉度比較有關。</span><span data-lang="en">If you have &gt;5 categorical columns with cardinality &gt; 100 and &gt; 10k samples, <strong>CatBoost is worth trying</strong>. Otherwise the gap is small — pick whatever the team knows best.</span></div>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🏆</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實案聚光燈" data-en="SPOTLIGHT">實案聚光燈</span>
+<h4 data-zh="2014 Higgs Boson Kaggle 挑戰 — XGBoost 的成名作" data-en="2014 Higgs Boson Kaggle Challenge — XGBoost's debut">2014 Higgs Boson Kaggle</h4>
+<p data-lang="zh">2014 年 CERN 在 Kaggle 發起 <strong>Higgs Boson Machine Learning Challenge</strong>，要求從 25 萬筆 LHC 模擬碰撞中找 Higgs → ττ signal。1,785 隊參賽，獲勝隊伍 (Gabor Melis、Tim Salimans 等) 全部使用同一個工具：剛開源不久的 <strong>XGBoost</strong>（Tianqi Chen 當時華盛頓大學博士生）。從這場比賽開始，XGBoost 成為 Kaggle 表格賽事的標配。十年後 (2024)，Chen 在 PyData NYC 發表 XGBoost 2.x 紀念演講——慶祝這個函式庫至今被引用 35,000+ 次、超過了 80% 的深度學習論文。</p>
+<p data-lang="en">In 2014, CERN launched the <strong>Higgs Boson Machine Learning Challenge</strong> on Kaggle — find Higgs → ττ signal in 250k simulated LHC collisions. 1,785 teams entered. The winning teams (Gabor Melis, Tim Salimans, etc.) all used the same new tool: the freshly open-sourced <strong>XGBoost</strong> by Tianqi Chen (then PhD student at U-Washington). From that day on, XGBoost became Kaggle's default for tabular. Ten years later (2024), Chen gave the 10-year anniversary keynote at PyData NYC — the library has now been cited 35,000+ times, more than 80% of deep-learning papers.</p>
+</div>
+</div>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="樹模型陷阱 6 連發" data-en="Six Pitfalls for Tree Models">樹模型 6 大陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="把 feature importance 當因果" data-en="Feature importance = causation">把 importance 當因果</h4><p data-lang="zh">「年齡 importance 最高」不代表「年齡導致這個結果」——可能只是和真正原因高度相關 (proxy)。<em>因果推論需要 DAG + 反事實 (Pearl 2009)</em>。</p><p data-lang="en">"Age is most important" doesn't mean "age causes the outcome" — it may just correlate with the true cause (proxy). <em>Causal claims need DAGs + counterfactuals (Pearl 2009).</em></p></div>
+<div class="pitfall-card"><h4 data-zh="忽略 train/val gap" data-en="Ignoring train/val gap">忽略 train/val gap</h4><p data-lang="zh">XGBoost train AUROC = 0.99 看起來很美——但 val AUROC = 0.78 就是嚴重過擬合。<strong>必須報告兩者，及差距</strong>。</p><p data-lang="en">XGBoost train AUROC = 0.99 looks pretty — but val AUROC = 0.78 is severe overfit. <strong>Always report both and the gap.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="把 XGBoost 當黑箱" data-en="XGBoost as black box">把 XGBoost 當黑箱</h4><p data-lang="zh">沒做 SHAP、沒做 partial dependence 就上線——出問題時無法 debug。<em>至少跑 SHAP summary + 5 個 SHAP dependence 圖</em>。</p><p data-lang="en">Deploying without SHAP / partial dependence → impossible to debug when it fails. <em>Always run SHAP summary + 5 dependence plots.</em></p></div>
+<div class="pitfall-card"><h4 data-zh="生產用預設超參數" data-en="Default hyperparams in production">預設超參數直接上線</h4><p data-lang="zh">XGBoost 預設 learning_rate=0.3 對大多數任務太大；LightGBM 預設 num_leaves=31 對小資料太多。<strong>至少 Optuna 跑 50 trials</strong>。</p><p data-lang="en">XGBoost default learning_rate=0.3 is too big for most tasks; LightGBM default num_leaves=31 is too many for small data. <strong>At least 50 Optuna trials.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="train/test 用不同 label encoder" data-en="Different label encoders for train/test">train/test 編碼不一致</h4><p data-lang="zh">用 <code>LabelEncoder()</code> 各自 fit_transform train 和 test → 同一字串可能編到不同數字。<em>fit 在 train、只 transform test</em>，或用 <code>OrdinalEncoder(handle_unknown="use_encoded_value")</code>。</p><p data-lang="en">fit_transform <code>LabelEncoder()</code> separately on train/test → same string maps to different ints. <em>Fit on train, only transform test</em>, or use <code>OrdinalEncoder(handle_unknown="use_encoded_value")</code>.</p></div>
+<div class="pitfall-card"><h4 data-zh="不平衡資料不設 scale_pos_weight" data-en="Imbalanced data without scale_pos_weight">不平衡資料不設 weight</h4><p data-lang="zh">陽性 5%：XGBoost 預設會學「全猜陰性」。設 <code>scale_pos_weight = neg/pos = 19</code> 或 LightGBM <code>is_unbalance=True</code>。</p><p data-lang="en">5% positive: XGBoost defaults to "always predict negative." Set <code>scale_pos_weight = neg/pos = 19</code> or LightGBM <code>is_unbalance=True</code>.</p></div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞範例" data-en="Bad">壞範例：直接 XGBClassifier()</h4>
+<p data-lang="zh"><code>xgb.XGBClassifier().fit(X_train, y_train); print(model.score(X_train, y_train))</code> — 預設超參、無 early stopping、用 train acc 報告。對 1:50 不平衡資料還能輸出 0.98——但 0.98 是 train acc，val PR-AUC 可能 0.18。</p>
+<p data-lang="en"><code>xgb.XGBClassifier().fit(X_train, y_train); print(model.score(X_train, y_train))</code> — defaults, no early stopping, reports train accuracy. On 1:50 imbalanced data it shows 0.98 — that's <em>train</em> acc; val PR-AUC may be 0.18.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好範例" data-en="Good">好範例：early stop + SHAP + scale_pos_weight</h4>
+<p data-lang="zh">設 <code>scale_pos_weight=neg/pos</code>、<code>eval_set=[(X_val,y_val)], early_stopping_rounds=30</code>，跑 Optuna 100 trials 找超參、最後 SHAP summary plot + reliability diagram + report 5-fold CV PR-AUC mean±SD。</p>
+<p data-lang="en">Set <code>scale_pos_weight=neg/pos</code>, <code>eval_set=[(X_val,y_val)], early_stopping_rounds=30</code>, run Optuna 100 trials, then SHAP summary plot + reliability diagram + 5-fold CV PR-AUC mean±SD.</p>
+</div>
+</div>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="反思題（先想 30 秒）" data-en="Reflection (think 30s)">反思題</h4>
+<ol>
+<li data-lang="zh">為什麼 RF 的 OOB error 大約相當於 LOO-CV 但 <em>不需要</em> 重新訓練？背後的數學？</li>
+<li data-lang="en">Why is RF's OOB error ≈ LOO-CV without retraining? What's the math?</li>
+<li data-lang="zh">XGBoost 的 2nd-order Taylor 展開比 GBM 的 1st-order 多了什麼資訊？為什麼讓收斂變快？</li>
+<li data-lang="en">XGBoost uses 2nd-order Taylor expansion vs GBM's 1st-order — what info does the extra term carry, and why does it speed convergence?</li>
+<li data-lang="zh">LightGBM leaf-wise 為什麼比 XGBoost level-wise 快？什麼情境會反過來？</li>
+<li data-lang="en">Why is LightGBM leaf-wise faster than XGBoost level-wise? When does the opposite hold?</li>
+<li data-lang="zh">能否用 RF feature importance 進行特徵選擇 ＋ 用同一份資料跑 RF 預測？這會有什麼偏誤？</li>
+<li data-lang="en">Can you use RF feature importance to select features and then run RF on the same data? What bias does this introduce?</li>
+<li data-lang="zh">設計一個 ablation 實驗：證明 XGBoost 中的 column subsampling (colsample_bytree) 真的有用。</li>
+<li data-lang="en">Design an ablation showing that XGBoost's column subsampling (colsample_bytree) actually helps.</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="進階研究員彩蛋" data-en="ADVANCED · RESEARCHER">進階研究員彩蛋</span>
+<h4 data-zh="2024–2026 SOTA：device API、GPUTreeShap、NGBoost、Quantized" data-en="2024–2026 SOTA: device API, GPUTreeShap, NGBoost, Quantized">2024–2026 SOTA</h4>
+<p data-lang="zh"><strong>XGBoost 2.x device-based API：</strong>10 週年大改版，<code>device="cuda"</code> / <code>"mps"</code> / <code>"cpu"</code> 取代舊的 <code>tree_method="gpu_hist"</code>。原生 categorical (no more LabelEncoder!) 、external memory、QuantileDMatrix 在 100M+ 樣本上比 v1 快 3×。</p>
+<p data-lang="en"><strong>XGBoost 2.x device-based API:</strong> 10th-anniversary redesign — <code>device="cuda"</code> / <code>"mps"</code> / <code>"cpu"</code> replaces the old <code>tree_method="gpu_hist"</code>. Native categorical (no more LabelEncoder!), external memory, QuantileDMatrix, 3× faster than v1 on 100M+ samples.</p>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：GPUTreeShap (Mitchell et al, ICLR 2022)" data-en="🔍 Click: GPUTreeShap (Mitchell et al, ICLR 2022)">🔍 GPUTreeShap</summary>
+<div class="detail-body" data-lang="zh"><p>原本 TreeSHAP 是 O(LD²) CPU bound；GPUTreeShap (NVIDIA Mitchell et al., arXiv:2010.13972, 2021) 用 path-based GPU kernel 把 600 棵深度 8 樹的 SHAP 從 4 小時降到 12 秒。整合到 XGBoost 2.x 的 <code>model.predict(X, pred_contribs=True)</code>。</p>
+<p>2024 NGBoost-SHAP (Duan et al., NeurIPS 2024) 進一步把 SHAP 推廣到「機率分布輸出」——可以解釋每個特徵對 mean / variance 各自的貢獻。</p></div>
+<div class="detail-body" data-lang="en"><p>Vanilla TreeSHAP is O(LD²) CPU-bound; GPUTreeShap (NVIDIA Mitchell et al., arXiv:2010.13972, 2021) uses a path-based GPU kernel to drop SHAP on 600 depth-8 trees from 4 h to 12 s. Integrated in XGBoost 2.x: <code>model.predict(X, pred_contribs=True)</code>.</p>
+<p>2024 NGBoost-SHAP (Duan et al., NeurIPS 2024) extends SHAP to "distributional outputs" — separating each feature's contribution to mean vs variance.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：NGBoost — 原生機率分布預測" data-en="🔍 Click: NGBoost — native probabilistic predictions">🔍 NGBoost (Duan et al, ICML 2020)</summary>
+<div class="detail-body" data-lang="zh"><p>NGBoost (Duan et al., ICML 2020, arXiv:1910.03225) 改用 <em>Natural Gradient Boosting</em> 同時擬合分布的 mean 與 scale 參數——不再只輸出點估，而是完整 P(y|x) 分布。例：給病人預測 5 年存活率時，能說「中位 0.65，IQR [0.42, 0.88]」。</p>
+<p>2025 NGBoost 0.5 加入 Multi-output 與 GPU 支援，比 XGBoost-quantile 更穩定。</p></div>
+<div class="detail-body" data-lang="en"><p>NGBoost (Duan et al., ICML 2020, arXiv:1910.03225) uses <em>Natural Gradient Boosting</em> to fit both location and scale parameters of an output distribution — point estimates become full P(y|x). E.g. "median 5-yr survival 0.65, IQR [0.42, 0.88]".</p>
+<p>NGBoost 0.5 (2025) adds multi-output and GPU support, more stable than XGBoost-quantile.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Grinsztajn 2022 — Tabular 仍屬於樹" data-en="🔍 Click: Grinsztajn 2022 — Tabular still belongs to trees">🔍 Why trees still beat Transformers on tabular</summary>
+<div class="detail-body" data-lang="zh"><p>Grinsztajn-Oyallon-Varoquaux NeurIPS 2022 (arXiv:2207.08815) 系統 benchmark 45 個表格資料集 vs Transformer (TabTransformer, FT-Transformer)、TabNet、MLP-PLR、XGBoost、RF。結論：<strong>樹型模型在 70% 的資料集上仍勝出</strong>，主因有三：(1) 樹自動處理非旋轉不變特徵；(2) 樹自動處理「不重要特徵」（非零權重會傷 NN）；(3) NN 在小資料上難收斂。</p>
+<p>這篇是 2024–2026 Kaggle 入門：「沒事就用 XGBoost / LightGBM」的官方依據。</p></div>
+<div class="detail-body" data-lang="en"><p>Grinsztajn-Oyallon-Varoquaux NeurIPS 2022 (arXiv:2207.08815) systematically benchmarked 45 tabular datasets vs Transformer (TabTransformer, FT-Transformer), TabNet, MLP-PLR, XGBoost, RF. Verdict: <strong>trees win on 70% of datasets</strong>, because (1) trees handle non-rotation-invariant features natively; (2) trees ignore unimportant features (NNs can't suppress them); (3) NNs underperform on small N.</p>
+<p>This is the official 2024–2026 reason: "for tabular, just use XGBoost / LightGBM."</p></div>
+</details>
+
+<p data-lang="zh"><strong>2025 cheat-sheet code:</strong></p>
+<p data-lang="en"><strong>2025 cheat-sheet code:</strong></p>
+<p><code>import xgboost as xgb<br>
+clf = xgb.XGBClassifier(device="cuda", enable_categorical=True,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n_estimators=2000, learning_rate=0.03, max_depth=6,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;subsample=0.8, colsample_bytree=0.8,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;scale_pos_weight=neg/pos, early_stopping_rounds=50)<br>
+clf.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], verbose=False)<br>
+import shap; expl=shap.TreeExplainer(clf); sv=expl(X_val)<br>
+shap.plots.beeswarm(sv, max_display=20)</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -196,6 +506,12 @@ hgb = HistGradientBoostingClassifier(max_iter=<span class="num">500</span>, lear
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 訓練是平行的</span><span data-lang="en">D. Training is parallel</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="趣聞：" data-en="Anecdote:">趣聞：</strong>
+<span data-lang="zh">Leo Breiman 1995 年 65 歲開始寫 Random Forest，他自嘲：「我的學術生涯最有趣的事，發生在退休之後。」2001 年 Random Forest 論文在 Machine Learning 期刊發表，至今 Google Scholar 引用 113,000+ 次——是統計學史上引用最多的單篇論文之一。他 2005 年過世前接受訪談說：「我希望我留下的東西不是任何單一定理，而是一種把資料當朋友的態度。」</span>
+<span data-lang="en">Leo Breiman started writing Random Forest at age 65 in 1995, joking: "The most interesting thing in my academic life happened after retirement." His 2001 Machine Learning paper now has 113,000+ Google Scholar citations — among the most-cited statistics papers ever. In a 2005 interview shortly before his death he said: "What I hope to leave isn't a theorem — it's an attitude of treating data as a friend."</span>
+</div>
 
 <nav class="page-nav">
 <a href="classification-overview.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 5: 分類概論：KNN 與 Logistic Regression" data-en="Ch 5: Classification Overview: KNN &amp; Logistic Regression">Ch 5: 分類概論：KNN 與 Logistic Regression</span></a>
@@ -236,6 +552,30 @@ function updateDepth(d){
 document.getElementById('dtD').addEventListener('input',e=>updateDepth(+e.target.value));
 document.addEventListener('langchange',()=>updateDepth(+document.getElementById('dtD').value));
 updateDepth(3);
+
+// ============= min_samples_leaf widget =============
+function updateMSL(){
+  const m=+document.getElementById('msl').value;
+  document.getElementById('mslVal').textContent=m;
+  // Synthetic curves: as min_samples_leaf grows, train acc drops, val acc peaks around m=10, then drops
+  const train = Math.min(1.0, 1.0 - 0.0008*(m-1)*(m-1) - 0.002*m);
+  const val   = Math.max(0.55, 0.92 - 0.00045*(m-10)*(m-10) - (m>50?0.003*(m-50):0));
+  const gap   = train - val;
+  const leaves= Math.max(2, Math.round(150 / Math.sqrt(m)));
+  const L=I18n.get();
+  const trL = L==='zh'?'訓練 Acc':'Train Acc';
+  const vaL = L==='zh'?'驗證 Acc':'Val Acc';
+  const gpL = L==='zh'?'Gap':'Gap';
+  const lfL = L==='zh'?'估計葉數':'~Leaves';
+  document.getElementById('mslKPI').innerHTML=
+    `<div class="kpi-card"><span class="kpi-num">${train.toFixed(3)}</span><span class="kpi-label">${trL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${val.toFixed(3)}</span><span class="kpi-label">${vaL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${gap.toFixed(3)}</span><span class="kpi-label">${gpL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${leaves}</span><span class="kpi-label">${lfL}</span></div>`;
+}
+document.getElementById('msl').addEventListener('input',updateMSL);
+document.addEventListener('langchange',updateMSL);
+updateMSL();
 
 const QF={zh:{q1_y:'Gini 與 Entropy 是節點不純度的核心指標。',q1_n:'C 為正確答案。',q2_y:'RF 的 bagging + 隨機特徵子集是減少變異的關鍵。',q2_n:'B 為正確答案。',q3_y:'GBM 序列擬合殘差，能逼近更低偏差，常勝過 RF 準確率。',q3_n:'A 為正確答案。'},
           en:{q1_y:'Gini and Entropy are the core impurity measures.',q1_n:'Correct answer is C.',q2_y:'RF combines bagging with random feature subsets — the key variance reducer.',q2_n:'Correct answer is B.',q3_y:'GBM sequentially fits residuals — lower bias, usually higher accuracy than RF.',q3_n:'Correct answer is A.'}};

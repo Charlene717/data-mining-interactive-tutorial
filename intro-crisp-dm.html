@@ -19,8 +19,150 @@
 <main class="content-wrap">
 
 <section class="section">
-<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
-<h2 data-zh="什麼是資料探勘？" data-en="What is Data Mining?">什麼是資料探勘？</h2>
+<div class="section-toc"><strong data-zh="本章閱讀地圖" data-en="Chapter Reading Map">本章閱讀地圖</strong>
+<ol>
+<li><a href="#story" data-zh="🎬 故事化導讀（5 分鐘）" data-en="🎬 Story-driven intro (5 min)">🎬 故事化導讀（5 分鐘）</a></li>
+<li><a href="#glossary" data-zh="📚 名詞速查表（12 個關鍵詞）" data-en="📚 Glossary (12 key terms)">📚 名詞速查表（12 個關鍵詞）</a></li>
+<li><a href="#history" data-zh="🏛️ 方法論演進時間軸" data-en="🏛️ Methodology Timeline">🏛️ 方法論演進時間軸</a></li>
+<li><a href="#tasks" data-zh="🎯 六大任務分類" data-en="🎯 Six Core Tasks">🎯 六大任務分類</a></li>
+<li><a href="#crispdm" data-zh="🔄 CRISP-DM 六階段" data-en="🔄 CRISP-DM 6 Phases">🔄 CRISP-DM 六階段</a></li>
+<li><a href="#timeAlloc" data-zh="🎚️ 互動：階段時間分配" data-en="🎚️ Interactive: Phase Time Allocation">🎚️ 互動：階段時間分配</a></li>
+<li><a href="#walkthrough" data-zh="🧮 完整案例走讀（再入院預測）" data-en="🧮 End-to-end walkthrough (readmission)">🧮 完整案例走讀</a></li>
+<li><a href="#discussion" data-zh="💬 思辨與爭論" data-en="💬 Discussion &amp; Debate">💬 思辨與爭論</a></li>
+<li><a href="#spotlight" data-zh="🌟 經典案例：Netflix Prize" data-en="🌟 Spotlight: Netflix Prize">🌟 經典案例：Netflix Prize</a></li>
+<li><a href="#pitfalls" data-zh="🚧 五大常見陷阱" data-en="🚧 Five Common Pitfalls">🚧 五大常見陷阱</a></li>
+<li><a href="#reflection" data-zh="💭 自我反思題" data-en="💭 Reflection Questions">💭 自我反思題</a></li>
+<li><a href="#advanced" data-zh="🌳 進階：CRISP-ML(Q)、bizML、AICan" data-en="🌳 Advanced: CRISP-ML(Q), bizML, AICan">🌳 進階：CRISP-ML(Q)、bizML、AICan</a></li>
+</ol>
+</div>
+<div class="pill-row" style="margin-top:14px;">
+<span class="level-badge l-beg" data-zh="🌱 初學者" data-en="🌱 Beginner">🌱 初學者</span>
+<span class="level-badge l-mid" data-zh="🌿 中階" data-en="🌿 Intermediate">🌿 中階</span>
+<span class="level-badge l-adv" data-zh="🌳 進階研究員" data-en="🌳 Advanced">🌳 進階研究員</span>
+<span class="pill teal" data-zh="⏱️ 預計閱讀 30–40 分鐘" data-en="⏱️ Est. 30–40 min">⏱️ 預計閱讀 30–40 分鐘</span>
+<span class="pill amber" data-zh="🎯 目標：以方法論思維框架專案" data-en="🎯 Goal: Frame projects methodologically">🎯 目標：以方法論思維框架專案</span>
+</div>
+</section>
+
+<section class="section" id="story">
+<div class="story-block">
+<span class="story-tag" data-zh="故事化導讀" data-en="STORY">故事化導讀</span>
+<h3 data-zh="🌙 凌晨三點，AUROC = 0.99 的時刻" data-en="🌙 3 a.m., the moment AUROC hits 0.99">🌙 凌晨三點，AUROC = 0.99 的時刻</h3>
+<div data-lang="zh">
+<p>那是 2024 年深秋的醫學中心。資料科學家 Maya 正在訓練一個 30 天再入院預測模型——這是醫院連續第二季的核心 KPI。前一週每晚她都熬到凌晨，從 EHR 撈出 67 萬筆住院紀錄、跑了 14 種演算法、調了三組超參數。</p>
+<p>那一晚，<strong>AUROC 終於跳到 0.99</strong>。她差點要把訊息丟到 Slack 慶祝——但身體卻僵住了。XGBoost 模型不可能在這種資料上拿到 0.99。她重新檢視特徵清單，第 47 個欄位赫然寫著 <code>discharge_diagnosis_icd10</code>——出院時才會填寫的診斷碼。她把它當「入院特徵」餵進了模型。</p>
+<p>她默默刪掉那一欄，重跑——AUROC 掉到 <strong>0.74</strong>。那一刻她才真正理解，為什麼 CRISP-DM 把<em>業務理解</em>與<em>資料理解</em>放在最前面：演算法從來不是專案的瓶頸，<strong>對問題與資料的清晰度</strong>才是。</p>
+</div>
+<div data-lang="en">
+<p>It's late autumn 2024 at a major medical center. Data scientist Maya is training a 30-day readmission model — the hospital's KPI for two quarters running. For a week she's stayed until 3 a.m., pulling 670,000 admissions from the EHR, running 14 algorithms, tuning three hyperparameter grids.</p>
+<p>Tonight, <strong>AUROC jumped to 0.99</strong>. She almost hit Slack to celebrate — then froze. XGBoost cannot reach 0.99 on this data. She re-opened the feature list. Column 47: <code>discharge_diagnosis_icd10</code> — the diagnosis assigned <em>at discharge</em>. She'd fed it as an admission feature.</p>
+<p>She quietly removed the column, re-ran — AUROC dropped to <strong>0.74</strong>. That was the moment she truly understood why CRISP-DM places <em>Business Understanding</em> and <em>Data Understanding</em> first: the algorithm is never the project bottleneck — <strong>clarity about the question and the data</strong> is.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞速查" data-en="GLOSSARY">名詞速查</div>
+<h2 data-zh="12 個關鍵詞：從直白到精確" data-en="12 Key Terms: From Plain to Precise">12 個關鍵詞：從直白到精確</h2>
+<div data-lang="zh"><p>每個詞先用「孩子也聽得懂」的方式說一次，再給出精確的技術定義。建議先看 🧒，再看 📐。</p></div>
+<div data-lang="en"><p>Each term gets a kid-friendly take first, then a precise technical definition. Read 🧒 first, then 📐.</p></div>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Data Mining</div><div class="term-zh">資料探勘</div>
+<div class="term-kid" data-lang="zh">想像你在挖恐龍化石——你不知道會挖到什麼，但你知道土裡有故事。</div>
+<div class="term-kid" data-lang="en">Like digging for dinosaur bones — you don't know what you'll find, but you know the ground holds stories.</div>
+<div class="term-tech" data-lang="zh">從大量資料中萃取非顯而易見、潛在有用、可解釋的模式與知識；位於統計、ML、資料庫與領域知識的交集。</div>
+<div class="term-tech" data-lang="en">Extracting non-obvious, potentially useful, interpretable patterns and knowledge from large datasets; at the intersection of statistics, ML, databases, and domain expertise.</div>
+</div>
+<div class="glossary-card"><div class="term-en">KDD</div><div class="term-zh">知識發現流程</div>
+<div class="term-kid" data-lang="zh">是「挖寶」的全套地圖：先選土壤、再過篩、再分類、最後解釋寶物。</div>
+<div class="term-kid" data-lang="en">A full treasure-hunting map: pick the soil, sift, sort, then explain what you found.</div>
+<div class="term-tech" data-lang="zh">Fayyad et al. 1996 提出的五階段流程：選擇 → 前處理 → 變形 → 探勘 → 解釋。資料探勘是其中一個步驟。</div>
+<div class="term-tech" data-lang="en">Fayyad et al. 1996's five-phase process: Selection → Preprocessing → Transformation → Mining → Interpretation. Data mining is one phase within it.</div>
+</div>
+<div class="glossary-card"><div class="term-en">CRISP-DM</div><div class="term-zh">跨產業資料探勘標準流程</div>
+<div class="term-kid" data-lang="zh">像食譜書：六個步驟教你怎麼從「我想做什麼」變成「能上桌的成品」。</div>
+<div class="term-kid" data-lang="en">A cookbook — six steps to take you from "what do I want?" to "ready to serve."</div>
+<div class="term-tech" data-lang="zh">1996 由 SPSS、Daimler-Benz、NCR 提出的六階段循環流程：業務理解 → 資料理解 → 資料準備 → 建模 → 評估 → 部署。</div>
+<div class="term-tech" data-lang="en">A six-phase cyclic process proposed in 1996 by SPSS, Daimler-Benz, and NCR: Business → Data → Prep → Model → Eval → Deploy.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Methodology</div><div class="term-zh">方法論</div>
+<div class="term-kid" data-lang="zh">不是「答案」，而是「找答案的順序」。</div>
+<div class="term-kid" data-lang="en">Not the answer — it's the order in which you look for the answer.</div>
+<div class="term-tech" data-lang="zh">解決問題的結構化路徑與原則集合；決定團隊如何分工、如何對齊、如何驗證。</div>
+<div class="term-tech" data-lang="en">A structured path and set of principles for solving problems; determines team workflow, alignment, and validation.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Business Understanding</div><div class="term-zh">業務理解</div>
+<div class="term-kid" data-lang="zh">在開挖之前，先問：「我們挖到寶物會拿來幹嘛？值多少錢？」</div>
+<div class="term-kid" data-lang="en">Before digging: "If we find treasure, what will we do with it? What's it worth?"</div>
+<div class="term-tech" data-lang="zh">界定問題、目標、KPI、限制與成功標準；產出 project charter 與 success metric。</div>
+<div class="term-tech" data-lang="en">Frame the problem, goals, KPIs, constraints, and success criteria; output: project charter and success metric.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Deployment</div><div class="term-zh">部署</div>
+<div class="term-kid" data-lang="zh">把實驗室裡的料理端到客人桌上，還要確保下個月一樣好吃。</div>
+<div class="term-kid" data-lang="en">Carrying the dish from the lab kitchen to the customer's table — and ensuring it tastes the same next month.</div>
+<div class="term-tech" data-lang="zh">將模型整合至生產環境，含 API 化、文件、監控、再訓練 schedule；常被輕忽。</div>
+<div class="term-tech" data-lang="en">Integrating the model into production: API exposure, documentation, monitoring, retraining schedule. Often under-invested.</div>
+</div>
+<div class="glossary-card"><div class="term-en">MLOps</div><div class="term-zh">機器學習維運</div>
+<div class="term-kid" data-lang="zh">DevOps 的 ML 版：自動上線、自動監控、自動補強。</div>
+<div class="term-kid" data-lang="en">DevOps for ML: auto-deploy, auto-monitor, auto-retrain.</div>
+<div class="term-tech" data-lang="zh">將 ML 系統的持續整合 / 部署 / 訓練 (CI/CD/CT) 標準化，工具如 MLflow、Vetiver、Kubeflow、ZenML。</div>
+<div class="term-tech" data-lang="en">Standardizes CI/CD/CT for ML systems — tools: MLflow, Vetiver, Kubeflow, ZenML.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Drift</div><div class="term-zh">資料漂移</div>
+<div class="term-kid" data-lang="zh">你訓練時是夏天，部署後變冬天——人類的行為也悄悄變了。</div>
+<div class="term-kid" data-lang="en">You trained in summer; deployed in winter — human behavior quietly shifted.</div>
+<div class="term-tech" data-lang="zh">輸入分佈 (covariate shift)、標籤分佈 (prior shift)、或 P(y|x) (concept drift) 隨時間改變。需 KS test / PSI / ADWIN 偵測。</div>
+<div class="term-tech" data-lang="en">Change over time in inputs (covariate), labels (prior), or P(y|x) (concept drift). Detected by KS test / PSI / ADWIN.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Target Leakage</div><div class="term-zh">目標外洩</div>
+<div class="term-kid" data-lang="zh">考試前偷看答案——模型「作弊」了。</div>
+<div class="term-kid" data-lang="en">Peeking at the answer before the exam — the model is cheating.</div>
+<div class="term-tech" data-lang="zh">特徵包含「在預測時間點不該知道的未來資訊」，導致驗證表現虛假升高。</div>
+<div class="term-tech" data-lang="en">A feature contains "future" information unavailable at prediction time, falsely inflating validation performance.</div>
+</div>
+<div class="glossary-card"><div class="term-en">EDA</div><div class="term-zh">探索性資料分析</div>
+<div class="term-kid" data-lang="zh">就像第一次走進新房子——先到處看看，再決定要改裝哪裡。</div>
+<div class="term-kid" data-lang="en">Like entering a new house — wander around first, then decide what to renovate.</div>
+<div class="term-tech" data-lang="zh">Tukey 1977 提出的視覺化導向資料偵察，先看再測；產出單變量分佈、雙變量關係、品質報表。</div>
+<div class="term-tech" data-lang="en">Tukey 1977's visualization-first data reconnaissance — look before testing. Outputs: univariate distributions, bivariate plots, quality reports.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Model Governance</div><div class="term-zh">模型治理</div>
+<div class="term-kid" data-lang="zh">為每個 AI 訂規矩——誰能改、誰能用、發生錯誤誰要負責。</div>
+<div class="term-kid" data-lang="en">Setting house rules for AI — who can change it, who can use it, who's accountable.</div>
+<div class="term-tech" data-lang="zh">含 model cards、audit log、approval workflow、rollback 機制；金融與醫療法規常強制 (EU AI Act 2026)。</div>
+<div class="term-tech" data-lang="en">Includes model cards, audit logs, approval workflows, rollback. Mandated in finance/health regulation (EU AI Act 2026).</div>
+</div>
+<div class="glossary-card"><div class="term-en">Pipeline</div><div class="term-zh">資料管線</div>
+<div class="term-kid" data-lang="zh">像一條洗車道，車進去 → 洗 → 蠟 → 吹乾 → 出來。資料也照順序走。</div>
+<div class="term-kid" data-lang="en">A carwash track: car in → wash → wax → dry → out. Data flows the same way.</div>
+<div class="term-tech" data-lang="zh">將前處理 + 模型串成一個可重現的 DAG；sklearn Pipeline、tidymodels workflow、Snakemake、Airflow。</div>
+<div class="term-tech" data-lang="en">Chains preprocessing + model into a reproducible DAG — sklearn Pipeline, tidymodels workflow, Snakemake, Airflow.</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="方法論演進時間軸" data-en="Methodology Evolution Timeline">方法論演進時間軸</h2>
+<div data-lang="zh"><p>從 1989 年 KDD 一詞誕生，到 2026 年 MLOps 全產業滲透——資料探勘方法論的 37 年演進。</p></div>
+<div data-lang="en"><p>From the coining of "KDD" in 1989 to industry-wide MLOps adoption in 2026 — 37 years of methodology evolution.</p></div>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1989</span><span class="tl-title" data-zh="Piatetsky-Shapiro 提出 KDD 術語" data-en="Piatetsky-Shapiro coins KDD">Piatetsky-Shapiro 提出 KDD</span><span class="tl-desc" data-zh="IJCAI workshop 上首次使用「Knowledge Discovery in Databases」一詞。" data-en="The term 'Knowledge Discovery in Databases' first appears at an IJCAI workshop."></span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="CRISP-DM Special Interest Group 成立" data-en="CRISP-DM SIG founded">CRISP-DM SIG 成立</span><span class="tl-desc" data-zh="SPSS、Daimler-Benz、NCR、OHRA 四方共組產業聯盟。" data-en="SPSS, Daimler-Benz, NCR, and OHRA form an industry consortium."></span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="Fayyad 等人發表 KDD 五階段論文" data-en="Fayyad et al. publish 5-phase KDD">KDD 五階段論文發表</span><span class="tl-desc" data-zh="AI Magazine 經典論文奠定學術 KDD 流程的理論基礎。" data-en="A canonical AI Magazine paper lays the theoretical foundation for academic KDD."></span></div>
+<div class="timeline-item"><span class="tl-year">1998</span><span class="tl-title" data-zh="SAS 發表 SEMMA 方法論" data-en="SAS publishes SEMMA">SAS 發表 SEMMA</span><span class="tl-desc" data-zh="Sample-Explore-Modify-Model-Assess，綁定 Enterprise Miner 產品。" data-en="Sample-Explore-Modify-Model-Assess, tied to Enterprise Miner."></span></div>
+<div class="timeline-item"><span class="tl-year">1999</span><span class="tl-title" data-zh="CRISP-DM 1.0 正式發表" data-en="CRISP-DM 1.0 released">CRISP-DM 1.0 正式發表</span><span class="tl-desc" data-zh="76 頁白皮書描述六階段及其循環關係；至今仍是業界引用次數最高的方法論。" data-en="A 76-page white paper detailing six phases and their cycles — still the most-cited industry methodology."></span></div>
+<div class="timeline-item"><span class="tl-year">2016</span><span class="tl-title" data-zh="Microsoft TDSP 上線" data-en="Microsoft TDSP launched">Microsoft TDSP</span><span class="tl-desc" data-zh="Team Data Science Process 加入 Git、Azure 部署與 team role；成為 CRISP-DM 雲端時代延伸。" data-en="Team Data Science Process adds Git, Azure deployment, and team roles — a cloud-era extension of CRISP-DM."></span></div>
+<div class="timeline-item"><span class="tl-year">2021</span><span class="tl-title" data-zh="CRISP-ML(Q) 發表" data-en="CRISP-ML(Q) published">CRISP-ML(Q) 發表</span><span class="tl-desc" data-zh="Studer et al. 加入 Quality Assurance 與 Monitoring；對應 ML 系統的長期維運需求。" data-en="Studer et al. add Quality Assurance and Monitoring for long-term ML system maintenance."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="Eric Siegel 發表 bizML" data-en="Eric Siegel publishes bizML">Eric Siegel 發表 bizML</span><span class="tl-desc" data-zh="Harvard Business Review 強調業務語言 6 步流程：establish value → frame problem → predict → improve → assess → deploy。" data-en="Harvard Business Review version emphasizing business-language 6 steps: value → frame → predict → improve → assess → deploy."></span></div>
+<div class="timeline-item"><span class="tl-year">2026</span><span class="tl-title" data-zh="MLOps 成為產業標配" data-en="MLOps becomes industry default">MLOps 成為標配</span><span class="tl-desc" data-zh="EU AI Act 全面生效；Gartner 調查 73% 機構納入 MLOps 流程；CRISP-DM 第 7 階段「Continual Deployment」呼之欲出。" data-en="EU AI Act in full effect; Gartner reports 73% adoption of MLOps; a 7th 'Continual Deployment' phase is on the horizon."></span></div>
+</div>
+</section>
+
+<section class="section" id="tasks">
+<div class="section-label" data-zh="任務分類" data-en="TASK TAXONOMY">任務分類</div>
+<h2 data-zh="一、資料探勘的六大核心任務" data-en="I. Six Core Data Mining Tasks">一、資料探勘的六大核心任務</h2>
 <div data-lang="zh">
 <p><strong>資料探勘 (Data Mining)</strong> 是從大量資料中挖掘出非顯而易見、潛在有用、可解釋的<strong>模式 (patterns)</strong> 與<strong>知識 (knowledge)</strong> 的過程。它座落於統計學、機器學習、資料庫與領域知識的交集，是 KDD (Knowledge Discovery in Databases) 流程中的核心步驟。</p>
 <p>在生物醫學脈絡下，資料探勘的對象橫跨 omics 矩陣、EHR 結構化欄位、影像、PubMed 文獻、臨床路徑等異質資料，常見任務包含：分類疾病 vs 健康、分群病人亞型、發現基因—疾病關聯、預測再入院風險。</p>
@@ -48,6 +190,16 @@
 </div>
 </section>
 
+<div class="analogy-box">
+<div class="ana-icon">⛏️</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="生活比喻" data-en="ANALOGY">生活比喻</span>
+<h4 data-zh="資料探勘就像考古學" data-en="Data mining is like archaeology">資料探勃就像考古學</h4>
+<p data-lang="zh">考古學家不會在沒地圖、沒問題意識下隨便挖掘。他們先研究文獻、選定遺址（業務理解），再小心剖面（資料理解），用刷子層層清理（資料準備），最後拼接器物（建模）並把故事寫進博物館展板（部署）。資料探勘是「在資料土壤裡挖故事」——你不會知道每次挖出的是恐龍化石還是塑膠玩具，但你必定要先確定挖的是值得的地點。</p>
+<p data-lang="en">Archaeologists don't dig randomly without a map or research question. They study literature, select a site (Business Understanding), carefully excavate cross-sections (Data Understanding), brush layer by layer (Data Preparation), assemble artifacts (Modeling), and write the story onto museum panels (Deployment). Data mining is "excavating stories from data soil" — you can't predict every dig will surface dinosaur bones or plastic toys, but you must first confirm the dig site is worthwhile.</p>
+</div>
+</div>
+
 <section class="section">
 <div class="section-label" data-zh="互動模擬" data-en="INTERACTIVE">互動模擬</div>
 <h2 data-zh="任務 vs 演算法 配對遊戲" data-en="Task vs Algorithm Matching Game">任務 vs 演算法 配對遊戲</h2>
@@ -65,7 +217,7 @@
 </div>
 </section>
 
-<section class="section">
+<section class="section" id="crispdm">
 <div class="section-label" data-zh="CRISP-DM" data-en="CRISP-DM">CRISP-DM</div>
 <h2 data-zh="二、CRISP-DM 六階段流程" data-en="II. The Six Phases of CRISP-DM">二、CRISP-DM 六階段流程</h2>
 <div data-lang="zh">
@@ -211,6 +363,201 @@ mlflow.log_metric(<span class="str">"auroc"</span>, gs.best_score_)</pre></div>
 </div></div>
 </section>
 
+<section class="section" id="timeAlloc">
+<div class="section-label" data-zh="互動：階段時間分配" data-en="INTERACTIVE: PHASE TIME">互動：階段時間分配</div>
+<h2 data-zh="四、CRISP-DM 各階段該花多少時間？" data-en="IV. How Much Time Should Each Phase Get?">四、CRISP-DM 各階段該花多少時間？</h2>
+<div data-lang="zh"><p>下方滑桿讓你重新分配六個階段的時間佔比。內圈是「教科書理想」，外圈是「業界實際」（根據 2024 Anaconda + Kaggle State of Data Science Survey 與 CRISP-DM 1.0 白皮書）。試著拖看看——你會發現業務 + 資料相關的階段（步驟 1–3）合計通常 70–80%。</p></div>
+<div data-lang="en"><p>The sliders below let you reallocate time across the six phases. The inner ring is the "textbook ideal," the outer ring is "industry reality" (per 2024 Anaconda + Kaggle State of Data Science Survey and the CRISP-DM 1.0 white paper). Try dragging — you'll see steps 1–3 (business + data) almost always total 70–80%.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="① 業務理解" data-en="① Business">① 業務理解</span> <span id="vp1">10</span>%</label><input type="range" id="sp1" min="0" max="40" value="10"></div>
+<div class="slider-group"><label><span data-zh="② 資料理解" data-en="② Data Understanding">② 資料理解</span> <span id="vp2">15</span>%</label><input type="range" id="sp2" min="0" max="40" value="15"></div>
+<div class="slider-group"><label><span data-zh="③ 資料準備" data-en="③ Data Prep">③ 資料準備</span> <span id="vp3">50</span>%</label><input type="range" id="sp3" min="0" max="80" value="50"></div>
+<div class="slider-group"><label><span data-zh="④ 建模" data-en="④ Modeling">④ 建模</span> <span id="vp4">10</span>%</label><input type="range" id="sp4" min="0" max="40" value="10"></div>
+<div class="slider-group"><label><span data-zh="⑤ 評估" data-en="⑤ Evaluation">⑤ 評估</span> <span id="vp5">10</span>%</label><input type="range" id="sp5" min="0" max="40" value="10"></div>
+<div class="slider-group"><label><span data-zh="⑥ 部署" data-en="⑥ Deployment">⑥ 部署</span> <span id="vp6">5</span>%</label><input type="range" id="sp6" min="0" max="40" value="5"></div>
+<div class="chart-container"><canvas id="timeChart"></canvas></div>
+<div class="sim-stats"><span class="sim-stat neutral" id="sumSt">Sum: 100%</span><span class="sim-stat pass" id="adviceSt">—</span></div>
+</div>
+</section>
+
+<section class="section" id="walkthrough">
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">Σ</div>
+<h3 data-zh="完整案例走讀：30 天再入院預測模型" data-en="End-to-End Walkthrough: 30-Day Readmission Model">完整案例走讀：30 天再入院預測模型</h3>
+<span class="wt-tag" data-zh="實戰" data-en="HANDS-ON">實戰</span></div>
+<div class="wt-step"><div class="wt-label">Step 1<br>Business</div><div class="wt-body"><strong data-zh="界定目標：" data-en="Frame the goal:">界定目標：</strong>
+<span data-lang="zh">與心臟科 + 護理部 + IT 部門開三場會，產出一頁 project charter：「在 2026 Q3 上線一個 30 天再入院預測模型，<code>AUROC ≥ 0.78</code>、解釋性可由臨床醫師驗證；不可影響電子病歷使用流程。」</span>
+<span data-lang="en">Three meetings with Cardiology, Nursing, and IT to produce a one-page project charter: "Deploy a 30-day readmission model by Q3 2026 with <code>AUROC ≥ 0.78</code>, explainable to clinicians, with zero disruption to EHR workflows."</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 2<br>Data</div><div class="wt-body"><strong data-zh="盤點資料：" data-en="Inventory data:">盤點資料：</strong>
+<span data-lang="zh">納入 2020–2025 共 <code>670,432</code> 筆住院紀錄；47 個欄位（demographics、vital signs、labs、meds、ICD 碼）。產出 data dictionary + 缺失率報表 → 發現 <code>HbA1c</code> 缺失 38%、<code>discharge_diagnosis</code> 含未來資訊（後續排除）。</span>
+<span data-lang="en">Include 2020–2025 admissions, <code>n = 670,432</code>; 47 fields (demographics, vitals, labs, meds, ICD). Produce data dictionary + missingness report → <code>HbA1c</code> missing 38%, <code>discharge_diagnosis</code> contains future info (later excluded).</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 3<br>Prep</div><div class="wt-body"><strong data-zh="清理 + 工程：" data-en="Clean + engineer:">清理 + 工程：</strong>
+<span data-lang="zh">統一單位 (mg/dL ↔ mmol/L)、補值 MICE m=10、加入領域特徵 (Charlson Comorbidity Index、用藥種類數、上一次住院距離)。<strong>by-hospital split</strong> 80/20 避免醫院 leakage。</span>
+<span data-lang="en">Harmonize units, MICE imputation m=10, add domain features (Charlson Comorbidity Index, med count, days since last admission). <strong>By-hospital split</strong> 80/20 to avoid hospital-level leakage.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 4<br>Model</div><div class="wt-body"><strong data-zh="訓練 + 調參：" data-en="Train + tune:">訓練 + 調參：</strong>
+<span data-lang="zh">比較 Logistic + Elastic Net、Random Forest、XGBoost、LightGBM；5-fold CV、Optuna 100 trials。XGBoost 最佳：<code>AUROC = 0.79</code>、<code>PR-AUC = 0.31</code>（基線 10%）。</span>
+<span data-lang="en">Compare Logistic+ElasticNet, Random Forest, XGBoost, LightGBM; 5-fold CV with Optuna ×100 trials. XGBoost wins: <code>AUROC = 0.79</code>, <code>PR-AUC = 0.31</code> (baseline 10%).</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 5<br>Eval</div><div class="wt-body"><strong data-zh="多面向評估：" data-en="Multi-faceted evaluation:">多面向評估：</strong>
+<span data-lang="zh">不只看 AUROC：<code>calibration slope = 1.02</code> ✅；fairness（race subgroups）TPR gap &lt; 0.05 ✅；SHAP 解釋與心臟科臨床經驗一致 → eGFR ↓ / NT-proBNP ↑ / 多重用藥為主因。</span>
+<span data-lang="en">Beyond AUROC: <code>calibration slope = 1.02</code> ✅; fairness (race subgroups) TPR gap &lt; 0.05 ✅; SHAP explanations align with cardiology — main drivers are eGFR ↓ / NT-proBNP ↑ / polypharmacy.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 6<br>Deploy</div><div class="wt-body"><strong data-zh="部署：" data-en="Deployment:">部署：</strong>
+<span data-lang="zh">FastAPI + Docker 包裝為內部 API；嵌入 EHR 出院 checklist；產出 model card；門檻 = 0.45（PPV 35% 對應臨床可承受誤報率）。</span>
+<span data-lang="en">FastAPI + Docker wrapping into an internal API, embedded in EHR discharge checklist; produce model card; threshold = 0.45 (PPV 35% at clinically acceptable false-positive rate).</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 7<br>Monitor</div><div class="wt-body"><strong data-zh="持續監控：" data-en="Continuous monitoring:">持續監控：</strong>
+<span data-lang="zh">PSI 每週、KS test 每月；2026 Q1 偵測 covariate drift（COVID 後處方模式改變）→ 觸發再訓練 SOP。</span>
+<span data-lang="en">PSI weekly, KS test monthly; in 2026 Q1, detect covariate drift (post-COVID prescribing patterns) → trigger retraining SOP.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 8<br>Loop</div><div class="wt-body"><strong data-zh="回到 Step 1：" data-en="Back to Step 1:">回到 Step 1：</strong>
+<span data-lang="zh">臨床委員會回報「我們其實更在乎 90 天 vs 30 天」→ 重新框架問題、回到業務理解。CRISP-DM 是<strong>循環</strong>而非線性，平均一個專案要走 3–5 圈。</span>
+<span data-lang="en">Clinical committee reports: "We actually care more about 90-day vs 30-day" → reframe the question, return to Business Understanding. CRISP-DM is <strong>cyclic</strong>, not linear — a typical project iterates 3–5 times.</span></div></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="思辨" data-en="DEBATE">思辨</div>
+<h2 data-zh="三個值得爭論的問題" data-en="Three Worth-Debating Questions">三個值得爭論的問題</h2>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #1" data-en="DEBATE #1">爭論 #1</span>
+<h3 data-zh="CRISP-DM 在 LLM 時代還相關嗎？" data-en="Is CRISP-DM still relevant in the LLM era?">CRISP-DM 在 LLM 時代還相關嗎？</h3>
+<div class="disc-q" data-lang="zh">當 GPT-5、Claude Opus 4.7 可以「直接讀 CSV + 給出洞見」時，我們還需要六階段方法論嗎？</div>
+<div class="disc-q" data-lang="en">When GPT-5 or Claude Opus 4.7 can "read a CSV and give insights directly," do we still need a six-phase methodology?</div>
+<div class="disc-pov"><strong data-zh="支持方：" data-en="Pro:">支持方：</strong>
+<span data-lang="zh">CRISP-DM 的精華是「問對問題 + 對齊團隊 + 監控部署」——這些跟用什麼模型無關。LLM 只是工具，不是流程。</span>
+<span data-lang="en">CRISP-DM's essence is "ask the right question + align the team + monitor deployment" — independent of which model. LLM is a tool, not a process.</span></div>
+<div class="disc-pov"><strong data-zh="反對方：" data-en="Con:">反對方：</strong>
+<span data-lang="zh">LLM 工作流是新模式：prompt engineering、RAG、agent 編排。六階段命名（建模、調參）跟它對應不上，需要新方法論（如 2025 Anthropic 的 Agent SDLC）。</span>
+<span data-lang="en">LLM workflows are a new paradigm — prompt engineering, RAG, agent orchestration. Six-phase naming (modeling, tuning) doesn't map; we need new methodologies (e.g., Anthropic Agent SDLC 2025).</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #2" data-en="DEBATE #2">爭論 #2</span>
+<h3 data-zh="AI 倫理應該是第 7 階段嗎？" data-en="Should AI ethics be a 7th phase?">AI 倫理應該是第 7 階段嗎？</h3>
+<div class="disc-q" data-lang="zh">2026 EU AI Act 生效後，許多人主張在六階段後加入「Ethics & Governance」第七階段。</div>
+<div class="disc-q" data-lang="en">With the EU AI Act in force from 2026, many propose adding a 7th "Ethics &amp; Governance" phase.</div>
+<div class="disc-pov"><strong data-zh="支持方：" data-en="Pro:">支持方：</strong>
+<span data-lang="zh">獨立階段可確保 fairness audit / model card / bias mitigation 不被略過；CRISP-ML(Q) 已經先做。</span>
+<span data-lang="en">A separate phase guarantees fairness audits / model cards / bias mitigation are not skipped; CRISP-ML(Q) already moves in this direction.</span></div>
+<div class="disc-pov"><strong data-zh="反對方：" data-en="Con:">反對方：</strong>
+<span data-lang="zh">倫理該<em>貫穿</em>所有階段而非孤立步驟——例如業務理解就要問「誰會受影響？」而非把它推到最後。</span>
+<span data-lang="en">Ethics should be <em>cross-cutting</em>, not isolated — Business Understanding must already ask "who is affected?" rather than deferring.</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #3" data-en="DEBATE #3">爭論 #3</span>
+<h3 data-zh="什麼情境 CRISP-DM 會失敗？" data-en="When does CRISP-DM fail?">什麼情境 CRISP-DM 會失敗？</h3>
+<div class="disc-q" data-lang="zh">CRISP-DM 假設「問題已知 + 資料已存在」。但研究探勘 (research mining) 常常兩者皆無。</div>
+<div class="disc-q" data-lang="en">CRISP-DM assumes "problem known + data exists." But in research mining, often neither holds.</div>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong>
+<span data-lang="zh">在純探索研究中（如 single-cell atlas 探勘），KDD 5 階段更合適——多輪迭代假設、不預設業務 KPI。</span>
+<span data-lang="en">In purely exploratory research (e.g., single-cell atlas mining), KDD's 5 phases fit better — iterate hypotheses without a predefined KPI.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong>
+<span data-lang="zh">CRISP-DM 的「業務理解」其實可以換成「科學問題理解」——只是它的成功標準是「論文可發表」而非「ROI」。</span>
+<span data-lang="en">CRISP-DM's "Business Understanding" can be reframed as "Scientific Question Understanding" — the success criterion becomes "publishable paper," not ROI.</span></div>
+</div>
+</section>
+
+<section class="section" id="spotlight">
+<div class="spotlight">
+<div class="sp-icon">🎬</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="經典案例" data-en="CASE STUDY">經典案例</span>
+<h4 data-zh="Netflix Prize 2009：百萬美元的方法論教科書" data-en="Netflix Prize 2009: A $1M Methodology Textbook">Netflix Prize 2009：百萬美元的方法論教科書</h4>
+<p data-lang="zh">2006 Netflix 公開 1 億筆評分資料，懸賞 100 萬美元給能將 RMSE 降低 10% 的團隊。三年後，BellKor's Pragmatic Chaos 團隊以 0.8567 → 0.8567 達成（險勝 The Ensemble）。這場比賽完美演繹 CRISP-DM 每一階段：清晰的業務 KPI（RMSE 降低 10%）、嚴謹的資料切割（probe vs qualifying set）、模型 ensemble（>100 個模型 blend）、與最關鍵的<strong>未部署</strong>結局——Netflix 後來宣佈得獎模型因「engineering complexity」未真正上線，轉而專注於 streaming 推薦。</p>
+<p data-lang="en">In 2006, Netflix released 100M ratings and offered $1M to any team that could reduce RMSE by 10%. Three years later, BellKor's Pragmatic Chaos hit 0.8567 (narrowly beating The Ensemble). This contest perfectly illustrated every CRISP-DM phase: a crisp business KPI (10% RMSE reduction), disciplined data splitting (probe vs qualifying set), heavy ensembling (>100 blended models), and — most tellingly — <strong>no deployment</strong>: Netflix later announced the winning model was never put into production due to "engineering complexity," and they shifted focus to streaming recommendations.</p>
+<p data-lang="zh"><strong>教訓：</strong>業務理解（為什麼要做？）與部署可行性（能上線嗎？）比模型本身重要——比賽贏家就栽在這一點。</p>
+<p data-lang="en"><strong>Lesson:</strong> Business Understanding (why?) and Deployment feasibility (can we ship it?) outweigh the model itself — the winners stumbled on exactly this.</p>
+</div>
+</div>
+<div class="spotlight">
+<div class="sp-icon">🤒</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實例聚光燈 / CASE STUDY" data-en="CASE STUDY">CASE STUDY</span>
+<h4 data-zh="Google Flu Trends 2008–2015：跳過 CRISP-DM 的代價" data-en="Google Flu Trends 2008–2015: The Cost of Skipping CRISP-DM">Google Flu Trends 2008–2015：跳過 CRISP-DM 的代價</h4>
+<div data-lang="zh"><p>2008 年 Google 在 <em>Nature</em> 發表 Flu Trends——用 4,500 萬條搜尋查詢預測流感樣疾病（ILI），自稱「比 CDC 快 1–2 週」。團隊跳過了 CRISP-DM 的 Business Understanding（沒有定義「成功 = 與 CDC 一致」還是「成功 = 預測未來」），也跳過了 Evaluation（從未用 hold-out 季驗證）。2009 H1N1 大流行時模型低估、2012–2013 流感季高估 2 倍以上（Lazer 等 2014 <em>Science</em>）。Google 在 2015 年悄悄關閉服務。事後分析指出三個 CRISP-DM 違規：(1) 把「搜尋頻率」這個會隨 Google 演算法變動的特徵當穩定信號；(2) 沒有 drift 監控；(3) 模型未經過部署→評估→再訓練的循環。</p></div>
+<div data-lang="en"><p>In 2008 Google published Flu Trends in <em>Nature</em>, predicting influenza-like illness (ILI) from 45M search queries and claiming "1–2 weeks ahead of CDC." The team skipped Business Understanding (did "success" mean "agree with CDC" or "predict the future"?) and skipped Evaluation (no held-out season validation). During the 2009 H1N1 pandemic it under-estimated; in 2012–2013 it over-estimated by &gt;2× (Lazer et al. 2014 <em>Science</em>). Google quietly retired the service in 2015. Post-mortem found three CRISP-DM violations: (1) treated "search frequency" — a feature that drifts with Google's own ranking algorithm — as a stable signal; (2) no drift monitoring; (3) no Deployment → Evaluation → Re-train loop.</p></div>
+<div data-lang="zh"><p><strong>啟示：</strong>沒有 CRISP-DM 的循環，再大的資料、再強的工程團隊也救不了一個沒有 Business Understanding 的模型。</p></div>
+<div data-lang="en"><p><strong>Implication:</strong> Without CRISP-DM's loop, no amount of data or engineering talent can rescue a model that skipped Business Understanding.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="五大常見陷阱" data-en="Five Common Pitfalls">五大常見陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① 跳過業務理解" data-en="① Skipping Business Understanding">① 跳過業務理解</h4>
+<p data-lang="zh">直接用 .csv 跑 AutoML——三個月後才發現業務方真正想要的是因果推論而非預測。<strong>解：</strong>強制產出 1 頁 project charter，所有利害關係人簽字。</p>
+<p data-lang="en">Jumping straight to AutoML on a .csv — three months later you discover stakeholders wanted causal inference, not prediction. <strong>Fix:</strong> Require a one-page project charter signed by every stakeholder.</p></div>
+<div class="pitfall-card"><h4 data-zh="② 無 rollback 計畫" data-en="② No Rollback Plan">② 無 rollback 計畫</h4>
+<p data-lang="zh">部署當天才發現模型把所有人預測為「高風險」——警示風暴。沒有 A/B 切換能立刻回到舊版本。<strong>解：</strong>shadow mode + feature flag + canary 5% → 100%。</p>
+<p data-lang="en">Deployment day: the model flags everyone as "high risk" — alert storm. No A/B switch to revert. <strong>Fix:</strong> shadow mode + feature flag + canary 5% → 100%.</p></div>
+<div class="pitfall-card"><h4 data-zh="③ 無 drift 監控" data-en="③ No Drift Monitoring">③ 無 drift 監控</h4>
+<p data-lang="zh">部署半年後性能默默崩壞——但沒人發現，直到主管問「最近 PPV 怎麼這麼差？」<strong>解：</strong>PSI / KS / model performance dashboard 自動週報。</p>
+<p data-lang="en">Six months in, performance quietly collapsed — no one noticed until the manager asked "why is PPV so low?" <strong>Fix:</strong> PSI / KS / performance dashboard auto-reported weekly.</p></div>
+<div class="pitfall-card"><h4 data-zh="④ 忽略利害關係人" data-en="④ Ignoring Stakeholders">④ 忽略利害關係人</h4>
+<p data-lang="zh">資料科學團隊獨立工作，部署時護理師抱怨「按鈕在哪？我已經在 EHR 點 20 下了」——UX 從沒被討論。<strong>解：</strong>每階段都讓終端使用者參與 review。</p>
+<p data-lang="en">DS team works in isolation; at deployment, nurses complain "I've already clicked 20 times in the EHR — where's the button?" UX was never discussed. <strong>Fix:</strong> end-users review at every phase.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ 只看模型指標" data-en="⑤ Only Optimizing Model Metric">⑤ 只看模型指標</h4>
+<p data-lang="zh">AUROC 0.85 但 PPV 8%——臨床護理師收到 1000 個警示，只有 80 個真的需要關心。模型「準」但臨床上「不可用」。<strong>解：</strong>用業務指標（NNS、淨效益）取代純 ML 指標。</p>
+<p data-lang="en">AUROC 0.85 but PPV 8% — nurses get 1000 alerts, only 80 actionable. The model is "accurate" but clinically unusable. <strong>Fix:</strong> use business metrics (NNS, net benefit) instead of pure ML metrics.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ 直線思考非循環" data-en="⑥ Linear Thinking, Not Cyclic">⑥ 直線思考非循環</h4>
+<p data-lang="zh">把 CRISP-DM 當「跑完六步就結束」——但真實專案需要在 Evaluation → Business Understanding 之間迴圈 3–5 次。<strong>解：</strong>專案 timeline 必須留 buffer 給「回到上一階段」。</p>
+<p data-lang="en">Treating CRISP-DM as "run six steps and finish" — but real projects loop Evaluation → Business Understanding 3–5 times. <strong>Fix:</strong> project timeline must budget for "return to previous phase."</p></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="對比" data-en="CONTRAST">對比</div>
+<h2 data-zh="同樣 problem statement，兩種不同方法" data-en="Same Problem, Two Approaches">同樣 problem statement，兩種不同方法</h2>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="演算法導向 (錯誤)" data-en="Algorithm-First (Wrong)">演算法導向 (錯誤)</h4>
+<p data-lang="zh">「我要做敗血症預測。先試 XGBoost、Random Forest、Transformer——哪個 AUROC 最高用哪個。」六個月後：「模型上不了線，因為臨床醫師看不懂、特徵需要實時 LIS 資料、護理流程不允許新增按鈕。」</p>
+<p data-lang="en">"I'll predict sepsis. Try XGBoost, Random Forest, Transformer — whichever has the highest AUROC wins." Six months later: "Can't deploy — clinicians can't interpret, features require real-time LIS, nursing workflow doesn't allow a new button."</p></div>
+<div class="con-card good"><h4 data-zh="方法論導向 (正確)" data-en="Methodology-First (Right)">方法論導向 (正確)</h4>
+<p data-lang="zh">第 1 週：召集 ICU 醫師 + 護理 + IT，產出 charter「在床邊 NEWS2 評估時提供風險分層，AUROC ≥ 0.75，可顯示前 5 個 feature」。第 2–6 週：盤點資料、確認可用性。第 7–12 週：模型訓練（簡單 logistic + 樹型即可）。第 13–18 週：shadow mode + 護理意見。上線。</p>
+<p data-lang="en">Week 1: ICU + nursing + IT sit-down; charter — "risk stratification at NEWS2 evaluation, AUROC ≥ 0.75, top-5 features visible." Weeks 2–6: data inventory + feasibility. Weeks 7–12: training (simple logistic + tree suffices). Weeks 13–18: shadow mode + nurse feedback. Deploy.</p></div>
+</div>
+<div class="tip-bar" data-zh="模型只佔成功的 10%；流程紀律佔 90%。" data-en="The model accounts for 10% of success; methodological discipline accounts for 90%.">模型只佔成功的 10%；流程紀律佔 90%。</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="自我反思" data-en="Reflection Questions">自我反思</h4>
+<ol>
+<li data-lang="zh">回想你最近一個資料分析專案——你花了多少時間在「業務理解」？如果不到 5%，你可能跳過了。</li>
+<li data-lang="en">Recall your most recent data project — how much time on "Business Understanding"? If &lt; 5%, you likely skipped it.</li>
+<li data-lang="zh">假設你的 AUROC 從 0.92 變成 0.99——你會做哪三件事來檢查 target leakage？</li>
+<li data-lang="en">Suppose your AUROC jumps from 0.92 to 0.99 — what three things would you do to check for target leakage?</li>
+<li data-lang="zh">CRISP-DM 六階段中，你個人最常輕忽哪一個？為什麼？</li>
+<li data-lang="en">Which of CRISP-DM's six phases do you personally most often under-invest in? Why?</li>
+<li data-lang="zh">如果你帶一個 8 人團隊，你會用 CRISP-DM 還是 TDSP？理由？</li>
+<li data-lang="en">If you led an 8-person team, would you choose CRISP-DM or TDSP? Why?</li>
+<li data-lang="zh">想像你的模型在部署 6 個月後 PPV 從 35% 掉到 18%——你會先查哪三類指標來定位 drift？</li>
+<li data-lang="en">Imagine your model's PPV dropped from 35% to 18% six months after deployment — which three metric families would you investigate first to locate the drift?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="🌳 進階研究員" data-en="🌳 ADVANCED">🌳 進階研究員</span>
+<h4 data-zh="2024–2026 方法論前沿" data-en="2024–2026 Methodology Frontier">2024–2026 方法論前沿</h4>
+<p data-lang="zh"><strong>bizML (Siegel 2024, HBR)：</strong>提出 6 業務導向步驟 establish value → frame problem → predict → improve → assess → deploy。它本質上是 CRISP-DM 的「商業包裝」，重點放在 Step 1（價值）與 Step 5（assess against business KPI）。</p>
+<p data-lang="en"><strong>bizML (Siegel 2024, HBR):</strong> proposes 6 business-led steps — establish value → frame problem → predict → improve → assess → deploy. Essentially a "business reframe" of CRISP-DM, emphasizing Step 1 (value) and Step 5 (KPI-aware assessment).</p>
+<p data-lang="zh"><strong>CRISP-ML(Q) (Studer et al. 2021)：</strong>在每個階段插入 Quality Assurance gate（risk identification → mitigation → continuous monitoring）。其完整公式為：<code>QA(phase_i) = identify_risks ∘ design_mitigation ∘ monitor_performance</code>，被 BMW、Allianz 採用。</p>
+<p data-lang="en"><strong>CRISP-ML(Q) (Studer et al. 2021):</strong> inserts QA gates at every phase (risk identification → mitigation → continuous monitoring). Formula: <code>QA(phase_i) = identify_risks ∘ design_mitigation ∘ monitor_performance</code>. Adopted by BMW, Allianz.</p>
+<p data-lang="zh"><strong>Google ML Test Score (Breck et al. 2017, 2024 更新)：</strong>對 ML 系統 28 項自動測試清單（data tests + model tests + ML infrastructure tests + monitoring tests），每項 0/0.5/1 分；總分 0–28 對應 maturity level 0–5。</p>
+<p data-lang="en"><strong>Google ML Test Score (Breck et al. 2017, updated 2024):</strong> a 28-item automated test list for ML systems (data tests + model tests + ML infrastructure tests + monitoring tests), each 0/0.5/1; total 0–28 maps to maturity level 0–5.</p>
+<p data-lang="zh"><strong>AICan MLOps Maturity Model (2025):</strong>0–5 級評估框架：Level 0 (manual notebooks) → Level 5 (full CI/CD/CT、shadow deployment、auto-retrain、auto-rollback、SLO 監控)。多數醫院仍停在 Level 1–2。</p>
+<p data-lang="en"><strong>AICan MLOps Maturity Model (2025):</strong> 0–5 maturity framework: Level 0 (manual notebooks) → Level 5 (full CI/CD/CT, shadow deployment, auto-retrain, auto-rollback, SLO monitoring). Most hospitals still sit at Level 1–2.</p>
+<p data-lang="zh"><strong>Open research problems:</strong> (1) <code>Continual Deployment</code> as a 7th phase (Sculley et al. 2024 NeurIPS workshop)；(2) LLM-augmented CRISP-DM workflows（用 LLM 自動產出 data dictionary、quality report、SHAP narrative）；(3) <code>Agent SDLC</code> for autonomous agentic data mining。</p>
+<p data-lang="en"><strong>Open research problems:</strong> (1) <code>Continual Deployment</code> as a 7th phase (Sculley et al. 2024 NeurIPS workshop); (2) LLM-augmented CRISP-DM workflows (auto data dictionary, quality report, SHAP narrative); (3) <code>Agent SDLC</code> for autonomous agentic data mining.</p>
+<p data-lang="zh"><strong>Code snippet (CRISP-ML(Q) 風格 pipeline)：</strong></p>
+<p data-lang="en"><strong>Code snippet (CRISP-ML(Q)-style pipeline):</strong></p>
+<p><code>from mlflow import log_metric, log_param  # Step 5+6 governance<br>
+import great_expectations as ge  # Step 2 data quality<br>
+qa = ge.from_pandas(df).expect_column_values_to_be_between("hba1c", 4, 14)<br>
+assert qa.success, "Data QA failed at preparation gate"</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -244,6 +591,11 @@ mlflow.log_metric(<span class="str">"auroc"</span>, gs.best_score_)</pre></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
 
+<div class="history-note">
+<span data-lang="zh"><strong>歷史小故事：</strong>1996 年 CRISP-DM 工作小組首次開會時，SPSS 的 Pete Chapman 在黑板畫了一個圓圈而不是流程圖——意在強調「資料探勘從來不是直線」。這個圓圈設計被保留至今：CRISP-DM 1.0 白皮書封面就是六階段環狀圖，1999 年正式發表後成為產業圖示。一個小決策（不畫成流程圖）影響了 30 年的方法論思考。</span>
+<span data-lang="en"><strong>History bite:</strong> When the CRISP-DM working group first met in 1996, SPSS's Pete Chapman drew a circle on the blackboard instead of a flowchart — to emphasize "data mining is never linear." That circular design persists: the 1.0 white paper cover features the six-phase ring, formalized in 1999 and adopted industry-wide. One small design choice (no flowchart) shaped 30 years of methodology thinking.</span>
+</div>
+
 <nav class="page-nav"><div class="placeholder"></div>
 <a href="data-preparation.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 2: 資料準備與前處理" data-en="Ch 2: Data Preparation &amp; Preprocessing">Ch 2: 資料準備與前處理</span></a>
 </nav>
@@ -270,6 +622,32 @@ function showTask(t){const L=I18n.get();document.getElementById('taskInfo').inne
 document.querySelectorAll('[data-task]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-task]').forEach(x=>x.classList.remove('active'));b.classList.add('active');showTask(b.dataset.task);}));
 document.addEventListener('langchange',()=>showTask(document.querySelector('[data-task].active').dataset.task));
 showTask('classification');
+
+const PHASE_LABELS={zh:['業務理解','資料理解','資料準備','建模','評估','部署'],en:['Business','Data','Prep','Model','Eval','Deploy']};
+const IDEAL=[10,15,50,10,10,5];
+const timeChart=new Chart(document.getElementById('timeChart'),{type:'doughnut',data:{labels:PHASE_LABELS.zh,datasets:[
+ {label:'User',data:[...IDEAL],backgroundColor:['#6D4C41','#00897B','#d97706','#fbbf24','#7c3aed','#dc2626'],borderColor:'#fff',borderWidth:2}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom'},title:{display:true,text:'Your Phase Time Allocation'}},cutout:'45%'}});
+function refreshTime(){
+ const vals=[1,2,3,4,5,6].map(i=>+document.getElementById('sp'+i).value);
+ vals.forEach((v,i)=>document.getElementById('vp'+(i+1)).textContent=v);
+ const sum=vals.reduce((a,b)=>a+b,0);
+ timeChart.data.datasets[0].data=vals;
+ timeChart.data.labels=PHASE_LABELS[I18n.get()];
+ timeChart.update('none');
+ const L=I18n.get();
+ document.getElementById('sumSt').textContent=(L==='zh'?'總和：':'Sum: ')+sum+'%';
+ const prep=vals[1]+vals[2];
+ let advice='';
+ if(sum!==100) advice=L==='zh'?'⚠️ 總和應為 100%':'⚠️ Total should equal 100%';
+ else if(prep<55) advice=L==='zh'?'⚠️ 資料相關階段通常 ≥ 60% (你 '+prep+'%)':'⚠️ Data-related phases usually ≥ 60% (you have '+prep+'%)';
+ else if(vals[5]<5) advice=L==='zh'?'⚠️ 部署通常被輕忽，建議 ≥ 10%':'⚠️ Deployment is often under-invested; recommend ≥ 10%';
+ else advice=L==='zh'?'✅ 分配看起來合理':'✅ Allocation looks reasonable';
+ document.getElementById('adviceSt').textContent=advice;
+}
+[1,2,3,4,5,6].forEach(i=>document.getElementById('sp'+i).addEventListener('input',refreshTime));
+document.addEventListener('langchange',refreshTime);
+refreshTime();
 
 const QF={zh:{q1_y:'資料探勘聚焦於從資料中發現非顯而易見的模式與知識。',q1_n:'C 為正確答案。',q2_y:'資料準備（清理、整合、特徵工程）通常佔最多時間。',q2_n:'B 為正確答案。',q3_y:'良/惡性是離散類別，屬於分類任務。',q3_n:'D 為正確答案。'},
           en:{q1_y:'Data mining is about extracting non-obvious patterns and knowledge.',q1_n:'Correct answer is C.',q2_y:'Data Preparation (cleaning, integration, feature engineering) consumes the most time.',q2_n:'Correct answer is B.',q3_y:'Benign/malignant is a discrete class — a classification task.',q3_n:'Correct answer is D.'}};

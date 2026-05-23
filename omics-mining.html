@@ -18,6 +18,173 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+  <strong data-zh="本章學習地圖" data-en="Chapter Roadmap">本章學習地圖</strong>
+  <div class="pill-row">
+    <span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+    <span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+    <span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+    <span class="pill teal">⏱ ~50 min</span>
+    <span class="pill amber">📖 18 / 20</span>
+    <span class="pill violet">🧬 Module E</span>
+  </div>
+  <ol>
+    <li><a href="#story" data-zh="開場故事：200 病人、20,000 基因" data-en="Story: 200 Patients, 20,000 Genes">開場故事</a></li>
+    <li><a href="#glossary" data-zh="術語小卡：LASSO 到 MOFA+" data-en="Glossary: LASSO to MOFA+">術語小卡</a></li>
+    <li><a href="#history" data-zh="時間軸：30 年特徵選擇史" data-en="Timeline: 30 Years of Feature Selection">時間軸</a></li>
+    <li><a href="#walkthrough" data-zh="完整實例：TCGA-BRCA 22 個基因" data-en="Worked Example: TCGA-BRCA 22 Genes">完整實例</a></li>
+    <li><a href="#discussion" data-zh="爭論：LASSO vs Boruta、批次校正是否傷害" data-en="Debates: LASSO vs Boruta, Batch Correction Risks">爭論</a></li>
+    <li><a href="#pitfalls" data-zh="陷阱：5 個常見錯誤" data-en="Pitfalls: 5 Common Mistakes">陷阱</a></li>
+    <li><a href="#reflection" data-zh="反思題" data-en="Reflection Questions">反思題</a></li>
+    <li><a href="#advanced" data-zh="進階：基礎模型與聯邦組學" data-en="Advanced: Foundation Models & Federated Omics">進階</a></li>
+  </ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="故事" data-en="STORY">故事</div>
+<h2 data-zh="開場：200 病人、20,000 基因、誰是真正的生物標記？" data-en="Opening: 200 Patients, 20,000 Genes — Which Is the Real Biomarker?">開場：200 病人、20,000 基因、誰是真正的生物標記？</h2>
+<div class="story-block">
+<span class="story-tag" data-zh="情境" data-en="SCENARIO">情境</span>
+<h3 data-zh="🧬 Hsu 教授實驗室的 RNA-seq 結果" data-en="🧬 Prof. Hsu's RNA-seq Showdown">🧬 Hsu 教授實驗室的 RNA-seq 結果</h3>
+<div data-lang="zh">
+<p>Hsu 教授的學生小杰拿著 200 個乳癌病人 × 20,000 個基因的 RNA-seq 表，問：「我們要在三個月內<strong>選 10 個基因</strong>，做臨床檢測 panel。哪些是真的有用？」p/n = 100，傳統 t-test 校正後幾乎全死。小杰寫了三套程式碼：</p>
+<p>(A) <strong>LASSO + 10-fold CV</strong>，挑出 15 個基因，AUROC 0.83；<br>
+(B) <strong>Boruta (Random Forest + shadow features)</strong>，挑出 32 個「all-relevant」基因，AUROC 0.81；<br>
+(C) <strong>MOFA+ multi-omics</strong>（合併 RNA + ATAC + 蛋白組），找到 6 個 latent factor，前兩個 factor 各與 ER status + proliferation 有關。</p>
+<p>「都不錯，但<strong>三組答案重疊不到一半</strong>。」小杰苦笑。Hsu 教授說：「特徵選擇沒有唯一解——LASSO 給你<em>最稀疏</em>，Boruta 給你<em>所有相關</em>，MOFA 告訴你<em>底層共同因子</em>。你要先問：要做什麼？臨床 panel？機制研究？分群？」這就是 omics mining 的核心：方法是工具，問題決定路徑。</p>
+</div>
+<div data-lang="en">
+<p>Hsu's student Jay holds a 200-patient × 20,000-gene RNA-seq table and asks: "We have 3 months to pick <strong>10 genes</strong> for a clinical panel. Which are the true biomarkers?" With p/n = 100, classical t-tests die after multiple-testing correction. Jay writes three pipelines:</p>
+<p>(A) <strong>LASSO + 10-fold CV</strong> → 15 genes, AUROC 0.83;<br>
+(B) <strong>Boruta (Random Forest + shadow features)</strong> → 32 "all-relevant" genes, AUROC 0.81;<br>
+(C) <strong>MOFA+ multi-omics</strong> (RNA + ATAC + proteome) → 6 latent factors; factors 1–2 align with ER status and proliferation.</p>
+<p>"All decent, but <strong>the three answers overlap by less than half</strong>," Jay sighs. Prof. Hsu replies: "Feature selection has no single answer — LASSO gives you the <em>sparsest</em>, Boruta gives you <em>all relevant</em>, MOFA reveals <em>shared latent structure</em>. Ask first: what's the goal? A clinical panel? Mechanism? Subtyping?" That is the core of omics mining: methods are tools; the question chooses the path.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="術語" data-en="GLOSSARY">術語</div>
+<h2 data-zh="術語小卡：LASSO 到 MOFA+" data-en="Glossary: LASSO to MOFA+">術語小卡：LASSO 到 MOFA+</h2>
+<div class="glossary-grid">
+  <div class="glossary-card">
+    <div class="term-en">p ≫ n / High-D</div>
+    <div class="term-zh">高維小樣本</div>
+    <div class="term-kid" data-lang="zh">特徵 (基因) 比病人多得多 → 像在 20,000 個變數中找 200 個方程式的解。</div>
+    <div class="term-kid" data-lang="en">Features (genes) far outnumber samples — like solving 200 equations in 20,000 unknowns.</div>
+    <div class="term-tech" data-lang="zh">When p ≫ n, OLS underdetermined；正則化 (L1/L2)、降維 (PCA)、稀疏先驗 (Horseshoe) 為必要工具。</div>
+    <div class="term-tech" data-lang="en">When p ≫ n, OLS is underdetermined; regularization (L1/L2), dimension reduction (PCA), sparse priors (Horseshoe) become mandatory.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">LASSO (L1)</div>
+    <div class="term-zh">L1 正則化稀疏迴歸</div>
+    <div class="term-kid" data-lang="zh">把多餘變數的係數<strong>直接壓到 0</strong>，留下少數重要的。</div>
+    <div class="term-kid" data-lang="en">Squashes redundant coefficients <strong>exactly to zero</strong>, keeping a sparse few.</div>
+    <div class="term-tech" data-lang="zh">Tibshirani 1996；min ‖y - Xβ‖² + λ‖β‖₁；L1 norm 在 0 處有 corner → sparse solution。</div>
+    <div class="term-tech" data-lang="en">Tibshirani 1996; min ‖y - Xβ‖² + λ‖β‖₁; the L1 corner at 0 yields sparse solutions.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Ridge (L2) / Elastic Net</div>
+    <div class="term-zh">L2 收縮 / 彈性網</div>
+    <div class="term-kid" data-lang="zh">Ridge 是「全體小聲」；Elastic Net = LASSO + Ridge，又稀疏又穩。</div>
+    <div class="term-kid" data-lang="en">Ridge shrinks all coefficients gently; Elastic Net = LASSO + Ridge — sparse and stable.</div>
+    <div class="term-tech" data-lang="zh">Hoerl 1970 Ridge；Zou-Hastie 2005 Elastic Net；後者處理相關特徵更佳 (correlated genes)。</div>
+    <div class="term-tech" data-lang="en">Hoerl 1970 Ridge; Zou-Hastie 2005 Elastic Net handles correlated features (genes) better.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Boruta</div>
+    <div class="term-zh">影子特徵法</div>
+    <div class="term-kid" data-lang="zh">把每個特徵<strong>亂排序產生影子</strong>，比影子重要的才算數。</div>
+    <div class="term-kid" data-lang="en">Permute features to create "shadow" copies; only features more important than the best shadow survive.</div>
+    <div class="term-tech" data-lang="zh">Kursa-Rudnicki 2010；RF + shadow feature；找<strong>所有相關</strong>(all-relevant) vs LASSO 找<strong>最少組合</strong>(minimal-optimal)。</div>
+    <div class="term-tech" data-lang="en">Kursa-Rudnicki 2010; RF + shadow features; finds <strong>all-relevant</strong> features vs LASSO's <strong>minimal-optimal</strong> set.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Stability Selection</div>
+    <div class="term-zh">穩定選擇</div>
+    <div class="term-kid" data-lang="zh">同樣的事做 100 次，每次都選中的才信任。</div>
+    <div class="term-kid" data-lang="en">Trust only features chosen across 100 repeated runs.</div>
+    <div class="term-tech" data-lang="zh">Meinshausen-Bühlmann 2010；bootstrap + LASSO → selection frequency；通常 keep features ≥ 60–80%。</div>
+    <div class="term-tech" data-lang="en">Meinshausen-Bühlmann 2010; bootstrap + LASSO → selection frequency; keep features ≥ 60–80%.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">MOFA+ / DIABLO</div>
+    <div class="term-zh">多視角因子模型</div>
+    <div class="term-kid" data-lang="zh">把 RNA / 蛋白 / 表觀<strong>同時</strong>學一個共通隱因子。</div>
+    <div class="term-kid" data-lang="en">Learn shared latent factors across RNA / protein / epigenome simultaneously.</div>
+    <div class="term-tech" data-lang="zh">MOFA Argelaguet 2018, MOFA+ 2020；group-sparse factor model；DIABLO from mixOmics 2017 是 supervised CCA 多視角延伸。</div>
+    <div class="term-tech" data-lang="en">MOFA Argelaguet 2018; MOFA+ 2020 — group-sparse factor model. DIABLO (mixOmics 2017) extends sparse CCA to multi-view supervised tasks.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Batch Effect</div>
+    <div class="term-zh">批次效應</div>
+    <div class="term-kid" data-lang="zh">不同天 / 不同儀器跑出的結果系統性偏差，比真實生物訊號還大。</div>
+    <div class="term-kid" data-lang="en">Systematic differences between days / instruments — often bigger than the real biological signal.</div>
+    <div class="term-tech" data-lang="zh">Leek 2010 "tackling batch effects"；典型成因：library prep、sequencer lane、reagent lot；偵測：PCA + 標記 batch。</div>
+    <div class="term-tech" data-lang="en">Leek 2010 "tackling batch effects"; typical sources: library prep, sequencer lane, reagent lot; detect via PCA coloured by batch.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">ComBat / SVA</div>
+    <div class="term-zh">已知 / 未知批次校正</div>
+    <div class="term-kid" data-lang="zh">ComBat：你知道是哪幾批；SVA：你不知道，要先找出來。</div>
+    <div class="term-kid" data-lang="en">ComBat = you know the batches; SVA = you don't, find them first.</div>
+    <div class="term-tech" data-lang="zh">Johnson-Li-Rabinovic 2007 ComBat (Empirical Bayes location-scale)；Leek-Storey 2007 SVA；ComBat-seq 2020 for RNA-seq counts。</div>
+    <div class="term-tech" data-lang="en">Johnson-Li-Rabinovic 2007 ComBat (Empirical Bayes location-scale); Leek-Storey 2007 SVA; ComBat-seq 2020 for RNA-seq counts.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">Harmony / scVI</div>
+    <div class="term-zh">scRNA-seq 批次校正</div>
+    <div class="term-kid" data-lang="zh">在「降維後的雲」上把不同樣本疊在一起，每個細胞還是它自己。</div>
+    <div class="term-kid" data-lang="en">Aligns clouds of cells in low-D space across samples while preserving cell identity.</div>
+    <div class="term-tech" data-lang="zh">Korsunsky 2019 Harmony (iterative soft k-means)；Lopez 2018 scVI (variational autoencoder with batch covariate)；2023 Harmony 2 + scANVI 主導 atlas-scale。</div>
+    <div class="term-tech" data-lang="en">Korsunsky 2019 Harmony (iterative soft k-means); Lopez 2018 scVI (VAE with batch covariate); 2023 Harmony 2 + scANVI dominate atlas-scale integration.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">PCA / UMAP</div>
+    <div class="term-zh">線性 / 非線性降維</div>
+    <div class="term-kid" data-lang="zh">把幾萬基因壓成 2-3 個軸，肉眼看得到分群。</div>
+    <div class="term-kid" data-lang="en">Compress tens-of-thousands of genes into 2–3 axes you can see.</div>
+    <div class="term-tech" data-lang="zh">PCA Pearson 1901 / Hotelling 1933；UMAP McInnes 2018；t-SNE van der Maaten 2008；UMAP 在 single-cell 已是標配，但 distance interpretation 需謹慎。</div>
+    <div class="term-tech" data-lang="en">PCA Pearson 1901 / Hotelling 1933; UMAP McInnes 2018; t-SNE van der Maaten 2008. UMAP is single-cell default but global distances are not preserved.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">DESeq2 / limma-voom</div>
+    <div class="term-zh">差異表現分析</div>
+    <div class="term-kid" data-lang="zh">告訴你「哪些基因在病人 vs 對照之間表現量真的不同」。</div>
+    <div class="term-kid" data-lang="en">Tells you which genes differ in expression between patients and controls.</div>
+    <div class="term-tech" data-lang="zh">DESeq2 Love 2014 Negative Binomial GLM + shrinkage；limma-voom Law 2014 適合 RNA-seq + small n；皆與 BH-FDR 配對使用。</div>
+    <div class="term-tech" data-lang="en">DESeq2 Love 2014 Negative Binomial GLM + shrinkage; limma-voom Law 2014 ideal for small-n RNA-seq; both paired with BH-FDR.</div>
+  </div>
+  <div class="glossary-card">
+    <div class="term-en">scRNA-seq</div>
+    <div class="term-zh">單細胞轉錄組</div>
+    <div class="term-kid" data-lang="zh">不再是「一團組織的平均」，而是「每顆細胞的個別表達」。</div>
+    <div class="term-kid" data-lang="en">No longer a tissue average — every single cell's individual expression.</div>
+    <div class="term-tech" data-lang="zh">10x Genomics Chromium 為主流；高 dropout (~70% zeros)；分析需 normalization (SCTransform/scran) + neighborhood graph (Leiden)。</div>
+    <div class="term-tech" data-lang="en">Mostly 10x Genomics Chromium; ~70% dropout zeros; needs normalization (SCTransform/scran) + neighborhood graph (Leiden).</div>
+  </div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間軸" data-en="TIMELINE">時間軸</div>
+<h2 data-zh="30 年特徵選擇與整合史" data-en="30 Years of Feature Selection & Integration">30 年特徵選擇與整合史</h2>
+<div class="timeline">
+  <div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title">LASSO (Tibshirani)</span><span class="tl-desc" data-zh="JRSS-B; L1-penalized regression — 引用 >50k。" data-en="JRSS-B; L1-penalized regression — >50k citations."></span></div>
+  <div class="timeline-item"><span class="tl-year">2002</span><span class="tl-title" data-zh="70-gene Mammaprint" data-en="70-gene Mammaprint">70-gene Mammaprint</span><span class="tl-desc" data-zh="van 't Veer Nature；microarray + correlation 選 70 個基因；2007 FDA 批准。" data-en="van 't Veer Nature; microarray + correlation picks 70 genes; FDA-cleared 2007."></span></div>
+  <div class="timeline-item"><span class="tl-year">2005</span><span class="tl-title">Elastic Net (Zou-Hastie)</span><span class="tl-desc" data-zh="JRSS-B；α-mix L1+L2，處理 collinear features。" data-en="JRSS-B; α-mix of L1+L2, handles collinear features."></span></div>
+  <div class="timeline-item"><span class="tl-year">2007</span><span class="tl-title">ComBat / SVA</span><span class="tl-desc" data-zh="Johnson 2007 / Leek-Storey 2007；批次校正成標準。" data-en="Johnson 2007 / Leek-Storey 2007; batch correction becomes standard."></span></div>
+  <div class="timeline-item"><span class="tl-year">2010</span><span class="tl-title">Boruta (Kursa-Rudnicki)</span><span class="tl-desc" data-zh="JSS 論文 + R package；RF + shadow feature 比較。" data-en="JSS paper + R package; RF + shadow-feature comparison."></span></div>
+  <div class="timeline-item"><span class="tl-year">2014</span><span class="tl-title">DESeq2</span><span class="tl-desc" data-zh="Love et al. Genome Biology；今日 RNA-seq DE 第一引用 (>50k)。" data-en="Love et al. Genome Biology; today's top RNA-seq DE method (>50k)."></span></div>
+  <div class="timeline-item"><span class="tl-year">2015</span><span class="tl-title">mixOmics / DIABLO</span><span class="tl-desc" data-zh="Lê Cao 等推出多視角 sparse CCA 工具鏈。" data-en="Lê Cao et al. release multi-view sparse CCA toolkit."></span></div>
+  <div class="timeline-item"><span class="tl-year">2018</span><span class="tl-title">MOFA / scVI</span><span class="tl-desc" data-zh="Argelaguet MOFA Mol Syst Biol；Lopez scVI Nat Methods (VAE)。" data-en="Argelaguet MOFA Mol Syst Biol; Lopez scVI Nat Methods (VAE)."></span></div>
+  <div class="timeline-item"><span class="tl-year">2019</span><span class="tl-title">Harmony (Korsunsky)</span><span class="tl-desc" data-zh="Nat Methods；scRNA-seq 多批次整合的 de facto。" data-en="Nat Methods; de facto for scRNA-seq multi-batch integration."></span></div>
+  <div class="timeline-item"><span class="tl-year">2020</span><span class="tl-title">MOFA+</span><span class="tl-desc" data-zh="Argelaguet Genome Biology；加入 group-level 結構與 missing-view。" data-en="Argelaguet Genome Biology; adds group structure and missing-view support."></span></div>
+  <div class="timeline-item"><span class="tl-year">2023</span><span class="tl-title" data-zh="scGPT / Geneformer 基礎模型" data-en="scGPT / Geneformer Foundation Models">scGPT / Geneformer 基礎模型</span><span class="tl-desc" data-zh="Cui scGPT (2024 Nat Methods); Theodoris Geneformer (2023 Nature) — 億級單細胞預訓練。" data-en="Cui scGPT (2024 Nat Methods); Theodoris Geneformer (2023 Nature) — billion-cell pretraining."></span></div>
+  <div class="timeline-item"><span class="tl-year">2024–2026</span><span class="tl-title" data-zh="聯邦多組學 + 多模態" data-en="Federated Multi-omics + Multimodal">聯邦多組學 + 多模態</span><span class="tl-desc" data-zh="MOFA+ with images (Velmeshev 2024); FedOmics 2025；scFoundation; Harmony 2 atlas-scale。" data-en="MOFA+ with imaging (Velmeshev 2024); FedOmics 2025; scFoundation; Harmony 2 at atlas scale."></span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="高維小樣本問題 (p ≫ n)" data-en="The High-Dimensional Small-Sample Problem (p ≫ n)">高維小樣本問題 (p ≫ n)</h2>
@@ -33,6 +200,25 @@
 <span data-lang="zh"><strong>批次效應 ≈ 真實生物訊號：</strong>若樣本批次與表型混淆 (confounded)，再強的 ComBat / Harmony 都救不回。實驗設計時就要 randomize batch ↔ condition。</span>
 <span data-lang="en"><strong>Batch effect ≈ real biology:</strong> if batch confounds phenotype, no ComBat / Harmony can rescue it. Randomize batch ↔ condition at experimental design.</span>
 </div></div>
+
+<div class="analogy-box">
+  <div class="ana-icon">🌾</div>
+  <div class="ana-body">
+    <span class="ana-tag" data-zh="比喻" data-en="ANALOGY">比喻</span>
+    <h4 data-zh="在 20,000 株麥裡找 10 株「黃金麥」" data-en="Finding 10 Golden Wheat Stalks Among 20,000">在 20,000 株麥裡找 10 株「黃金麥」</h4>
+    <p data-lang="zh">想像一片有 20,000 株麥的田，你只有 200 個量測者。你怎麼挑出最有意義的 10 株？<strong>LASSO</strong> 像一個吝嗇的農夫：「拿最少最稀疏的就好」；<strong>Random Forest / Boruta</strong> 像個民主投票：「凡是<strong>每個樹</strong>都同意比影子高的麥都算數」；<strong>MOFA+</strong> 像個天文學家：「我不挑單一麥，我看整片田<strong>背後的隱形主題</strong>——是水？是日照？是基因？」三種視角，三套答案。</p>
+    <p data-lang="en">Picture a field of 20,000 wheat stalks with only 200 surveyors. How do you pick the meaningful 10? <strong>LASSO</strong> is the frugal farmer — "give me the sparsest set that explains it"; <strong>Random Forest / Boruta</strong> is a democracy — "all stalks that beat their shadow across every tree count"; <strong>MOFA+</strong> is the astronomer — "I don't pick stalks, I look for the <strong>hidden themes</strong> driving the whole field — water? sun? genes?" Three lenses, three answers.</p>
+  </div>
+</div>
+
+<div class="kpi-grid">
+  <div class="kpi-card"><span class="kpi-num">~20k</span><span class="kpi-label" data-zh="人類蛋白編碼基因" data-en="Protein-coding genes">蛋白編碼基因</span></div>
+  <div class="kpi-card"><span class="kpi-num">>500k</span><span class="kpi-label" data-zh="UK Biobank 基因型 + EHR" data-en="UK Biobank GT + EHR">UK Biobank</span></div>
+  <div class="kpi-card"><span class="kpi-num">~70%</span><span class="kpi-label" data-zh="scRNA dropout 零元素" data-en="scRNA-seq dropout zeros">Dropout zeros</span></div>
+  <div class="kpi-card"><span class="kpi-num">2.0</span><span class="kpi-label" data-zh="MOFA+ 主要版本 (2020)" data-en="MOFA+ version (2020)">MOFA+</span></div>
+  <div class="kpi-card"><span class="kpi-num">7</span><span class="kpi-label" data-zh="TCGA 主要 omics 層次" data-en="TCGA core omics layers">TCGA layers</span></div>
+  <div class="kpi-card"><span class="kpi-num">2007</span><span class="kpi-label" data-zh="Mammaprint FDA 批准" data-en="Mammaprint FDA-cleared">Mammaprint</span></div>
+</div>
 </section>
 
 <section class="section">
@@ -157,6 +343,270 @@ sce.pp.harmony_integrate(adata, key=<span class="str">"batch"</span>)</pre></div
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="完整實例" data-en="WALKTHROUGH">完整實例</div>
+<h2 data-zh="TCGA-BRCA：從 19,000 基因到 22 個面板" data-en="TCGA-BRCA: From 19,000 Genes to 22-Gene Panel">TCGA-BRCA：從 19,000 基因到 22 個面板</h2>
+<div class="walkthrough">
+  <div class="walkthrough-header">
+    <div class="wt-num">FS</div>
+    <h3 data-zh="ER status 預測的特徵選擇流程" data-en="Feature Selection for ER-Status Prediction">ER status 預測的特徵選擇流程</h3>
+    <span class="wt-tag" data-zh="目標：找 ER 預測 panel" data-en="Target: ER predictor panel">目標：找 ER 預測 panel</span>
+  </div>
+  <div class="wt-step"><div class="wt-label">Step 1</div><div class="wt-body" data-lang="zh"><strong>原始資料：</strong>TCGA-BRCA RNA-seq，<strong>1,098 病人 × 19,648 基因</strong>，target = ER status (positive 76% / negative 24%)。先做 <code>vst()</code> (variance-stabilizing transformation) 與 <code>removeBatchEffect()</code> 處理 plate 效應。</div><div class="wt-body" data-lang="en"><strong>Raw data:</strong> TCGA-BRCA RNA-seq, <strong>1,098 patients × 19,648 genes</strong>; target = ER status (76% positive / 24% negative). Apply <code>vst()</code> (variance-stabilizing transformation) and <code>removeBatchEffect()</code> for plate effects.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 2</div><div class="wt-body" data-lang="zh"><strong>過濾低方差：</strong>每個基因計算 variance；<code>var &lt; 0.1</code> 的去除 → 剩 <strong>~8,200 基因</strong>。理由：絕大多數低變異基因是雜訊或全為 0。</div><div class="wt-body" data-lang="en"><strong>Variance filter:</strong> drop genes with <code>var &lt; 0.1</code> → <strong>~8,200 genes</strong> remain. Most low-variance genes are noise or all-zero.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 3</div><div class="wt-body" data-lang="zh"><strong>單變量預篩：</strong>用 <code>limma::eBayes</code> 算 moderated t；<strong>BH-FDR &lt; 0.05</strong> → 剩 <strong>~1,200 基因</strong>。<em>注意</em>：這只是預篩，<strong>不是最終選擇</strong>，避免 selection bias 要把後續模型訓練放在獨立 fold。</div><div class="wt-body" data-lang="en"><strong>Univariate pre-screen:</strong> <code>limma::eBayes</code> moderated t; keep <strong>BH-FDR &lt; 0.05</strong> → <strong>~1,200 genes</strong>. This is pre-screening only — final selection must happen inside CV folds to avoid selection bias.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 4</div><div class="wt-body" data-lang="zh"><strong>LASSO + 10-fold CV：</strong><code>glmnet::cv.glmnet(X, y, family="binomial", alpha=1, nfolds=10)</code>；選 <code>lambda.1se</code> (parsimony) → <strong>22 個非零係數基因</strong>。</div><div class="wt-body" data-lang="en"><strong>LASSO + 10-fold CV:</strong> <code>glmnet::cv.glmnet(X, y, family="binomial", alpha=1, nfolds=10)</code>; pick <code>lambda.1se</code> for parsimony → <strong>22 non-zero genes</strong>.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 5</div><div class="wt-body" data-lang="zh"><strong>Boruta 確認：</strong>在同一份 1,200 預篩集上跑 <code>Boruta(maxRuns=200)</code> → confirmed 35 個 / tentative 8 個。LASSO 的 22 個有 <strong>18 個</strong>落在 Boruta confirmed 內 → 高 overlap，可信度高。</div><div class="wt-body" data-lang="en"><strong>Boruta confirmation:</strong> run <code>Boruta(maxRuns=200)</code> on the 1,200 pre-screened genes → 35 confirmed / 8 tentative. <strong>18 of LASSO's 22</strong> are in Boruta-confirmed → high overlap, robust.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 6</div><div class="wt-body" data-lang="zh"><strong>穩定選擇：</strong>對 80% bootstrap × 100 次跑 LASSO，記錄每個基因被選中的頻率；保留 ≥ 70% → <strong>16 個</strong>。這是最保守的 panel。</div><div class="wt-body" data-lang="en"><strong>Stability selection:</strong> 100× bootstrap (80%) LASSO, record selection frequency; keep ≥ 70% → <strong>16 genes</strong>. Most conservative panel.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 7</div><div class="wt-body" data-lang="zh"><strong>外部驗證 (METABRIC)：</strong>把 16-gene LR 套到 METABRIC (2,509 病人) → AUROC <strong>0.83</strong> (95% CI 0.81–0.85)。已知的 ER signature gene (<em>ESR1, GATA3, FOXA1, PGR</em>) 均在 panel 內。</div><div class="wt-body" data-lang="en"><strong>External validation (METABRIC):</strong> 16-gene LR applied to METABRIC (2,509 patients) → AUROC <strong>0.83</strong> (95% CI 0.81–0.85). Canonical ER signature genes (<em>ESR1, GATA3, FOXA1, PGR</em>) all in the panel.</div></div>
+  <div class="wt-step"><div class="wt-label">Step 8</div><div class="wt-body" data-lang="zh"><strong>多組學延伸：</strong>把 RNA + methylation + RPPA protein 餵 MOFA+；factor 1 解釋 19% RNA variance + 11% methyl + 14% protein，正好對應 ER 主軸；factor 2 對應 proliferation。Factor 重要 features 與 LASSO panel 高度重疊。</div><div class="wt-body" data-lang="en"><strong>Multi-omics extension:</strong> feed RNA + methylation + RPPA protein into MOFA+; factor 1 explains 19% RNA var + 11% methyl + 14% protein — aligned with the ER axis; factor 2 maps to proliferation. Factor-loading top features overlap heavily with the LASSO panel.</div></div>
+</div>
+
+<details class="detail-toggle">
+  <summary data-zh="🔬 進階：為何要在 fold 內做預篩？" data-en="🔬 Advanced: why pre-screen inside the fold?">🔬 進階：為何要在 fold 內做預篩？</summary>
+  <div class="detail-body" data-lang="zh"><p>如果你在<strong>整個資料集</strong>上用 t-test 預篩，然後再切 fold 訓練 LASSO，你已經用了測試集的訊息去選特徵 → <strong>selection bias / double-dipping</strong>。Ambroise & McLachlan 2002 經典論文證實這會嚴重高估 CV 準確率（可能高估 10–30%）。正解：把 <code>limma → LASSO</code> 整個流程包進 fold 內，每個 fold 跑一遍。</p></div>
+  <div class="detail-body" data-lang="en"><p>If you pre-screen with t-tests on the <strong>full</strong> dataset and then split into folds for LASSO, you've used the test set's information to choose features — <strong>selection bias / double-dipping</strong>. Ambroise & McLachlan 2002 showed this severely inflates CV accuracy (often by 10–30%). Fix: wrap the entire <code>limma → LASSO</code> pipeline inside each fold.</p></div>
+</details>
+</section>
+
+<section class="section">
+<div class="spotlight">
+  <div class="sp-icon">🎀</div>
+  <div class="sp-body">
+    <span class="sp-tag" data-zh="案例" data-en="CASE STUDY">案例</span>
+    <h4 data-zh="2002 Mammaprint — 70 個基因改寫乳癌治療" data-en="2002 Mammaprint — 70 Genes That Reshaped Breast-Cancer Care">2002 Mammaprint — 70 個基因改寫乳癌治療</h4>
+    <p data-lang="zh">van 't Veer et al. (2002 <em>Nature</em>) 在 <strong>78 名</strong>淋巴結陰性乳癌病人上跑 microarray (~25,000 基因)，用 correlation-based LASSO-like 特徵選擇，定出 <strong>70 個基因 prognosis signature</strong>。 2007 FDA 批准 Mammaprint 作為臨床檢測；2016 MINDACT trial (6,693 病人) 證實能讓 <strong>46% 臨床高風險</strong>病人安全避免化療。20 年來估計救了數十萬名女性免於不必要的化療毒性。</p>
+    <p data-lang="zh">教訓：在 <em>p ≫ n</em> 下，<strong>看似不可能的特徵選擇是可行的</strong>——但要做：(1) 嚴謹 cross-validation；(2) 完全獨立的外部驗證 (METABRIC, MINDACT)；(3) 長期前瞻性試驗。</p>
+    <p data-lang="en">van 't Veer et al. (2002 <em>Nature</em>) ran microarrays on <strong>78</strong> node-negative breast-cancer patients (~25,000 genes) with correlation-based LASSO-like selection, deriving a <strong>70-gene prognosis signature</strong>. The FDA cleared Mammaprint in 2007; the 2016 MINDACT trial (6,693 patients) showed <strong>46% of "clinically high-risk"</strong> women could safely skip chemo. Over 20 years that has spared hundreds of thousands from needless chemo toxicity.</p>
+    <p data-lang="en">Lesson: in <em>p ≫ n</em>, <strong>"impossible" feature selection works</strong> — if you commit to (1) rigorous CV, (2) fully independent external validation (METABRIC, MINDACT), (3) long prospective trials.</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論" data-en="DEBATES">爭論</div>
+<h2 data-zh="三個正在燒的爭論" data-en="Three Debates Burning Now">三個正在燒的爭論</h2>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+  <h3 data-zh="LASSO vs Boruta — 何時用哪個？" data-en="LASSO vs Boruta — When to Use Which?">LASSO vs Boruta — 何時用哪個？</h3>
+  <div class="disc-q" data-lang="zh">LASSO 找 <strong>最少 / 最稀疏</strong>能解釋目標的特徵子集 (minimal-optimal)；Boruta 找<strong>所有真正相關</strong>的特徵 (all-relevant)。它們的目標<em>不同</em>，常被混為一談。</div>
+  <div class="disc-q" data-lang="en">LASSO finds the <strong>minimal-optimal</strong> set of features; Boruta finds the <strong>all-relevant</strong> set. The goals are different and often conflated.</div>
+  <div class="disc-pov" data-lang="zh"><strong>用 LASSO 的時機：</strong>clinical panel、藥廠 companion diagnostic、要部署到 PCR / Nanostring 平台（基因數越少越省）。</div>
+  <div class="disc-pov" data-lang="en"><strong>Choose LASSO:</strong> clinical panels, companion diagnostics, PCR / Nanostring deployment (fewer genes = lower cost).</div>
+  <div class="disc-pov" data-lang="zh"><strong>用 Boruta 的時機：</strong>機制研究、生物學詮釋、pathway enrichment、補捉相關基因群 (paralogues)。</div>
+  <div class="disc-pov" data-lang="en"><strong>Choose Boruta:</strong> mechanism research, biological interpretation, pathway enrichment, capturing related gene groups (paralogs).</div>
+  <div class="disc-pov" data-lang="zh"><strong>實務折衷：</strong>先 LASSO 找稀疏 panel + 用 Boruta 補強周邊相關基因；2024 多篇 <em>Bioinformatics</em> 論文展示 hybrid 流程。</div>
+  <div class="disc-pov" data-lang="en"><strong>Hybrid in practice:</strong> LASSO for the sparse panel + Boruta to expand related genes; 2024 <em>Bioinformatics</em> papers showcase hybrid workflows.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+  <h3 data-zh="批次校正會不會傷害生物訊號？" data-en="Does Batch Correction Hurt Biology?">批次校正會不會傷害生物訊號？</h3>
+  <div class="disc-q" data-lang="zh">Goh 2017 <em>PLOS One</em> 〈Why batch effects matter — and why batch correction can introduce more bias〉指出：當 batch 與 condition 部分混淆時，ComBat 會把<strong>真實生物訊號當作批次</strong>洗掉。2023 Antonsson & Lapuente-Brun 對 scVI 也有類似批評：過度校正後 cell-type rare population 可能消失。</div>
+  <div class="disc-q" data-lang="en">Goh 2017 <em>PLOS One</em> "Why batch effects matter — and why batch correction can introduce more bias" warns: with partial batch–condition confounding, ComBat can wash out <strong>real biology as batch noise</strong>. Antonsson & Lapuente-Brun 2023 raise the same about scVI: over-correction can erase rare populations.</div>
+  <div class="disc-pov" data-lang="zh"><strong>緩解策略：</strong>(1) 隨機化實驗設計；(2) 加入 <code>mod = ~condition</code> 保留 biology；(3) PCA pre/post 比較；(4) 對 rare population 用 reference-mapping 而非 in-situ correction。</div>
+  <div class="disc-pov" data-lang="en"><strong>Mitigation:</strong> (1) randomize design; (2) supply <code>mod = ~condition</code> to preserve biology; (3) pre/post PCA inspection; (4) for rare populations use reference-mapping rather than in-situ correction.</div>
+</div>
+
+<div class="discussion-card">
+  <span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+  <h3 data-zh="2026 是否該全用基礎模型？" data-en="Should We Just Use Foundation Models in 2026?">2026 是否該全用基礎模型？</h3>
+  <div class="disc-q" data-lang="zh">scGPT (2024 Nat Methods)、Geneformer (2023 Nature)、scFoundation (2024)、HyenaDNA 把<strong>數十億單細胞 / 序列</strong>預訓練；下游 task 微調 / zero-shot 已在多 benchmark 超越傳統 pipeline。但 Kedzierska et al. 2024 <em>bioRxiv</em> 也指出 zero-shot 表現在許多任務不如想像，且<strong>不可重現的 latent space</strong> 是新風險。</div>
+  <div class="disc-q" data-lang="en">scGPT (2024 Nat Methods), Geneformer (2023 Nature), scFoundation (2024), HyenaDNA pretrain on <strong>billions of cells / sequences</strong>; downstream fine-tuning / zero-shot beats traditional pipelines on many benchmarks. But Kedzierska et al. 2024 <em>bioRxiv</em> caution that zero-shot performance is often weaker than advertised, and <strong>non-reproducible latent spaces</strong> are a new risk.</div>
+  <div class="disc-pov" data-lang="zh"><strong>2026 折衷：</strong>用基礎模型做 representation + 傳統方法做 supervised endpoint；publish embedding + version 才有 reproducibility 基礎。</div>
+  <div class="disc-pov" data-lang="en"><strong>2026 compromise:</strong> use foundation models for representation + classical methods for supervised endpoints; always publish embeddings + versions for reproducibility.</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="五個 omics 探勘的常見陷阱" data-en="Five Common Omics Mining Pitfalls">五個 omics 探勘的常見陷阱</h2>
+<div class="pitfall-grid">
+  <div class="pitfall-card">
+    <h4 data-zh="LASSO 未標準化" data-en="LASSO without standardization">LASSO 未標準化</h4>
+    <p data-lang="zh">L1 penalty 對 scale 敏感：表達量 0–10000 的基因會把 0–1 的基因壓死。<code>glmnet</code> 預設會做 standardize=TRUE，但<strong>用 <code>scale()</code> 自己處理時要記得在 fold 內做</strong>。</p>
+    <p data-lang="en">L1 is scale-sensitive: a gene with expression 0–10000 will crush a 0–1 gene. <code>glmnet</code> defaults to standardize=TRUE; if you scale manually, do it <strong>inside the fold</strong>.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="批次效應混淆 biology" data-en="Batch confounded with biology">批次效應混淆 biology</h4>
+    <p data-lang="zh">case 全在 plate 1、control 全在 plate 2 → ComBat 救不了。<strong>實驗設計階段</strong>就要 randomize。檢查：<code>table(batch, condition)</code> 是否 balanced。</p>
+    <p data-lang="en">All cases on plate 1, controls on plate 2 → ComBat can't save you. Randomize at <strong>design</strong>. Check <code>table(batch, condition)</code> is balanced.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="Double-dipping" data-en="Double-dipping">Double-dipping</h4>
+    <p data-lang="zh">用全資料做 t-test 預篩，再用同一資料做 LASSO + CV → 嚴重 selection bias (Ambroise-McLachlan 2002)。<strong>所有特徵選擇步驟都要進 fold</strong>。</p>
+    <p data-lang="en">Pre-screen with t-test on full data then LASSO + CV on the same → severe selection bias (Ambroise-McLachlan 2002). <strong>Wrap every selection step inside the fold.</strong></p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="MOFA+ 未 normalize" data-en="MOFA+ on un-normalized data">MOFA+ 未 normalize</h4>
+    <p data-lang="zh">MOFA 假設 Gaussian（RNA log-CPM）、Bernoulli（mutation）、Poisson（counts）。若直接餵 raw counts 給 Gaussian view，會被 highly-expressed gene 主導。先 <code>vst()</code> / <code>SCTransform()</code>。</p>
+    <p data-lang="en">MOFA assumes Gaussian (RNA log-CPM), Bernoulli (mutations), Poisson (counts). Feeding raw counts to a Gaussian view is dominated by highly-expressed genes. Use <code>vst()</code> / <code>SCTransform()</code> first.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="post-selection inference" data-en="post-selection inference">把選後 p-value 當有效</h4>
+    <p data-lang="zh">LASSO / Boruta 選完，再對選中的特徵跑 t-test → p-value 嚴重偏低 (post-selection inference 問題)。要用 <code>selectiveInference</code> 或 <code>hdi</code> R 套件做正確 post-selection 推論。</p>
+    <p data-lang="en">Running t-tests on selected features yields biased p-values (post-selection inference). Use <code>selectiveInference</code> or <code>hdi</code> R packages for valid post-selection inference.</p>
+  </div>
+  <div class="pitfall-card">
+    <h4 data-zh="UMAP 距離過度解讀" data-en="Over-interpreting UMAP distances">UMAP 距離過度解讀</h4>
+    <p data-lang="zh">UMAP 保留 local neighborhood，<strong>不保留</strong> global distance。兩個分離很遠的群並不代表它們真的「很遠」。要量化分離請用 silhouette / Davies-Bouldin / clustering metric。</p>
+    <p data-lang="en">UMAP preserves local neighborhoods, <strong>not</strong> global distance. Two far-apart clusters need not be biologically far. Quantify with silhouette / Davies-Bouldin / clustering metrics.</p>
+  </div>
+</div>
+
+<div class="contrast-2col">
+  <div class="con-card bad">
+    <h4 data-zh="壞範例" data-en="Bad Practice">壞範例</h4>
+    <p data-lang="zh">在 1098 病人 19000 基因上用全資料先做 t-test，挑 top 100 基因再用同一資料訓練 LASSO + 10-fold CV，報 AUROC 0.95。Reviewer 沒抓到，論文後來在外部驗證上 AUROC 跌到 0.71。</p>
+    <p data-lang="en">Run t-test on all 1098 × 19000, take top 100, then LASSO + 10-fold CV on the same data, report AUROC 0.95. Reviewer missed it; external validation later dropped to 0.71.</p>
+  </div>
+  <div class="con-card good">
+    <h4 data-zh="好範例" data-en="Good Practice">好範例</h4>
+    <p data-lang="zh">完整 nested CV：外層 5-fold，每折內做 limma 預篩 + LASSO + 內層 10-fold CV 選 λ；最終在獨立 METABRIC 上驗證 AUROC 0.83，且公開 cohort + code (Snakemake) + 容器 (Docker)。</p>
+    <p data-lang="en">Full nested CV: outer 5-fold, each fold does limma pre-screen + LASSO + inner 10-fold to pick λ; final external validation on METABRIC AUROC 0.83, with public cohort + code (Snakemake) + container (Docker).</p>
+  </div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+  <h4 data-zh="反思題（讀完想 5 分鐘）" data-en="Reflection (think for 5 minutes)">反思題（讀完想 5 分鐘）</h4>
+  <ol data-lang="zh">
+    <li>你只有 50 個病人 × 20,000 基因要做生物標記發現——三個方法（LASSO / Boruta / MOFA+）你會怎麼排列組合？</li>
+    <li>批次效應與 phenotype 完全 confounded 的情境下，你的「最佳」可行方案是什麼？放棄分析？納入 batch 為 covariate？</li>
+    <li>scGPT 在 zero-shot 條件下對你的稀有細胞群表現很差——你會微調？換 scVI？還是回到傳統 Seurat pipeline？</li>
+    <li>若 LASSO 選 22 個基因、Boruta 選 35 個、MOFA+ factor 1 top loadings 是 50 個，這三組「真實 panel」如何整合？</li>
+    <li>面對 2026 年 EU AI Act，若你的 omics-based biomarker 進入臨床決策支援系統，你需要做哪些 governance？</li>
+  </ol>
+  <ol data-lang="en">
+    <li>You have 50 patients × 20,000 genes — how do you combine LASSO / Boruta / MOFA+?</li>
+    <li>If batch is fully confounded with phenotype, what's your best feasible plan? Abandon? Add batch as covariate?</li>
+    <li>scGPT zero-shot performs badly on your rare cell population — fine-tune? Switch to scVI? Or back to Seurat?</li>
+    <li>LASSO picks 22 genes, Boruta picks 35, MOFA+ factor 1 has 50 top loadings — how do you integrate the "true panel"?</li>
+    <li>Under EU AI Act 2026, if your omics biomarker enters a clinical decision-support system, what governance do you need?</li>
+  </ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+  <span class="adv-label" data-zh="進階 / 2024–2026 前沿" data-en="ADVANCED / 2024–2026 FRONTIERS">進階 / 2024–2026 前沿</span>
+  <h4 data-zh="omics 探勘的下一個五年" data-en="The Next Five Years of Omics Mining">omics 探勘的下一個五年</h4>
+  <p data-lang="zh"><strong>基礎模型百花齊放：</strong>scGPT (Cui 2024 Nat Methods, 33M cells)、Geneformer (Theodoris 2023 Nature, 30M cells, GTEx-based)、scFoundation (Hao 2024, 50M cells)、UCE Universal Cell Embedding 2024、HyenaDNA (Nguyen 2023) for ~1M-bp context；MammalNet 2024 跨物種。</p>
+  <p data-lang="zh"><strong>多模態 MOFA+：</strong>MEFISTO (Velten 2022) 加入空間 + 時間；MOFA+ for imaging (2024) 整合組織切片影像 + 轉錄組；Spatial-LIBD + Visium HD 2024 高解析度 SRT。</p>
+  <p data-lang="zh"><strong>Harmony 2 / scANVI for atlas-scale：</strong>2024 HCA (Human Cell Atlas) v2 釋出 ~100M 細胞；CellxGene Discover 平台 + scvi-tools 2.0 提供 reference mapping。</p>
+  <p data-lang="zh"><strong>聯邦多組學：</strong>FedOmics 2025、Owkin Substra 2024、FedScGen 2024 讓多醫院在不共享病人 raw data 的前提下做 single-cell 整合 + 差異分析。</p>
+  <p data-lang="zh"><strong>SHAP / 可解釋 omics：</strong>SHAP for biomarker discovery 已成 2024 主流；scExplainer (Liu 2024)、CellRank 2 (Lange 2024)、CausalSC 2025 把因果框架引入單細胞。</p>
+  <p data-lang="zh"><strong>監管：</strong>FDA Oncology Center of Excellence 2024 multi-omics signatures guidance；EMA ATMP 2025 多組學 companion diagnostic 規範；ICMJE 2025 要求公開 cohort + code + embedding。</p>
+  <p data-lang="en"><strong>Foundation models blooming:</strong> scGPT (Cui 2024 Nat Methods, 33M cells), Geneformer (Theodoris 2023 Nature, 30M cells, GTEx-based), scFoundation (Hao 2024, 50M cells), UCE Universal Cell Embedding 2024, HyenaDNA (Nguyen 2023) for ~1M-bp context, MammalNet 2024 cross-species.</p>
+  <p data-lang="en"><strong>Multimodal MOFA+:</strong> MEFISTO (Velten 2022) adds spatial + temporal; MOFA+ for imaging (2024) fuses histology with transcriptomics; Spatial-LIBD + Visium HD 2024 high-resolution SRT.</p>
+  <p data-lang="en"><strong>Harmony 2 / scANVI at atlas scale:</strong> 2024 HCA v2 releases ~100M cells; CellxGene Discover + scvi-tools 2.0 provide reference mapping.</p>
+  <p data-lang="en"><strong>Federated multi-omics:</strong> FedOmics 2025, Owkin Substra 2024, FedScGen 2024 let hospitals integrate scRNA + DE without sharing raw data.</p>
+  <p data-lang="en"><strong>SHAP / explainable omics:</strong> SHAP for biomarker discovery is now standard; scExplainer (Liu 2024), CellRank 2 (Lange 2024), CausalSC 2025 bring causal frames to single-cell.</p>
+  <p data-lang="en"><strong>Regulation:</strong> FDA Oncology CoE 2024 multi-omics signatures guidance; EMA ATMP 2025 multi-omics CDx; ICMJE 2025 requires public cohort + code + embeddings.</p>
+</div>
+</section>
+
+<section id="pitfalls">
+<h2><span data-zh="常見錯誤陷阱" data-en="Common Pitfalls">常見錯誤陷阱</span> / <span data-zh="Common Pitfalls" data-en="常見錯誤陷阱">Common Pitfalls</span></h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="LASSO 未標準化變數" data-en="Applying LASSO without standardization"></h4><div data-lang="zh"><p><strong>症狀：</strong>L1 懲罰對所有變數一視同仁，未標準化時表達量高的基因被偏好懲罰，造成 selection bias。<strong>修正：</strong>先 <code>log1p</code> 再 <code>StandardScaler</code>；或用 <code>glmnet(..., standardize=TRUE)</code> 預設選項。</p></div><div data-lang="en"><p><strong>Symptom:</strong> L1 penalty treats all features equally; high-expression genes get over-penalized → selection bias. <strong>Fix:</strong> <code>log1p</code> + <code>StandardScaler</code>; or use <code>glmnet(..., standardize=TRUE)</code> (default).</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="批次效應遮蔽生物訊號" data-en="Batch effects masking biology"></h4><div data-lang="zh"><p><strong>症狀：</strong>第一主成分 PC1 解釋 60% 變異——但對應的是 batch，不是 disease；PCA 圖形按 batch 分群而非按 condition。<strong>修正：</strong>檢查 PCA + Sample-Sample correlation；用 ComBat-Seq (counts) 或 Harmony / scVI (single-cell)；不要對 raw counts 用 ComBat（它是 Gaussian 模型）。</p></div><div data-lang="en"><p><strong>Symptom:</strong> PC1 explains 60% variance — but it tracks batch, not disease; PCA clusters by batch instead of condition. <strong>Fix:</strong> inspect PCA + sample-sample correlation; use ComBat-Seq (counts) or Harmony / scVI (single-cell); never apply Gaussian ComBat to raw counts.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="Double-dipping (對同一筆資料先選特徵再測)" data-en="Double-dipping (select features then test on same data)"></h4><div data-lang="zh"><p><strong>症狀：</strong>先用全部資料做 t-test 篩前 100 基因，再用同一資料訓練 + 評估 classifier，AUROC 假性高估 0.2+。Ambroise & McLachlan 2002 的經典批判。<strong>修正：</strong>把 feature selection 放進 nested CV 的內圈；或用 hold-out / selective inference。</p></div><div data-lang="en"><p><strong>Symptom:</strong> select top-100 genes by t-test on full data, then train + evaluate on the same data — AUROC inflates by 0.2+. The classic Ambroise & McLachlan 2002 critique. <strong>Fix:</strong> nest feature selection inside the inner CV loop; or use hold-out / selective inference.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="MOFA+ 用在未標準化資料" data-en="MOFA+ on un-normalized data"></h4><div data-lang="zh"><p><strong>症狀：</strong>MOFA+ 預設假設 modality 內變異尺度相近；直接餵入 raw count + protein abundance 會讓 RNA 主導所有因子。<strong>修正：</strong>RNA 用 <code>vst</code> 或 <code>log1p(CPM)</code>，protein 用 <code>log2 intensity</code>，再 per-feature scale。</p></div><div data-lang="en"><p><strong>Symptom:</strong> MOFA+ assumes within-modality variance is on a comparable scale; raw counts + protein abundance let RNA dominate every factor. <strong>Fix:</strong> <code>vst</code> or <code>log1p(CPM)</code> for RNA, <code>log2 intensity</code> for protein, then per-feature scaling.</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="忽略 selective inference" data-en="Ignoring selective inference"></h4><div data-lang="zh"><p><strong>症狀：</strong>用 LASSO 選出 20 個基因後，再用普通 OLS / Wald test 報 p-value——這些 p-value 是 <strong>無效</strong> 的（被選擇條件污染）。<strong>修正：</strong>用 <code>selectiveInference</code> R 套件 (Tibshirani et al. 2016)；或 stability selection (Meinshausen-Bühlmann 2010)；或 knockoff filter (Barber-Candès 2015)。</p></div><div data-lang="en"><p><strong>Symptom:</strong> after LASSO selects 20 genes, you run plain OLS / Wald to report p-values — those p-values are <strong>invalid</strong> (selection-contaminated). <strong>Fix:</strong> R package <code>selectiveInference</code> (Tibshirani 2016); or stability selection (Meinshausen-Bühlmann 2010); or knockoff filter (Barber-Candès 2015).</p></div></div>
+
+<div class="pitfall-card"><h4 data-zh="把 TPM 直接拿來做 DE" data-en="Using TPM for differential expression"></h4><div data-lang="zh"><p><strong>症狀：</strong>用 TPM / FPKM 做 t-test 或 limma → p-value 偏誤、FDR 失控。TPM 是 within-sample 比較，不適合 between-sample DE。<strong>修正：</strong>用 raw counts + DESeq2 (Love 2014) 或 edgeR (Robinson 2010)；single-cell 用 negative-binomial 或 NB-mixed-effect。</p></div><div data-lang="en"><p><strong>Symptom:</strong> running t-tests or limma on TPM / FPKM → biased p-values, runaway FDR. TPM is for within-sample comparison, not between-sample DE. <strong>Fix:</strong> raw counts + DESeq2 (Love 2014) or edgeR (Robinson 2010); for single-cell, NB or NB-mixed-effect.</p></div></div>
+</div>
+</section>
+
+<section>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="錯誤做法：未標準化 + 無 Boruta 確認" data-en="Wrong: no standardization + no Boruta confirmation"></h4><div data-lang="zh"><pre><code class="language-python">from sklearn.linear_model import Lasso
+model = Lasso(alpha=0.1).fit(X_raw, y)
+# X_raw 是原始 RNA-seq counts，未經 log + scale
+# 表達量高的基因被偏好懲罰 → 假陰性
+selected = X_raw.columns[model.coef_ != 0]</code></pre></div><div data-lang="en"><pre><code class="language-python">from sklearn.linear_model import Lasso
+model = Lasso(alpha=0.1).fit(X_raw, y)
+# X_raw is raw RNA-seq counts, no log + no scale
+# High-expression genes over-penalized -> false negatives
+selected = X_raw.columns[model.coef_ != 0]</code></pre></div></div>
+<div class="con-card good"><h4 data-zh="正確做法：log + scale + Boruta 確認" data-en="Correct: log + scale + Boruta confirmation"></h4><div data-lang="zh"><pre><code class="language-python">import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Lasso
+from boruta import BorutaPy
+from sklearn.ensemble import RandomForestClassifier
+
+X = StandardScaler().fit_transform(np.log1p(X_raw))
+lasso = Lasso(alpha=0.1).fit(X, y)
+sel_lasso = X_raw.columns[lasso.coef_ != 0]
+
+# 用 Boruta 做 model-agnostic 確認
+boruta = BorutaPy(RandomForestClassifier(n_estimators=500),
+                   n_estimators='auto', random_state=42).fit(X, y)
+sel_boruta = X_raw.columns[boruta.support_]
+final = set(sel_lasso) & set(sel_boruta)</code></pre></div><div data-lang="en"><pre><code class="language-python">import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import Lasso
+from boruta import BorutaPy
+from sklearn.ensemble import RandomForestClassifier
+
+X = StandardScaler().fit_transform(np.log1p(X_raw))
+lasso = Lasso(alpha=0.1).fit(X, y)
+sel_lasso = X_raw.columns[lasso.coef_ != 0]
+
+# Boruta as model-agnostic confirmation
+boruta = BorutaPy(RandomForestClassifier(n_estimators=500),
+                   n_estimators='auto', random_state=42).fit(X, y)
+sel_boruta = X_raw.columns[boruta.support_]
+final = set(sel_lasso) & set(sel_boruta)</code></pre></div></div>
+</div>
+</section>
+
+<section id="discussion">
+<h2><span data-zh="引人入勝的討論點" data-en="Engaging Discussion Points">引人入勝的討論點</span> / <span data-zh="Engaging Discussion Points" data-en="引人入勝的討論點">Engaging Discussion Points</span></h2>
+
+<div class="discussion-card"><span class="disc-label">DEBATE</span><h3 data-zh="LASSO vs Boruta — 何時用哪一個？" data-en="LASSO vs Boruta — when to use which?"></h3><div class="disc-q" data-lang="zh">在組學特徵選擇中，LASSO 與 Boruta 各有什麼適用情境？</div><div class="disc-q" data-lang="en">In omics feature selection, when should each be preferred?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">LASSO — 適合連續預測、需要稀疏模型、速度快（O(np) 級）；2024 GLMNet 6.x 對 p&gt;100k 仍可用。</span><span data-lang="en">LASSO — best for continuous prediction, sparse models needed, fast (O(np)); 2024 GLMNet 6.x scales to p &gt; 100k.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">Boruta — 模型無關、有時更保守（避免假陽性）、可以與任何 tree-based estimator 搭配；但 ~50× 慢於 LASSO。</span><span data-lang="en">Boruta — model-agnostic, sometimes more conservative (avoids false positives), works with any tree-based estimator; but ~50× slower than LASSO.</span></div><div class="disc-pov"><strong data-zh="觀點三（最佳實踐）：" data-en="View 3 (best practice):">觀點三（最佳實踐）：</strong> <span data-lang="zh">兩者交集——只用同時被 LASSO 與 Boruta 選中的特徵，可大幅降低 false discovery。</span><span data-lang="en">Use the intersection — take only features endorsed by both LASSO and Boruta to slash false discovery.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">CRITIQUE</span><h3 data-zh="批次校正會在某些情況下弊大於利嗎？" data-en="Can batch correction do more harm than good?"></h3><div class="disc-q" data-lang="zh">ComBat / Harmony / scVI 等批次校正方法，在哪些情況下會「過度校正」並抹去生物訊號？</div><div class="disc-q" data-lang="en">When do ComBat / Harmony / scVI "over-correct" and erase biology?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">Goh 2017 經典批判——當 batch 與 condition <strong>混淆</strong>（同一 batch 內只有 control）時，ComBat 會把真實生物訊號當 batch 噪聲移除。</span><span data-lang="en">Goh 2017 critique — when batch and condition are <strong>confounded</strong> (one batch only has controls), ComBat removes real biology as if it were batch noise.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">ComBat-Seq 與 Harmony 2 (2024) 較保守，加入 covariate 保護機制；建議設計階段就 stratify batch。</span><span data-lang="en">ComBat-Seq and Harmony 2 (2024) are more conservative with covariate-protection; the real fix is to stratify batches at design.</span></div></div>
+
+<div class="discussion-card"><span class="disc-label">FOUNDATION MODELS</span><h3 data-zh="2026 年是否一律該用組學基礎模型？" data-en="Should we always use omics foundation models in 2026?"></h3><div class="disc-q" data-lang="zh">scGPT / Geneformer 等 foundation models 是否已經取代古典方法（LASSO、limma、DESeq2）？</div><div class="disc-q" data-lang="en">Have scGPT / Geneformer replaced classical methods (LASSO, limma, DESeq2)?</div><div class="disc-pov"><strong data-zh="觀點一：" data-en="View 1:">觀點一：</strong> <span data-lang="zh">否——小 N (n&lt;50) 與明確定義任務（DE / 預後）下，古典方法仍勝；foundation models 在 zero-shot 與 cross-tissue generalization 才有優勢。</span><span data-lang="en">No — for small N (n&lt;50) and well-defined tasks (DE, prognosis), classical methods still win; foundation models excel only at zero-shot and cross-tissue generalization.</span></div><div class="disc-pov"><strong data-zh="觀點二：" data-en="View 2:">觀點二：</strong> <span data-lang="zh">是（特定情境）——大型 atlas-scale 任務（cell-type annotation across 100M cells）foundation models 顯著勝出。</span><span data-lang="en">Yes (in context) — for atlas-scale tasks (cell-type annotation across 100M cells) foundation models clearly win.</span></div></div>
+</section>
+
+<section>
+<div class="spotlight"><div class="sp-icon">🌟</div><div class="sp-body"><span class="sp-tag">CASE STUDY</span><h4 data-zh="2002 van 't Veer 70-gene Mammaprint — 第一個 FDA 核可的多基因檢驗" data-en="2002 van 't Veer 70-gene Mammaprint — the first FDA-cleared multigene assay"></h4><div data-lang="zh"><p>2002 年 Laura van 't Veer 在 <em>Nature</em> 發表了 70 基因的乳癌預後 signature（Mammaprint）。她用 LASSO-like 特徵選擇方法在 microarray 資料上，<strong>訓練組僅 78 名病人，驗證組 295 名</strong>。2007 年 FDA 核可；2016 年 MINDACT trial (n=6,693) 證實它能讓 46% 臨床高風險但 genomic 低風險的病人安全省略化療。</p><p>22 年後仍在臨床使用——拯救了數十萬名女性免於不必要的化療。這是第一個 FDA 核可的<strong>多基因檢驗 (multigene assay)</strong>，也是組學資料探勘走進臨床的里程碑。當年審稿人質疑「78 病人找出 70 基因，太自信」——MINDACT 用嚴格 prospective RCT 給出最終答案。</p></div><div data-lang="en"><p>In 2002 Laura van 't Veer published a 70-gene breast cancer prognostic signature (Mammaprint) in <em>Nature</em>. She used LASSO-style feature selection on microarray data, with <strong>just 78 training patients and 295 validation patients</strong>. FDA cleared in 2007; the 2016 MINDACT trial (n=6,693) showed 46% of clinically high-risk but genomically low-risk patients could safely skip chemo.</p><p>Still in clinical use 22 years later — sparing hundreds of thousands of women from unnecessary chemotherapy. It was the first FDA-cleared <strong>multigene assay</strong> and the milestone moment when omics mining entered the clinic. Reviewers had warned "70 genes from 78 patients is overconfident" — MINDACT, a rigorous prospective RCT, delivered the final verdict.</p></div></div></div>
+</section>
+
+<section id="reflection">
+<h2><span data-zh="延伸思考題" data-en="Reflection Questions">延伸思考題</span> / <span data-zh="Reflection Questions" data-en="延伸思考題">Reflection Questions</span></h2>
+<div class="reflection-q"><h4 data-zh="自我檢測" data-en="Self-test"></h4>
+<ol data-lang="zh">
+<li>為什麼 L1 比 L0 更適合做稀疏選擇？(提示：凸性、計算可行性)</li>
+<li>Boruta 的「shadow feature」(影子變數) 在做什麼？為何能控制 false discovery？</li>
+<li>MOFA+ 與 PCA 在多 modality 上的根本差別是什麼？</li>
+<li>Harmony 在什麼情況下會失敗？舉一個 single-cell 整合的真實案例。</li>
+<li>為什麼不能用 TPM 做差異表達分析？背後的統計理由為何？</li>
+</ol>
+<ol data-lang="en">
+<li>Why is L1 better than L0 for sparsity? (Hint: convexity, tractability)</li>
+<li>What do Boruta's "shadow features" do? Why do they control false discovery?</li>
+<li>Fundamentally, how does MOFA+ differ from PCA across modalities?</li>
+<li>When does Harmony fail at batch correction? Give a real single-cell integration example.</li>
+<li>Why can't we use TPM for differential expression analysis? What is the statistical reason?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced">
+<h2><span data-zh="進階研究員筆記" data-en="Advanced Researcher Notes">進階研究員筆記</span> / <span data-zh="Advanced Researcher Notes" data-en="進階研究員筆記">Advanced Researcher Notes</span></h2>
+<div class="advanced-note"><span class="adv-label">2024–2026 SOTA</span><h4 data-zh="組學探勘的 2024–2026 前沿" data-en="Omics mining at the 2024–2026 frontier"></h4><div data-lang="zh"><p><strong>Foundation models：</strong>2024 scGPT (Cui)、Geneformer (Theodoris 2023)——可 fine-tune 做 cell-type classification、perturbation prediction、batch correction；參數從 10M 到 1B+。</p><p><strong>Multi-omics：</strong>2025 MOFA+ 多模態擴充支援 imaging（Argelaguet 2025）；Harmony 2 支援 atlas-scale (100M+ cells)；scVI 2.x PyTorch backend 取代 TF。</p><p><strong>Federated：</strong>FedMOFA 2024 跨機構多組學分析不外洩 raw data；同期 secure aggregation + differential privacy 達到 ε=1 級隱私保證。</p><p><strong>Explainability：</strong>SHAP for omics（Lundberg 2017）已是標配；2026 引入 causal SHAP 與 CausalImpact 於介入研究。</p><p><strong>Selective inference：</strong>SLOPE (Bogdan 2015)、knockoff filter (Barber-Candès 2015)、stability selection 2.x 在 2024 R Bioc 廣泛採用。</p></div><div data-lang="en"><p><strong>Foundation models:</strong> 2024 scGPT (Cui), Geneformer (Theodoris 2023) — fine-tune for cell-type classification, perturbation prediction, batch correction; 10M–1B+ parameters.</p><p><strong>Multi-omics:</strong> 2025 MOFA+ extends to imaging modalities (Argelaguet 2025); Harmony 2 scales to atlas-scale (100M+ cells); scVI 2.x replaces TF with PyTorch backend.</p><p><strong>Federated:</strong> FedMOFA 2024 enables cross-institution multi-omics without sharing raw data; secure aggregation + differential privacy achieve ε=1-level guarantees.</p><p><strong>Explainability:</strong> SHAP for omics (Lundberg 2017) is now standard; 2026 introduces causal SHAP and CausalImpact for interventional studies.</p><p><strong>Selective inference:</strong> SLOPE (Bogdan 2015), knockoff filter (Barber-Candès 2015), stability selection 2.x widely adopted in 2024 R/Bioconductor.</p></div></div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -189,6 +639,8 @@ sce.pp.harmony_integrate(adata, key=<span class="str">"batch"</span>)</pre></div
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. L1 正則化</span><span data-lang="en">D. L1 regularization</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note"><strong data-zh="歷史小故事：" data-en="History Note:">歷史小故事：</strong><span data-lang="zh">1995 年 — 史丹佛大學 Pat Brown 用一台改裝自印刷業的機械手臂，把 DNA 點在玻璃片上，做出第一張 DNA 微陣列 (microarray)。五年內，microarray 成為基因體學的基礎。「組學革命」始於 1990 年代的 microarray 資料——也催生了全新的統計方法，因為 n=20 病人 × p=20,000 基因打破了所有教科書的假設。LASSO 原本是 1996 年 Tibshirani 為迴歸係數收縮設計的方法，竟在組學資料上找到 killer application（也成為 >50,000 引用的論文；他笑稱 "Least Absolute Shrinkage and Selection Operator" 是先取了好聽的縮寫才回頭湊全名）。van 't Veer 2002 的 70-gene Mammaprint，便是這條路的第一個臨床成果。</span><span data-lang="en">1995 — Pat Brown at Stanford built the first DNA microarray by spotting DNA onto a glass slide with a robot adapted from a printing press. Within five years microarrays became the bedrock of genomics. The "omics revolution" began with 1990s microarray data — and birthed entirely new statistical methods because n=20 patients × p=20,000 genes broke every textbook assumption. LASSO, originally Tibshirani's 1996 regression-shrinkage method, found its killer application here (a >50,000-cited paper; he joked the acronym "Least Absolute Shrinkage and Selection Operator" came first and the full name was back-fitted). van 't Veer's 2002 70-gene Mammaprint was the first clinical fruit of this lineage.</span></div>
 
 <nav class="page-nav">
 <a href="ehr-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 17: 電子病歷資料探勘" data-en="Ch 17: EHR Data Mining">Ch 17: 電子病歷資料探勘</span></a>

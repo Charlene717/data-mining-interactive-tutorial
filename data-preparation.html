@@ -19,8 +19,159 @@
 <main class="content-wrap">
 
 <section class="section">
-<div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
-<h2 data-zh="為什麼資料準備是最關鍵的階段？" data-en="Why is Data Preparation the Most Critical Phase?">為什麼資料準備是最關鍵的階段？</h2>
+<div class="section-toc"><strong data-zh="本章閱讀地圖" data-en="Chapter Reading Map">本章閱讀地圖</strong>
+<ol>
+<li><a href="#story" data-zh="🎬 故事化導讀（5 分鐘）" data-en="🎬 Story-driven intro (5 min)">🎬 故事化導讀（5 分鐘）</a></li>
+<li><a href="#glossary" data-zh="📚 名詞速查表（14 個關鍵詞）" data-en="📚 Glossary (14 key terms)">📚 名詞速查表（14 個關鍵詞）</a></li>
+<li><a href="#history" data-zh="🏛️ 缺失與重採樣方法時間軸" data-en="🏛️ Missing &amp; Resampling Timeline">🏛️ 缺失與重採樣方法時間軸</a></li>
+<li><a href="#steps" data-zh="🔧 六個核心步驟" data-en="🔧 Six Core Steps">🔧 六個核心步驟</a></li>
+<li><a href="#missExplorer" data-zh="🎚️ 互動：缺失策略偏差—變異探索器" data-en="🎚️ Interactive: Missing-Strategy Bias-Variance Explorer">🎚️ 互動：缺失策略偏差—變異探索器</a></li>
+<li><a href="#walkthrough" data-zh="🧮 完整案例走讀（糖尿病 EHR）" data-en="🧮 End-to-end walkthrough (Diabetes EHR)">🧮 完整案例走讀</a></li>
+<li><a href="#discussion" data-zh="💬 思辨：刪除？SMOTE？目標編碼？" data-en="💬 Debate: Delete? SMOTE? Target encoding?">💬 思辨：刪除？SMOTE？目標編碼？</a></li>
+<li><a href="#spotlight" data-zh="🌟 經典案例：Epic Sepsis Watch 崩盤" data-en="🌟 Spotlight: Epic Sepsis Watch Collapse">🌟 經典案例：Epic Sepsis Watch 崩盤</a></li>
+<li><a href="#pitfalls" data-zh="🚧 六大常見陷阱" data-en="🚧 Six Common Pitfalls">🚧 六大常見陷阱</a></li>
+<li><a href="#reflection" data-zh="💭 自我反思題" data-en="💭 Reflection Questions">💭 自我反思題</a></li>
+<li><a href="#advanced" data-zh="🌳 進階：MissForest、CausalImpact、HistGB" data-en="🌳 Advanced: MissForest, CausalImpact, HistGB">🌳 進階</a></li>
+</ol>
+</div>
+<div class="pill-row" style="margin-top:14px;">
+<span class="level-badge l-beg" data-zh="🌱 初學者" data-en="🌱 Beginner">🌱 初學者</span>
+<span class="level-badge l-mid" data-zh="🌿 中階" data-en="🌿 Intermediate">🌿 中階</span>
+<span class="level-badge l-adv" data-zh="🌳 進階研究員" data-en="🌳 Advanced">🌳 進階研究員</span>
+<span class="pill teal" data-zh="⏱️ 預計閱讀 30–40 分鐘" data-en="⏱️ Est. 30–40 min">⏱️ 預計閱讀 30–40 分鐘</span>
+<span class="pill rose" data-zh="🔥 整本書最被忽視的章節" data-en="🔥 The most under-loved chapter">🔥 整本書最被忽視的章節</span>
+</div>
+</section>
+
+<section class="section" id="story">
+<div class="story-block">
+<span class="story-tag" data-zh="故事化導讀" data-en="STORY">故事化導讀</span>
+<h3 data-zh="📊 47% 缺失值、三種「Female」、與一個崩潰的下午" data-en="📊 47% missing, three flavors of 'Female', and a meltdown afternoon">📊 47% 缺失值、三種「Female」、與一個崩潰的下午</h3>
+<div data-lang="zh">
+<p>Karim 是一家跨國藥廠 R&amp;D 的資料分析師。週一上午老闆把一個 12 GB CSV 丟過來：「這是我們三個臨床試驗的合併資料，下週要建糖尿病風險模型。」</p>
+<p>Karim 打開檔案，第一個欄位 <code>date_of_birth</code> 立刻讓他傻眼：英國地點用 <code>DD/MM/YYYY</code>、美國地點用 <code>MM/DD/YYYY</code>、印度地點用 <code>YYYY-MM-DD</code>。第二個欄位 <code>sex</code>：「Female」、「F」、「female」、「Mujer」（西語）、「女」（中文）⋯⋯五種寫法。</p>
+<p><code>HbA1c</code> 缺失率 47%——但他發現缺失不是隨機的：缺失值大多來自<strong>已經死亡</strong>的病人（未抽血即離世）。這是 MNAR (Missing Not At Random)。如果他用 mean imputation 補值，模型會學到「HbA1c 平均 ≈ 高血糖人」的虛假相關，預測會嚴重偏差。</p>
+<p>那個下午他做了三件事：（1）寫一個 <code>schema_check.py</code> 統一所有單位與日期；（2）為 <code>HbA1c</code> 新增 <code>HbA1c_missing</code> 二元欄位；（3）打電話給老闆說：「資料準備至少要兩週，不能下週交。」<strong>那一刻起，他真正成為資料科學家。</strong></p>
+</div>
+<div data-lang="en">
+<p>Karim is an R&amp;D data analyst at a multinational pharma. Monday morning his boss hands him a 12 GB CSV: "Merged data from three clinical trials. Build a diabetes risk model by next week."</p>
+<p>Karim opens it. Column 1: <code>date_of_birth</code>. UK sites use <code>DD/MM/YYYY</code>, US sites <code>MM/DD/YYYY</code>, India sites <code>YYYY-MM-DD</code>. Column 2: <code>sex</code>. "Female", "F", "female", "Mujer" (Spanish), 「女」 (Chinese) — five encodings.</p>
+<p><code>HbA1c</code> is 47% missing — but the missingness is non-random: most missing rows are patients who <strong>died</strong> before blood was drawn. This is MNAR (Missing Not At Random). Mean imputation would teach the model a fake "HbA1c ≈ average hyperglycemia patient" pattern, badly biasing predictions.</p>
+<p>That afternoon he did three things: (1) wrote <code>schema_check.py</code> to harmonize units and dates; (2) added a <code>HbA1c_missing</code> binary feature; (3) called his boss: "Data prep needs at least two weeks. Not next week." <strong>That was the moment he became a real data scientist.</strong></p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞速查" data-en="GLOSSARY">名詞速查</div>
+<h2 data-zh="14 個關鍵詞：從直白到精確" data-en="14 Key Terms: From Plain to Precise">14 個關鍵詞：從直白到精確</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">MCAR / MAR / MNAR</div><div class="term-zh">三種缺失機制</div>
+<div class="term-kid" data-lang="zh">MCAR=隨機掉牙；MAR=刷牙頻率決定掉牙；MNAR=「壞牙才不敢給人看」（缺失本身藏訊息）。</div>
+<div class="term-kid" data-lang="en">MCAR = random tooth loss; MAR = brushing frequency drives loss; MNAR = "won't show bad teeth" (missingness itself carries info).</div>
+<div class="term-tech" data-lang="zh">Rubin 1976 提出。MCAR: P(R|X,Y)=const；MAR: P(R|X,Y)=P(R|X_obs)；MNAR: P(R|X,Y) 與 Y_miss 有關，必須建模。</div>
+<div class="term-tech" data-lang="en">Rubin 1976. MCAR: P(R|X,Y)=const; MAR: P(R|X,Y)=P(R|X_obs); MNAR: P(R|X,Y) depends on Y_miss — must be modeled.</div>
+</div>
+<div class="glossary-card"><div class="term-en">MICE</div><div class="term-zh">多重補值連環方程式</div>
+<div class="term-kid" data-lang="zh">先猜每個空格、再用周圍的人來矯正——做 5 次，看看你預測會抖多少。</div>
+<div class="term-kid" data-lang="en">Guess each blank, then correct with neighbors — repeat 5 times to see how much your prediction wobbles.</div>
+<div class="term-tech" data-lang="zh">Multivariate Imputation by Chained Equations (van Buuren 2011)。對每個缺失欄位用其他欄位迴歸補值，重複 m=5–20 次得到不確定性。</div>
+<div class="term-tech" data-lang="en">van Buuren 2011. Regress each missing column on the others; iterate m=5–20 times to quantify imputation uncertainty.</div>
+</div>
+<div class="glossary-card"><div class="term-en">KNN Imputer</div><div class="term-zh">最近鄰補值</div>
+<div class="term-kid" data-lang="zh">缺空格時，找最像你的 5 個鄰居，把他們那一欄的平均填進去。</div>
+<div class="term-kid" data-lang="en">When a value is missing, find your 5 nearest neighbors and average their column.</div>
+<div class="term-tech" data-lang="zh">Troyanskaya 2001 提出。用 k 個最近樣本的平均（或加權）填入缺失值；對高維與類別欄位失效。</div>
+<div class="term-tech" data-lang="en">Troyanskaya 2001. Uses k nearest samples' mean (or weighted mean); fails in high-D and on categoricals.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Target Leakage</div><div class="term-zh">目標外洩</div>
+<div class="term-kid" data-lang="zh">考試前偷看答案——模型「作弊」了。</div>
+<div class="term-kid" data-lang="en">Peeking at answers before the exam — the model is cheating.</div>
+<div class="term-tech" data-lang="zh">特徵包含預測時間點不可得的未來資訊；驗證 AUROC 過高 (&gt;0.95) 是徵兆。</div>
+<div class="term-tech" data-lang="en">Features contain future info unavailable at prediction time; AUROC &gt; 0.95 is a red flag.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Train/Val/Test Split</div><div class="term-zh">三段切割</div>
+<div class="term-kid" data-lang="zh">訓練 = 寫筆記；驗證 = 模擬考；測試 = 真正大考。三個不能混。</div>
+<div class="term-kid" data-lang="en">Train = study notes; Val = mock exam; Test = real exam. Never mix them.</div>
+<div class="term-tech" data-lang="zh">典型 60/20/20 或 80/10/10；時序資料用時間切；醫療資料用 by-site 切。</div>
+<div class="term-tech" data-lang="en">Typically 60/20/20 or 80/10/10; time-aware split for time series; by-site split for medical data.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Stratified Split</div><div class="term-zh">分層切割</div>
+<div class="term-kid" data-lang="zh">確保訓練 / 測試各有相同比例的「少數族群」，不會偶然全集中在一邊。</div>
+<div class="term-kid" data-lang="en">Ensures train/test keep the same minority-class ratio — no accidental clustering on one side.</div>
+<div class="term-tech" data-lang="zh">按 y 分層抽樣，保 P(y) 相同；對極不平衡資料必須。</div>
+<div class="term-tech" data-lang="en">Sample stratified by y, preserving P(y); essential for highly imbalanced data.</div>
+</div>
+<div class="glossary-card"><div class="term-en">SMOTE</div><div class="term-zh">合成少數類過採樣</div>
+<div class="term-kid" data-lang="zh">人少不夠用，就把兩個少數樣本連起來，中間「造」一個新樣本。</div>
+<div class="term-kid" data-lang="en">Too few minorities — connect two and "synthesize" a new sample on the line between them.</div>
+<div class="term-tech" data-lang="zh">Chawla 2002。在 k-NN 線性插值合成少數樣本；只能用於訓練集！2022 多篇 paper 質疑效果。</div>
+<div class="term-tech" data-lang="en">Chawla 2002. Linear interpolation along k-NN for the minority; <strong>training set only</strong>! 2022 papers question its effectiveness.</div>
+</div>
+<div class="glossary-card"><div class="term-en">ADASYN</div><div class="term-zh">自適應合成</div>
+<div class="term-kid" data-lang="zh">SMOTE 的進階版——在「分類邊界」生成更多樣本，而非均勻分散。</div>
+<div class="term-kid" data-lang="en">An advanced SMOTE — generates more near the decision boundary, not uniformly.</div>
+<div class="term-tech" data-lang="zh">He 2008。權重高給「難分」的少數樣本鄰域；可能放大噪音。</div>
+<div class="term-tech" data-lang="en">He 2008. Weights up "hard" minority neighborhoods; can amplify noise.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Undersampling</div><div class="term-zh">欠採樣</div>
+<div class="term-kid" data-lang="zh">與其補少數，不如丟掉多數——但小心丟到重要訊息。</div>
+<div class="term-kid" data-lang="en">Instead of growing the minority, shrink the majority — but you may toss valuable info.</div>
+<div class="term-tech" data-lang="zh">Random Undersampling、Tomek Links、Edited NN。對極不平衡與大資料較友善。</div>
+<div class="term-tech" data-lang="en">Random Undersampling, Tomek Links, Edited NN. Useful for extreme imbalance + large data.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Scaling</div><div class="term-zh">特徵縮放</div>
+<div class="term-kid" data-lang="zh">身高 (cm) 跟體重 (kg) 數字不同——縮到同一尺度才能公平比較。</div>
+<div class="term-kid" data-lang="en">Height (cm) and weight (kg) live on different scales — normalize them before comparing.</div>
+<div class="term-tech" data-lang="zh">Min-Max、StandardScaler、RobustScaler、QuantileTransformer。<strong>fit 只能在 train，再 transform 到 test！</strong></div>
+<div class="term-tech" data-lang="en">Min-Max, StandardScaler, RobustScaler, QuantileTransformer. <strong>Fit on train only, then transform test!</strong></div>
+</div>
+<div class="glossary-card"><div class="term-en">Robust Scaling</div><div class="term-zh">穩健縮放</div>
+<div class="term-kid" data-lang="zh">用「中位數 + IQR」代替「平均 + 標準差」——極端值不再影響整體。</div>
+<div class="term-kid" data-lang="en">Uses median + IQR instead of mean + std — extreme values stop dominating.</div>
+<div class="term-tech" data-lang="zh">x_scaled = (x − median) / IQR；對含 outlier 的生物資料較佳。</div>
+<div class="term-tech" data-lang="en">x_scaled = (x − median) / IQR; preferred for biomedical data with heavy outliers.</div>
+</div>
+<div class="glossary-card"><div class="term-en">One-Hot Encoding</div><div class="term-zh">獨熱編碼</div>
+<div class="term-kid" data-lang="zh">把「紅／黃／藍」拆成三個「是 / 不是」欄位，每個樣本只在一欄填 1。</div>
+<div class="term-kid" data-lang="en">Split "red/yellow/blue" into three "yes/no" columns — each row gets a 1 in only one.</div>
+<div class="term-tech" data-lang="zh">每個類別新增二元欄；高基數類別會爆維。建議 ≤ 50 unique values 才用。</div>
+<div class="term-tech" data-lang="en">Adds a binary column per category; explodes for high-cardinality. Recommended only when ≤ 50 unique values.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Target Encoding</div><div class="term-zh">目標編碼</div>
+<div class="term-kid" data-lang="zh">用「在這個類別裡，多少人是陽性？」替代類別名稱——但小心洩漏。</div>
+<div class="term-kid" data-lang="en">Replace each category with "what fraction of this group is positive?" — but beware leakage.</div>
+<div class="term-tech" data-lang="zh">x_cat → mean(y|x_cat)；高基數類別友善。<strong>必須 nested CV / out-of-fold</strong> 否則洩漏。</div>
+<div class="term-tech" data-lang="en">x_cat → mean(y|x_cat); high-cardinality friendly. <strong>Requires nested CV / out-of-fold</strong> or it leaks.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Data Dictionary</div><div class="term-zh">資料字典</div>
+<div class="term-kid" data-lang="zh">每個欄位的「使用說明書」：意義、單位、範圍、誰填的、什麼時候填的。</div>
+<div class="term-kid" data-lang="en">A "user manual" for every column: meaning, unit, range, who filled it, when.</div>
+<div class="term-tech" data-lang="zh">FAIR 原則第一步；常用 Frictionless Data、DCAT-AP、Open Targets ontology。</div>
+<div class="term-tech" data-lang="en">Step 1 of FAIR; common tools include Frictionless Data, DCAT-AP, Open Targets ontology.</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="缺失值與重採樣方法演進" data-en="Missing-Value &amp; Resampling Methods Timeline">缺失值與重採樣方法演進</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1976</span><span class="tl-title" data-zh="Rubin 缺失資料理論" data-en="Rubin's missing-data theory">Rubin 缺失資料理論</span><span class="tl-desc" data-zh="Donald Rubin 在 Biometrika 提出 MCAR/MAR/MNAR 分類，奠定後續 50 年的理論基礎。" data-en="Rubin's Biometrika paper introduces MCAR/MAR/MNAR — the theoretical bedrock for the next 50 years."></span></div>
+<div class="timeline-item"><span class="tl-year">1987</span><span class="tl-title" data-zh="Multiple Imputation 正式發表" data-en="Multiple Imputation formalized">Multiple Imputation 發表</span><span class="tl-desc" data-zh="Rubin 出版專書《Multiple Imputation for Nonresponse in Surveys》。" data-en="Rubin's book 'Multiple Imputation for Nonresponse in Surveys'."></span></div>
+<div class="timeline-item"><span class="tl-year">2002</span><span class="tl-title" data-zh="SMOTE 發表" data-en="SMOTE published">SMOTE 發表</span><span class="tl-desc" data-zh="Chawla et al. JAIR 引用次數逾 25,000——機器學習史上最常被引用的論文之一。" data-en="Chawla et al. JAIR — over 25,000 citations, one of ML's most cited papers."></span></div>
+<div class="timeline-item"><span class="tl-year">2008</span><span class="tl-title" data-zh="ADASYN 自適應合成" data-en="ADASYN adaptive synthesis">ADASYN 發表</span><span class="tl-desc" data-zh="He et al. 提出依分類難度加權的合成方法。" data-en="He et al. propose synthesis weighted by classification difficulty."></span></div>
+<div class="timeline-item"><span class="tl-year">2011</span><span class="tl-title" data-zh="mice R 套件發表" data-en="mice R package released">mice R 套件發表</span><span class="tl-desc" data-zh="van Buuren 發表 mice 套件，成為缺失值補值的事實標準工具。" data-en="van Buuren releases the mice package — de facto standard for imputation."></span></div>
+<div class="timeline-item"><span class="tl-year">2016</span><span class="tl-title" data-zh="sklearn ColumnTransformer" data-en="sklearn ColumnTransformer">sklearn ColumnTransformer</span><span class="tl-desc" data-zh="統一了不同欄位類型的前處理 API，pipeline 從此「乾淨」。" data-en="Unified preprocessing API across mixed-type columns — pipelines became 'clean'."></span></div>
+<div class="timeline-item"><span class="tl-year">2020</span><span class="tl-title" data-zh="imbalanced-learn 0.7" data-en="imbalanced-learn 0.7">imbalanced-learn 0.7</span><span class="tl-desc" data-zh="imblearn.Pipeline 確保 SMOTE 只作用於 train fold——終結千篇一律的 leakage 錯誤。" data-en="imblearn.Pipeline ensures SMOTE applies only on train folds — ending decades of leakage errors."></span></div>
+<div class="timeline-item"><span class="tl-year">2022</span><span class="tl-title" data-zh="SMOTE 反思年" data-en="SMOTE reconsidered">SMOTE 反思年</span><span class="tl-desc" data-zh="多篇 systematic review（Elor &amp; Averbuch-Elor、Goorbergh et al.）質疑 SMOTE 在實務中常無效或有害。" data-en="Multiple systematic reviews (Elor &amp; Averbuch-Elor, Goorbergh et al.) question SMOTE's real-world effectiveness."></span></div>
+<div class="timeline-item"><span class="tl-year">2025</span><span class="tl-title" data-zh="sklearn 1.6 ExtraTrees 原生 NA 支援" data-en="sklearn 1.6 native NA in ExtraTrees">sklearn 1.6 原生 NA</span><span class="tl-desc" data-zh="HistGradientBoosting 後，ExtraTrees 也加入原生缺失值處理，補值不再必要。" data-en="After HistGradientBoosting, ExtraTrees also gains native missing-value handling — imputation no longer required."></span></div>
+</div>
+</section>
+
+<section class="section" id="steps">
+<div class="section-label" data-zh="核心步驟" data-en="CORE STEPS">核心步驟</div>
+<h2 data-zh="一、六個關鍵子步驟" data-en="I. Six Key Sub-steps">一、六個關鍵子步驟</h2>
 <div data-lang="zh">
 <p>資料準備（含清理、整合、變形、特徵工程）通常佔資料探勘專案 <strong>60–80% 的時間</strong>。它決定了模型輸入的「天花板」——若資料含大量缺失、編碼不一致、外洩 (target leakage)，再強的演算法也只會放大雜訊。</p>
 <p>在生物醫學脈絡下，這個階段更具挑戰：EHR 缺失非隨機 (MNAR)、不同醫院 ICD 碼版本不一、檢驗值單位混雜 (mg/dL vs mmol/L)、組學批次效應 (batch effect)。許多失敗的探勘專案——例如多個 sepsis 早期預警模型於外院驗證崩潰——根因都出在這一步。</p>
@@ -46,6 +197,36 @@
 <div class="card"><div class="card-icon">🔢</div><h4 data-zh="⑤ 編碼 Encoding" data-en="⑤ Encoding">⑤ 編碼 Encoding</h4><div data-lang="zh"><p>One-Hot、Ordinal、Target、Frequency；高基數類別建議 Target Encoding + CV-fold。</p></div><div data-lang="en"><p>One-Hot, Ordinal, Target, Frequency. For high-cardinality use Target Encoding + CV-fold guarding.</p></div></div>
 <div class="card"><div class="card-icon">⚙️</div><h4 data-zh="⑥ 特徵工程 Feature Eng." data-en="⑥ Feature Engineering">⑥ 特徵工程</h4><div data-lang="zh"><p>分箱、log/exp、交互特徵、時間特徵（season、weekday）、領域知識特徵（BMI、CHA₂DS₂-VASc）。</p></div><div data-lang="en"><p>Binning, log/exp, interaction terms, time features (season, weekday), domain features (BMI, CHA₂DS₂-VASc).</p></div></div>
 </div>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">🍳</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="生活比喻" data-en="ANALOGY">生活比喻</span>
+<h4 data-zh="資料準備就像料理" data-en="Data preparation is like cooking">資料準備就像料理</h4>
+<p data-lang="zh">沒有人能把生肉、未洗的蔬菜、整罐鹽巴直接丟進烤箱，然後期待端出米其林菜。料理 80% 時間在<strong>備料</strong>：洗、切、調味、醃漬、平衡口味。建模就像「按下烤箱開關」——快但只是最後一步。把備料當作可有可無的「pre-step」，是新手廚師最大的迷思。</p>
+<p data-lang="en">No one tosses raw meat, unwashed vegetables, and a whole jar of salt into an oven and expects a Michelin meal. Cooking is 80% <em>mise en place</em> — wash, chop, season, marinate, balance. Modeling is "pressing the oven button" — fast, but it's just the final step. Treating prep as a skippable "pre-step" is the rookie cook's biggest mistake.</p>
+</div>
+</div>
+
+<section class="section" id="missExplorer">
+<div class="section-label" data-zh="互動：缺失策略" data-en="INTERACTIVE: MISSING STRATEGY">互動：缺失策略</div>
+<h2 data-zh="缺失策略偏差—變異探索器" data-en="Missing-Strategy Bias-Variance Explorer">缺失策略偏差—變異探索器</h2>
+<div data-lang="zh"><p>調整缺失比例（左），選擇補值策略（右），下方圖表顯示估計的<strong>偏差 (bias)</strong> 與<strong>變異 (variance)</strong>。看看 mean imputation 在高缺失率下如何災難——以及 MICE 為何成為金標準。</p></div>
+<div data-lang="en"><p>Adjust the missingness fraction (left) and choose an imputation strategy (right). The chart below shows estimated <strong>bias</strong> and <strong>variance</strong>. Watch how mean imputation collapses at high missingness — and why MICE is the gold standard.</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label><span data-zh="缺失比例 (%)" data-en="Missing fraction (%)">缺失比例</span> <span id="vMiss">20</span>%</label><input type="range" id="sMiss" min="0" max="80" value="20" step="5"></div>
+<div class="toggle-row">
+<button class="toggle-btn active" data-imp="drop" data-zh="刪除整列" data-en="Drop rows">刪除整列</button>
+<button class="toggle-btn" data-imp="mean" data-zh="平均補" data-en="Mean">平均補</button>
+<button class="toggle-btn" data-imp="median" data-zh="中位數補" data-en="Median">中位數補</button>
+<button class="toggle-btn" data-imp="knn" data-zh="KNN 補" data-en="KNN">KNN 補</button>
+<button class="toggle-btn" data-imp="mice" data-zh="MICE 多重補" data-en="MICE">MICE</button>
+</div>
+<div class="chart-container"><canvas id="missChart"></canvas></div>
+<div class="sim-stats"><span class="sim-stat neutral" id="bvStat">Bias: — / Variance: —</span><span class="sim-stat pass" id="recStat">—</span></div>
+</div>
+<div class="tip-bar" data-zh="實證觀察：缺失率 &gt; 40% 時，所有單值補值法都會崩盤——除非是 MNAR 你又「建模化缺失原因」。" data-en="Empirical observation: above 40% missingness, all single-value imputation strategies collapse — unless you 'model the cause' under MNAR.">實證觀察：缺失率 &gt; 40% 時，所有單值補值法都會崩盤——除非是 MNAR 你又「建模化缺失原因」。</div>
 </section>
 
 <section class="section">
@@ -148,6 +329,199 @@ pipe.fit(X_tr, y_tr)</pre></div>
 </div></div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">Σ</div>
+<h3 data-zh="完整案例走讀：糖尿病 EHR 前處理" data-en="End-to-End Walkthrough: Diabetes EHR Preparation">完整案例走讀：糖尿病 EHR 前處理</h3>
+<span class="wt-tag" data-zh="9 步" data-en="9 STEPS">9 步</span></div>
+<div class="wt-step"><div class="wt-label">Step 1<br>Schema</div><div class="wt-body"><strong data-zh="schema 檢查：" data-en="Schema check:">schema 檢查：</strong>
+<span data-lang="zh">用 <code>pandera</code> 或 <code>great_expectations</code> 定義欄位類型、單位、合理範圍。範例：<code>age</code> 必須 integer 0–120、<code>HbA1c</code> 必須 4–14 mg%、<code>sex</code> 必須 ∈ {M, F, Other}。</span>
+<span data-lang="en">Define column types, units, valid ranges with <code>pandera</code> or <code>great_expectations</code>. e.g., <code>age</code> int 0–120, <code>HbA1c</code> 4–14 mg%, <code>sex</code> ∈ {M, F, Other}.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 2<br>Units</div><div class="wt-body"><strong data-zh="單位調和：" data-en="Unit harmonization:">單位調和：</strong>
+<span data-lang="zh">英美 HbA1c 用 mg%、歐洲用 mmol/mol。寫一個 <code>convert_hba1c()</code> 函式統一：<code>mmol/mol = (mg% − 2.15) / 0.0915</code>。Glucose mg/dL ↔ mmol/L 乘 0.0555。</span>
+<span data-lang="en">US uses HbA1c mg%; EU uses mmol/mol. Write <code>convert_hba1c()</code>: <code>mmol/mol = (mg% − 2.15) / 0.0915</code>. Glucose mg/dL ↔ mmol/L × 0.0555.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 3<br>Encode</div><div class="wt-body"><strong data-zh="類別編碼：" data-en="Categorical encoding:">類別編碼：</strong>
+<span data-lang="zh"><code>sex</code> 五種寫法 → 用 dict map 為三類；<code>diagnosis_code</code> 高基數 → target encoding + 5-fold CV out-of-fold；<code>medication</code> ATC ontology 對齊。</span>
+<span data-lang="en"><code>sex</code> with 5 encodings → dict-map to 3 classes; high-cardinality <code>diagnosis_code</code> → out-of-fold target encoding; <code>medication</code> aligned to ATC ontology.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 4<br>Impute</div><div class="wt-body"><strong data-zh="MICE 多重補值：" data-en="MICE multiple imputation:">MICE 多重補值：</strong>
+<span data-lang="zh">對 MAR 欄位用 MICE m=10、predictor matrix 限制只用同就診資料；對 MNAR (HbA1c) 加 <code>HbA1c_missing</code> 二元指標再補。</span>
+<span data-lang="en">For MAR columns, MICE m=10 with predictor matrix restricted to same-visit data; for MNAR (HbA1c) add <code>HbA1c_missing</code> indicator then impute.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 5<br>Outlier</div><div class="wt-body"><strong data-zh="異常值處理：" data-en="Outlier handling:">異常值處理：</strong>
+<span data-lang="zh">用 IQR 標記 (Q1 − 1.5 IQR, Q3 + 1.5 IQR) 之外的值。<strong>不是自動刪</strong>：BMI=12 可能是真實的厭食症患者，需審查上下文。</span>
+<span data-lang="en">Flag values outside (Q1 − 1.5 IQR, Q3 + 1.5 IQR). <strong>Don't auto-delete</strong>: BMI=12 could be a real anorexia case — review in context.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 6<br>Split</div><div class="wt-body"><strong data-zh="切割：" data-en="Split:">切割：</strong>
+<span data-lang="zh">用 <code>StratifiedGroupKFold</code>，<strong>group=patient_id</strong> 避免同一病人跨 fold；<strong>stratify=y</strong> 保少數族群比例；<strong>tilt by site</strong> 模擬外院驗證。</span>
+<span data-lang="en">Use <code>StratifiedGroupKFold</code>: <strong>group=patient_id</strong> to prevent patient-leak across folds, <strong>stratify=y</strong> for minority preservation, <strong>tilt by site</strong> to simulate external validation.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 7<br>Scale</div><div class="wt-body"><strong data-zh="縮放：" data-en="Scaling:">縮放：</strong>
+<span data-lang="zh"><code>RobustScaler</code>（含 outlier 友善）；<strong>fit 只在 train</strong>、transform 套到 test。<strong>絕對</strong>不能 fit 整個 dataset 再切！</span>
+<span data-lang="en"><code>RobustScaler</code> (outlier-friendly); <strong>fit on train only</strong>, transform on test. <strong>Never</strong> fit on the whole dataset then split!</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 8<br>Test Enc.</div><div class="wt-body"><strong data-zh="測試集編碼：" data-en="Test encoding:">測試集編碼：</strong>
+<span data-lang="zh">test 用 <strong>train 的</strong> mean/std、target encoder、imputer 統計量；新類別預設用 <code>handle_unknown="ignore"</code>。</span>
+<span data-lang="en">Test uses <strong>train's</strong> mean/std, target encoder, imputer statistics; new categories default to <code>handle_unknown="ignore"</code>.</span></div></div>
+<div class="wt-step"><div class="wt-label">Step 9<br>Final QC</div><div class="wt-body"><strong data-zh="最終 QC：" data-en="Final QC:">最終 QC：</strong>
+<span data-lang="zh">檢查 <code>tr.shape, te.shape</code>、無 NaN、無 inf、特徵 mean ≈ 0 std ≈ 1（若 Standard）、保存 <code>preprocessor.joblib</code> + git commit hash + data version。</span>
+<span data-lang="en">Check <code>tr.shape, te.shape</code>, no NaN, no inf, feature mean ≈ 0 std ≈ 1 (if Standard); save <code>preprocessor.joblib</code> + git commit hash + data version.</span></div></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="思辨" data-en="DEBATE">思辨</div>
+<h2 data-zh="三個值得爭論的問題" data-en="Three Worth-Debating Questions">三個值得爭論的問題</h2>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #1" data-en="DEBATE #1">爭論 #1</span>
+<h3 data-zh="應該刪除任何含缺失的列嗎？" data-en="Should you ever drop rows with missing values?">應該刪除任何含缺失的列嗎？</h3>
+<div class="disc-q" data-lang="zh">最簡單的 listwise deletion——但會丟掉多少訊息？</div>
+<div class="disc-q" data-lang="en">The simplest listwise deletion — but how much info does it discard?</div>
+<div class="disc-pov"><strong data-zh="支持：" data-en="Pro:">支持：</strong>
+<span data-lang="zh">當缺失 &lt; 5% 且確定為 MCAR，listwise 是無偏估計、簡單可重現。</span>
+<span data-lang="en">When missing &lt; 5% and confirmed MCAR, listwise gives unbiased estimates — simple and reproducible.</span></div>
+<div class="disc-pov"><strong data-zh="反對：" data-en="Con:">反對：</strong>
+<span data-lang="zh">在 EHR 缺失幾乎都是 MAR 或 MNAR——刪除會引入嚴重 selection bias（例如預測心衰時刪掉所有沒測 BNP 的病人 = 刪掉狀況最差的人）。</span>
+<span data-lang="en">In EHR data, missingness is almost always MAR or MNAR — deletion introduces severe selection bias (e.g., dropping unmeasured-BNP patients in heart failure prediction = dropping the sickest).</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #2" data-en="DEBATE #2">爭論 #2</span>
+<h3 data-zh="SMOTE 究竟有用還是有害？" data-en="Is SMOTE actually helpful or harmful?">SMOTE 究竟有用還是有害？</h3>
+<div class="disc-q" data-lang="zh">2022 Goorbergh、2024 Elor &amp; Averbuch-Elor 等多篇 systematic review 質疑 SMOTE 的實用效果。</div>
+<div class="disc-q" data-lang="en">Multiple 2022–2024 systematic reviews (Goorbergh, Elor &amp; Averbuch-Elor) question SMOTE's real-world effectiveness.</div>
+<div class="disc-pov"><strong data-zh="支持：" data-en="Pro:">支持：</strong>
+<span data-lang="zh">當你只在乎 minority recall（如罕病偵測）、樣本量小、模型對類別不平衡敏感——SMOTE 仍可提升 recall 5–10%。</span>
+<span data-lang="en">When you care only about minority recall (rare disease detection), small sample, model sensitive to imbalance — SMOTE can still boost recall 5–10%.</span></div>
+<div class="disc-pov"><strong data-zh="反對：" data-en="Con:">反對：</strong>
+<span data-lang="zh">2024 review：在 73 個資料集中，SMOTE + 樹型模型相比僅用 <code>class_weight</code> 改善 &lt; 1%；且會破壞 calibration——AUROC 看似上升，但 PPV 與決策變差。建議：先試 class weight，再考慮 SMOTE。</span>
+<span data-lang="en">2024 review: across 73 datasets, SMOTE + tree models improved &lt; 1% over <code>class_weight</code> alone; SMOTE breaks calibration — AUROC may rise but PPV and decisions degrade. Recommendation: try class weight first, SMOTE second.</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #3" data-en="DEBATE #3">爭論 #3</span>
+<h3 data-zh="Target Encoding 必然洩漏嗎？" data-en="Does target encoding always leak?">Target Encoding 必然洩漏嗎？</h3>
+<div class="disc-q" data-lang="zh">高基數類別（5000 zip codes、10000 ICD-10）用 one-hot 會爆維——但 target encoding 也常被罵「洩漏」。</div>
+<div class="disc-q" data-lang="en">High-cardinality features (5000 ZIP codes, 10000 ICD-10) explode with one-hot — yet target encoding is often blamed for leakage.</div>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong>
+<span data-lang="zh">如果用 <strong>out-of-fold</strong> 編碼（CV 內每 fold 重新計算）+ smoothing（小類別向全域平均收縮）+ 高 prior weight，理論上沒有洩漏。</span>
+<span data-lang="en">With <strong>out-of-fold</strong> encoding (recompute within each CV fold) + smoothing (small categories shrink toward global mean) + high prior weight, leakage is bounded.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong>
+<span data-lang="zh">即使 out-of-fold，編碼仍然「peek」過全 dataset 的標籤分佈——這在臨床外院驗證時會崩潰。改用 <code>CatBoost</code> 的 ordered target encoding（按時間順序）較安全。</span>
+<span data-lang="en">Even out-of-fold "peeks" at the dataset label distribution — collapses at external validation. Safer: <code>CatBoost</code>'s ordered target encoding (time-ordered).</span></div>
+</div>
+</section>
+
+<section class="section" id="spotlight">
+<div class="spotlight">
+<div class="sp-icon">🏥</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="經典案例" data-en="CASE STUDY">經典案例</span>
+<h4 data-zh="Epic Sepsis Watch：當資料準備出錯，AI 模型如何崩盤" data-en="Epic Sepsis Watch: How a Data-Prep Mistake Collapsed an AI Model">Epic Sepsis Watch：當資料準備出錯，AI 模型如何崩盤</h4>
+<p data-lang="zh">Epic EHR 系統內建的 Sepsis Watch 早期預警模型曾部署至 170+ 美國醫院。2021 年 JAMA Internal Medicine 一項外部驗證（Wong et al.）發現，在 38,455 名病患中，模型敏感度僅 33%、PPV 12%——遠低於 Epic 宣稱的 ~80%。事後分析發現多個資料準備層面的問題：(1) Epic 用<strong>整個 dataset</strong> 計算 imputation 統計，造成 leakage；(2) 訓練資料的 sepsis 標籤定義與 deployment 環境不同；(3) 缺失值處理沒考慮 MNAR（敗血症高風險病人血壓往往未測即急救）。</p>
+<p data-lang="en">Epic EHR's built-in Sepsis Watch early-warning model was deployed at 170+ US hospitals. A 2021 JAMA Internal Medicine external validation (Wong et al., 38,455 patients) found 33% sensitivity, 12% PPV — far below Epic's claimed ~80%. Post-mortem analysis revealed multiple data-prep failures: (1) Epic computed imputation statistics over the <strong>entire dataset</strong>, leaking; (2) sepsis labels in training differed from deployment definitions; (3) missing-value handling ignored MNAR (high-risk patients' BP often never measured before resuscitation).</p>
+<p data-lang="zh"><strong>教訓：</strong>資料準備的錯誤可能完全看不見——直到部署半年後在另一家醫院驗證時才爆出。一旦 leakage 進入訓練流程，連最強的 XGBoost 也救不回來。</p>
+<p data-lang="en"><strong>Lesson:</strong> Data-prep errors can be invisible — only revealed months later at another hospital. Once leakage enters training, not even the strongest XGBoost can save you.</p>
+</div>
+</div>
+<div class="spotlight">
+<div class="sp-icon">💳</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實例聚光燈 / CASE STUDY" data-en="CASE STUDY">CASE STUDY</span>
+<h4 data-zh="Apple Card 2019：「性別盲」演算法仍歧視女性" data-en="Apple Card 2019: A 'Gender-Blind' Algorithm Still Discriminated">Apple Card 2019：「性別盲」演算法仍歧視女性</h4>
+<div data-lang="zh"><p>2019 年 11 月，Apple 聯合創辦人 Steve Wozniak 在 Twitter 抱怨：他與妻子的財產合併、信用紀錄相同，但 Apple Card 給他 10 倍於妻子的信用額度。隨後數百名用戶回報相同性別差異。紐約金融服務部 (DFS) 隨即展開調查。Apple 與 Goldman Sachs 強調模型「並未使用性別作為特徵」（gender-blind）——但這正是資料準備層面的根本誤解：<strong>不使用 protected attribute 並不等於模型公平</strong>。歷史上女性與男性的「消費速度」「主要持卡人 vs 副卡」「商家類別分布」等特徵都隱含性別信號，模型仍透過這些 proxy 學到了歧視。Apple-Goldman 的失敗不是模型問題，而是<strong>資料準備時沒有做 demographic parity / equalized odds 的審計</strong>。2021 年 DFS 結案聲明：「未發現故意歧視，但流程確實未檢測公平性，建議所有金融機構導入 fairness-aware preprocessing。」</p></div>
+<div data-lang="en"><p>In November 2019, Apple co-founder Steve Wozniak tweeted that he and his wife shared finances and credit history yet Apple Card gave him a 10× higher limit. Hundreds of users echoed the disparity; the NY Department of Financial Services opened an investigation. Apple and Goldman Sachs insisted the model was "gender-blind" — but this is the canonical data-prep misconception: <strong>not using a protected attribute does not make a model fair</strong>. Features like "spend velocity," "primary vs authorized user," and "merchant-category mix" all carry implicit gender signal; the model learned discrimination through these proxies. The failure wasn't in modeling — it was in data preparation, which never audited demographic parity or equalized odds. The 2021 DFS report concluded: "No intentional discrimination found, but fairness was never tested; we recommend fairness-aware preprocessing across the industry."</p></div>
+<div data-lang="zh"><p><strong>啟示：</strong>資料準備不只是「填缺失、做標準化」——更要做<strong>fairness preprocessing</strong>（reweighting、disparate impact remover、fair representation learning）。否則 leakage 不是訊息洩漏，而是<strong>偏見洩漏</strong>。</p></div>
+<div data-lang="en"><p><strong>Implication:</strong> Data prep is not only "impute + scale" — it must include <strong>fairness preprocessing</strong> (reweighting, disparate-impact remover, fair-representation learning). Otherwise the leakage isn't information — it's <strong>bias</strong>.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="六大常見陷阱" data-en="Six Common Pitfalls">六大常見陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① fit 整 dataset 再切" data-en="① Fit-then-Split">① fit 整 dataset 再切</h4>
+<p data-lang="zh">在切割前用整個 dataset 跑 StandardScaler / SimpleImputer / OneHotEncoder——test set 的統計資訊已洩漏。<strong>解：</strong>用 <code>Pipeline</code>，fit 只在 train。</p>
+<p data-lang="en">Running StandardScaler / SimpleImputer / OneHotEncoder on the whole dataset before split — test statistics leak. <strong>Fix:</strong> use <code>Pipeline</code>; fit on train only.</p></div>
+<div class="pitfall-card"><h4 data-zh="② SMOTE 套用至 test" data-en="② SMOTE on Test">② SMOTE 套用至 test</h4>
+<p data-lang="zh">用 <code>sklearn.Pipeline</code> 包 SMOTE → 它會在預測時也呼叫 SMOTE！必須用 <code>imblearn.Pipeline</code>（自動知道 SMOTE 不在 transform 時執行）。</p>
+<p data-lang="en">Wrapping SMOTE in <code>sklearn.Pipeline</code> → it triggers SMOTE at prediction time! Must use <code>imblearn.Pipeline</code> (knows SMOTE is fit-only).</p></div>
+<div class="pitfall-card"><h4 data-zh="③ 全刪缺失而無 MNAR 檢" data-en="③ Drop without MNAR Check">③ 全刪缺失而無 MNAR 檢</h4>
+<p data-lang="zh">看到 30% 缺失就 listwise delete——但其實大多缺失來自最重症病人。模型訓練在「健康 subset」，部署時遇到真實病人就崩。<strong>解：</strong>先檢查 P(missing | y) vs P(missing) 差異。</p>
+<p data-lang="en">Seeing 30% missing and listwise-deleting — but most missing rows are the sickest patients. Trains on a "healthy subset," collapses on real patients. <strong>Fix:</strong> compare P(missing | y) vs P(missing).</p></div>
+<div class="pitfall-card"><h4 data-zh="④ 高基數 one-hot" data-en="④ High-card One-Hot">④ 高基數 one-hot</h4>
+<p data-lang="zh">5000 個 ZIP code 全部 one-hot → 維度爆炸、樣本變稀疏。<strong>解：</strong>頻率編碼 / target encoding（含 CV-fold 保護）/ entity embedding。</p>
+<p data-lang="en">One-hot encoding 5000 ZIP codes → dimension explosion, data becomes sparse. <strong>Fix:</strong> frequency encoding / target encoding (with CV-fold) / entity embedding.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ 無 out-of-fold target enc." data-en="⑤ No Out-of-Fold Target Enc.">⑤ 無 out-of-fold target enc.</h4>
+<p data-lang="zh">用整個 train set 算 target encoding，再丟進 CV——train fold 內已洩漏。<strong>解：</strong><code>category_encoders.TargetEncoder</code> 配合 <code>sklearn.model_selection.cross_val_score</code> 用內 fold。</p>
+<p data-lang="en">Computing target encoding over the whole train set then feeding into CV — leakage within each train fold. <strong>Fix:</strong> <code>category_encoders.TargetEncoder</code> with proper inner-fold CV.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ 不存 preprocessor" data-en="⑥ Forgetting to Save Preprocessor">⑥ 不存 preprocessor</h4>
+<p data-lang="zh">部署時忘了保存 imputer / scaler / encoder——只存了 model.pkl。輸入資料分佈一變就完全崩。<strong>解：</strong>整個 pipeline 一起 <code>joblib.dump</code>。</p>
+<p data-lang="en">Deployment time, forgot to save imputer / scaler / encoder — only saved model.pkl. Any input distribution change crashes it. <strong>Fix:</strong> dump the entire pipeline via <code>joblib.dump</code>.</p></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="對比" data-en="CONTRAST">對比</div>
+<h2 data-zh="同一份資料，兩種前處理寫法" data-en="Same Data, Two Preprocessing Styles">同一份資料，兩種前處理寫法</h2>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="序列腳本 (錯誤)" data-en="Sequential Script (Wrong)">序列腳本 (錯誤)</h4>
+<p data-lang="zh"><code>df['age'] = df['age'].fillna(df['age'].mean())</code><br>
+<code>df['glucose'] = (df['glucose'] - df['glucose'].mean()) / df['glucose'].std()</code><br>
+<code>tr, te = train_test_split(df)</code><br>
+所有統計都從 <strong>全 dataset</strong> 算——test set 的資訊已混進 train。模型 AUROC 看起來很好，外院驗證立刻崩盤。</p>
+<p data-lang="en"><code>df['age'] = df['age'].fillna(df['age'].mean())</code><br>
+<code>df['glucose'] = (df['glucose'] - df['glucose'].mean()) / df['glucose'].std()</code><br>
+<code>tr, te = train_test_split(df)</code><br>
+All stats from the <strong>entire dataset</strong> — test info contaminates train. AUROC looks great; external validation collapses.</p></div>
+<div class="con-card good"><h4 data-zh="Pipeline (正確)" data-en="Pipeline (Right)">Pipeline (正確)</h4>
+<p data-lang="zh"><code>tr, te = train_test_split(df, stratify=y)</code><br>
+<code>pipe = Pipeline([('imp', KNNImputer()), ('sc', RobustScaler()), ('clf', XGBClassifier())])</code><br>
+<code>pipe.fit(tr_X, tr_y)</code><br>
+所有統計從 <strong>tr 學</strong>、套到 te。Pipeline 一行解決 leakage——而且可以 <code>joblib.dump</code> 整個物件部署。</p>
+<p data-lang="en"><code>tr, te = train_test_split(df, stratify=y)</code><br>
+<code>pipe = Pipeline([('imp', KNNImputer()), ('sc', RobustScaler()), ('clf', XGBClassifier())])</code><br>
+<code>pipe.fit(tr_X, tr_y)</code><br>
+All stats learned from <strong>tr</strong>, applied to te. One line solves leakage — and the whole object is <code>joblib.dump</code>-able.</p></div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="自我反思" data-en="Reflection Questions">自我反思</h4>
+<ol>
+<li data-lang="zh">回想你最近的 pipeline——你在 <code>train_test_split()</code> 前做了哪些 transform？哪些可能洩漏？</li>
+<li data-lang="en">Recall your most recent pipeline — what transforms ran before <code>train_test_split()</code>? Which could leak?</li>
+<li data-lang="zh">假設你發現 <code>HbA1c</code> 在「死亡病人」中缺失率 95%，在「存活病人」中 5%——這是哪一類缺失？該如何處理？</li>
+<li data-lang="en">Suppose <code>HbA1c</code> is 95% missing in deceased patients vs 5% in survivors — which missingness mechanism? How would you handle it?</li>
+<li data-lang="zh">你會用 SMOTE 嗎？什麼情況下你會「拒絕」SMOTE？</li>
+<li data-lang="en">Would you use SMOTE? When would you refuse to use SMOTE?</li>
+<li data-lang="zh">在 100,000 個 ICD-10 編碼中，你會用 one-hot 還是 target encoding？為什麼？</li>
+<li data-lang="en">For 100,000 ICD-10 codes, would you pick one-hot or target encoding? Why?</li>
+<li data-lang="zh">資料準備佔 80% 的時間——你會如何向不懂技術的主管說明「為什麼要這麼久」？</li>
+<li data-lang="en">Data prep takes 80% of project time — how would you explain "why so long" to a non-technical manager?</li>
+<li data-lang="zh">你的 preprocessor 已部署 3 個月，新進的資料 race 欄位多了一個值「Pacific Islander」——你會發生什麼錯？如何預防？</li>
+<li data-lang="en">Your deployed preprocessor encounters a new race value "Pacific Islander" 3 months in — what breaks? How to prevent?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="🌳 進階研究員" data-en="🌳 ADVANCED">🌳 進階研究員</span>
+<h4 data-zh="2024–2026 前沿：缺失值與重採樣新方向" data-en="2024–2026 Frontier: Missing &amp; Resampling">2024–2026 前沿：缺失值與重採樣新方向</h4>
+<p data-lang="zh"><strong>MissForest vs mice：</strong>Stekhoven &amp; Bühlmann 2012 的 MissForest 用 Random Forest 迭代補值，對非線性與混合型資料較佳；mice 假設條件分佈為 GLM，較適合線性問題。<a href="https://academic.oup.com/bioinformatics/article/28/1/112/219101" target="_blank">DOI</a>。</p>
+<p data-lang="en"><strong>MissForest vs mice:</strong> Stekhoven &amp; Bühlmann 2012's MissForest iteratively imputes via Random Forest — better for nonlinearity and mixed types; mice assumes conditional GLMs, better for linear problems.</p>
+<p data-lang="zh"><strong>"Don't impute, model missingness" (Halland 2021)：</strong>對 EHR 缺失常為 MNAR，補值反而引入偏差；新興方法直接把<code>是否缺失</code>當預測信號（HistGradientBoosting 原生 NA、CatBoost、LightGBM）。</p>
+<p data-lang="en"><strong>"Don't impute, model missingness" (Halland 2021):</strong> In EHR data missing-NOT-at-random dominates; imputation introduces bias. Emerging practice: use <code>is_missing</code> as a feature (HistGradientBoosting, CatBoost, LightGBM all support native NA).</p>
+<p data-lang="zh"><strong>PyMC for Bayesian imputation：</strong>把補值寫成階層 Bayesian model，缺失值是後驗分佈而非單點估計——適合下游風險決策需要不確定性的場景。</p>
+<p data-lang="en"><strong>PyMC for Bayesian imputation:</strong> write imputation as a hierarchical Bayesian model — missing values are posterior distributions, not point estimates. Suited for downstream decisions needing uncertainty.</p>
+<p data-lang="zh"><strong>CausalImpact for MNAR：</strong>2024 Pearl &amp; Bareinboim 倡議的 do-calculus 補值——若知道缺失機制的 DAG，可以做 <strong>identifiable</strong> 推論。</p>
+<p data-lang="en"><strong>CausalImpact for MNAR:</strong> Pearl &amp; Bareinboim 2024 advocate do-calculus imputation — given the missingness mechanism's DAG, <strong>identifiable</strong> inference becomes possible.</p>
+<p data-lang="zh"><strong>2025 SMOTE 替代品：</strong>(1) <code>SMOGN</code> for regression；(2) <code>Generative Models</code>（GAN、Diffusion）合成；(3) <code>Cost-sensitive learning</code> + <code>focal loss</code>；(4) <code>Threshold tuning</code>（最簡單）。Carmona-Sáez 2024 在 Nat Methods 系統比較 12 種方法。</p>
+<p data-lang="en"><strong>2025 SMOTE alternatives:</strong> (1) <code>SMOGN</code> for regression; (2) Generative models (GAN, Diffusion); (3) Cost-sensitive learning + focal loss; (4) Threshold tuning (simplest). Carmona-Sáez 2024 systematically compares 12 methods in Nat Methods.</p>
+<p data-lang="zh"><strong>Code snippet（modern HistGradientBoosting，無需補值）：</strong></p>
+<p data-lang="en"><strong>Code snippet (modern HistGradientBoosting, no imputation needed):</strong></p>
+<p><code>from sklearn.ensemble import HistGradientBoostingClassifier<br>
+clf = HistGradientBoostingClassifier(class_weight='balanced', random_state=42)<br>
+clf.fit(X_train_with_NA, y_train)  # NAs handled natively, no imputer</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -180,6 +554,11 @@ pipe.fit(X_tr, y_tr)</pre></div>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. train/test 切割後，只對 training fold 套用</span><span data-lang="en">D. After train/test split, only on training folds</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<span data-lang="zh"><strong>歷史小故事：</strong>1976 年 Donald Rubin 在 Biometrika 投稿時，審稿人之一抱怨「為什麼要分這麼多種缺失？太複雜了。」Rubin 在回信中寫：「因為缺失機制決定了任何補值策略是否有效——這是 50 年來統計學界忽略的事。」他堅持發表 MCAR/MAR/MNAR 三分類，後來成為缺失資料領域的聖經。從 1976 到 2026，這個分類影響了從心理學調查到大型語言模型訓練資料的所有領域。</span>
+<span data-lang="en"><strong>History bite:</strong> In 1976, when Donald Rubin submitted to Biometrika, one reviewer complained: "Why so many missing-data categories? Too complex." Rubin replied: "Because the mechanism determines whether any imputation can work — something statistics has ignored for 50 years." He pushed through the MCAR/MAR/MNAR taxonomy that became the bible of missing data. From 1976 to 2026, this single classification has shaped fields from psychology surveys to LLM training data.</span>
+</div>
 
 <nav class="page-nav">
 <a href="intro-crisp-dm.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 1: 資料探勘導論與 CRISP-DM" data-en="Ch 1: Data Mining &amp; CRISP-DM">Ch 1: 資料探勘導論與 CRISP-DM</span></a>
@@ -231,6 +610,34 @@ document.getElementById('sliderMin').addEventListener('input',regen);
 document.querySelectorAll('[data-strat]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-strat]').forEach(x=>x.classList.remove('active'));b.classList.add('active');strat=b.dataset.strat;regen();}));
 document.addEventListener('langchange',regen);
 regen();
+
+// Missing-strategy bias-variance explorer
+const MISS_PROFILE={
+ drop:{biasFn:m=>m*0.02,varFn:m=>0.05+m*0.06,rec:{zh:'<5% 且 MCAR 時 OK；高缺失下變異大、樣本流失嚴重',en:'OK if <5% &amp; MCAR; high missingness loses samples and inflates variance'}},
+ mean:{biasFn:m=>m*0.7+0.05,varFn:m=>0.02,rec:{zh:'簡單但對 MAR/MNAR 嚴重偏差；分佈會壓扁',en:'Simple but biased for MAR/MNAR; distribution gets flattened'}},
+ median:{biasFn:m=>m*0.55+0.04,varFn:m=>0.018,rec:{zh:'比 mean 稍穩；仍無法處理 MAR/MNAR',en:'Slightly better than mean; still poor for MAR/MNAR'}},
+ knn:{biasFn:m=>m*0.25+0.03,varFn:m=>0.04+m*0.02,rec:{zh:'低偏差但對高維 / 類別欄失效；運算慢',en:'Low bias but fails in high-D / categoricals; slow'}},
+ mice:{biasFn:m=>m*0.08+0.02,varFn:m=>0.06+m*0.04,rec:{zh:'最佳偏差—變異平衡；MAR 下接近金標準',en:'Best bias-variance tradeoff; near-gold-standard under MAR'}}
+};
+let curImp='drop';
+const missChart=new Chart(document.getElementById('missChart'),{type:'bar',data:{labels:['Bias','Variance'],datasets:[
+ {label:'Selected strategy',data:[0,0],backgroundColor:['rgba(220,38,38,.7)','rgba(124,58,237,.7)'],borderColor:['#7f1d1d','#5b21b6'],borderWidth:1}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{y:{beginAtZero:true,max:1,title:{display:true,text:'estimated magnitude'}}},plugins:{legend:{display:false}}}});
+function refreshMiss(){
+ const m=+document.getElementById('sMiss').value/100;
+ document.getElementById('vMiss').textContent=(m*100).toFixed(0);
+ const p=MISS_PROFILE[curImp];
+ const bias=Math.min(p.biasFn(m),1), va=Math.min(p.varFn(m),1);
+ missChart.data.datasets[0].data=[bias,va];
+ missChart.update('none');
+ const L=I18n.get();
+ document.getElementById('bvStat').textContent=(L==='zh'?'偏差 ':'Bias ')+bias.toFixed(2)+' / '+(L==='zh'?'變異 ':'Variance ')+va.toFixed(2);
+ document.getElementById('recStat').textContent=p.rec[L];
+}
+document.getElementById('sMiss').addEventListener('input',refreshMiss);
+document.querySelectorAll('[data-imp]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-imp]').forEach(x=>x.classList.remove('active'));b.classList.add('active');curImp=b.dataset.imp;refreshMiss();}));
+document.addEventListener('langchange',refreshMiss);
+refreshMiss();
 
 const QF={zh:{q1_y:'極高 AUROC 往往是 target leakage 的徵兆。',q1_n:'C 為正確答案。',q2_y:'KNN/SVM 等距離型方法對特徵尺度敏感，必須縮放。',q2_n:'A 為正確答案。',q3_y:'SMOTE 只能用在 training fold；對 test 套用會洩漏。',q3_n:'D 為正確答案。'},
           en:{q1_y:'Extreme AUROC is usually a target-leakage symptom.',q1_n:'Correct answer is C.',q2_y:'Distance-based methods (KNN/SVM) are scale-sensitive; scaling is mandatory.',q2_n:'Correct answer is A.',q3_y:'SMOTE belongs on training folds only; otherwise it leaks.',q3_n:'Correct answer is D.'}};

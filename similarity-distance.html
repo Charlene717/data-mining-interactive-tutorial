@@ -19,6 +19,161 @@
 <main class="content-wrap">
 
 <section class="section">
+<div class="section-toc"><strong data-zh="本章閱讀地圖" data-en="Chapter Reading Map">本章閱讀地圖</strong>
+<ol>
+<li><a href="#story" data-zh="🎬 故事化導讀（兒童醫院的配對演算法）" data-en="🎬 Story-driven intro (children's hospital matching)">🎬 故事化導讀</a></li>
+<li><a href="#glossary" data-zh="📚 名詞速查表（15 個關鍵詞）" data-en="📚 Glossary (15 key terms)">📚 名詞速查表（15 個關鍵詞）</a></li>
+<li><a href="#history" data-zh="🏛️ 距離度量演進時間軸" data-en="🏛️ Distance Metrics Timeline">🏛️ 距離度量演進時間軸</a></li>
+<li><a href="#metrics" data-zh="📏 九種常用度量" data-en="📏 Nine Common Metrics">📏 九種常用度量</a></li>
+<li><a href="#flipExplorer" data-zh="🎚️ 互動：度量切換讓「最近」翻轉" data-en="🎚️ Interactive: Metric Swap Flips 'Nearest'">🎚️ 互動：度量切換讓「最近」翻轉</a></li>
+<li><a href="#walkthrough" data-zh="🧮 完整案例走讀（6 種距離手算）" data-en="🧮 End-to-end walkthrough (6 metrics by hand)">🧮 完整案例走讀</a></li>
+<li><a href="#discussion" data-zh="💬 思辨：Cosine、curse、Omics" data-en="💬 Debate: Cosine, curse, omics">💬 思辨</a></li>
+<li><a href="#spotlight" data-zh="🌟 經典案例：Netflix 學習距離" data-en="🌟 Spotlight: Netflix learned distance">🌟 經典案例：Netflix 學習距離</a></li>
+<li><a href="#pitfalls" data-zh="🚧 五大常見陷阱" data-en="🚧 Five Common Pitfalls">🚧 五大常見陷阱</a></li>
+<li><a href="#reflection" data-zh="💭 自我反思題" data-en="💭 Reflection Questions">💭 自我反思題</a></li>
+<li><a href="#advanced" data-zh="🌳 進階：Wasserstein, ITML, quantum" data-en="🌳 Advanced: Wasserstein, ITML, quantum">🌳 進階</a></li>
+</ol>
+</div>
+<div class="pill-row" style="margin-top:14px;">
+<span class="level-badge l-beg" data-zh="🌱 初學者" data-en="🌱 Beginner">🌱 初學者</span>
+<span class="level-badge l-mid" data-zh="🌿 中階" data-en="🌿 Intermediate">🌿 中階</span>
+<span class="level-badge l-adv" data-zh="🌳 進階研究員" data-en="🌳 Advanced">🌳 進階研究員</span>
+<span class="pill teal" data-zh="⏱️ 預計閱讀 30–40 分鐘" data-en="⏱️ Est. 30–40 min">⏱️ 預計閱讀 30–40 分鐘</span>
+<span class="pill rose" data-zh="📐 KNN/K-Means/UMAP/DBSCAN 都從這裡開始" data-en="📐 KNN/K-Means/UMAP/DBSCAN all start here">📐 KNN/K-Means/UMAP/DBSCAN 都從這裡開始</span>
+</div>
+</section>
+
+<section class="section" id="story">
+<div class="story-block">
+<span class="story-tag" data-zh="故事化導讀" data-en="STORY">故事化導讀</span>
+<h3 data-zh="🧒 兒童醫院的「最像我家小孩」演算法" data-en="🧒 The 'Most Like My Kid' Algorithm at a Children's Hospital">🧒 兒童醫院的「最像我家小孩」演算法</h3>
+<div data-lang="zh">
+<p>波士頓兒童醫院的 Dr. Park 正在面對一個三歲女孩 Lily——罕見的代謝症候群，全球僅 47 個確診病例。她需要決定治療方案，但無法照「教科書」走——案例太少。她決定用「<strong>病人匹配 (patient matching)</strong>」：在資料庫的 47 個病例中，找出「最像 Lily」的 5 個，看看他們的治療反應。</p>
+<p>她的資料科學家先用 <strong>Euclidean 距離</strong>跑——前 5 名是 A、B、C、D、E。改用 <strong>Cosine 距離</strong>——前 5 名變成 B、F、G、H、I。再改用 <strong>Mahalanobis</strong>（考慮 covariance）——前 5 名又變成 C、F、J、K、L。<strong>同一個 Lily，三種度量，三組完全不同的「鄰居」。</strong></p>
+<p>Dr. Park 看著螢幕沈默了很久。她意識到「距離」不是技術選擇——而是<strong>臨床推論</strong>的選擇。Cosine 忽略症狀的絕對強度（只看「模式」），Euclidean 把實驗室數值絕對化，Mahalanobis 校正了實驗室之間的相關。她最後問了一個問題：「對 Lily 來說，重要的是『症狀組合』還是『嚴重度』還是『獨立風險』？」這個問題決定了她該用哪一個度量——而度量決定了哪 5 個病人會影響 Lily 的治療。</p>
+</div>
+<div data-lang="en">
+<p>At Boston Children's Hospital, Dr. Park is facing a 3-year-old girl, Lily, with a rare metabolic syndrome — only 47 documented cases worldwide. She has to choose a treatment, but the "textbook" doesn't fit — too few cases. So she turns to <strong>patient matching</strong>: from the database's 47 cases, find the 5 "most like Lily" and study their responses.</p>
+<p>Her data scientist runs <strong>Euclidean distance</strong> first — top 5: A, B, C, D, E. Then <strong>Cosine</strong> — top 5: B, F, G, H, I. Then <strong>Mahalanobis</strong> (covariance-aware) — top 5: C, F, J, K, L. <strong>One Lily, three metrics, three completely different "neighbors."</strong></p>
+<p>Dr. Park stared at the screen for a long time. She realized "distance" is not a technical choice — it's a <strong>clinical reasoning</strong> choice. Cosine ignores absolute symptom intensity (only "pattern" matters); Euclidean takes lab values at face; Mahalanobis corrects for correlations among labs. Her final question: "For Lily, is the important thing the <em>combination</em> of symptoms, the <em>severity</em>, or the <em>independent risk</em>?" That question decided the metric — and the metric decided which 5 patients would shape Lily's treatment.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞速查" data-en="GLOSSARY">名詞速查</div>
+<h2 data-zh="15 個關鍵詞：從直白到精確" data-en="15 Key Terms: From Plain to Precise">15 個關鍵詞：從直白到精確</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Distance Metric</div><div class="term-zh">距離度量</div>
+<div class="term-kid" data-lang="zh">兩個東西「差多少」的數字尺——必須滿足四個基本規則。</div>
+<div class="term-kid" data-lang="en">A numeric ruler for "how different are two things?" — must obey four basic rules.</div>
+<div class="term-tech" data-lang="zh">滿足 (1) 非負 (2) 同一性 (3) 對稱 (4) 三角不等式的函式 d : X × X → ℝ⁺。</div>
+<div class="term-tech" data-lang="en">A function d : X × X → ℝ⁺ satisfying (1) non-negativity (2) identity (3) symmetry (4) triangle inequality.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Semi-metric</div><div class="term-zh">半度量</div>
+<div class="term-kid" data-lang="zh">「幾乎是距離」——少了三角不等式那條。</div>
+<div class="term-kid" data-lang="en">"Almost a distance" — but missing the triangle inequality.</div>
+<div class="term-tech" data-lang="zh">滿足三角不等式之外的所有公理；Cosine distance 是典型例（不嚴格滿足三角）。</div>
+<div class="term-tech" data-lang="en">Satisfies all axioms except the triangle inequality; Cosine distance is the canonical example.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Similarity</div><div class="term-zh">相似度</div>
+<div class="term-kid" data-lang="zh">兩個東西「多像」——越大代表越像。</div>
+<div class="term-kid" data-lang="en">"How alike" two things are — bigger means more alike.</div>
+<div class="term-tech" data-lang="zh">sim(x,y) ∈ [0,1] 或 [−1,1]；通常透過 d = 1 − sim 或 d = 1/sim 轉換為距離。</div>
+<div class="term-tech" data-lang="en">sim(x,y) ∈ [0,1] or [−1,1]; usually converted to distance via d = 1 − sim or d = 1/sim.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Euclidean (L2)</div><div class="term-zh">歐氏距離</div>
+<div class="term-kid" data-lang="zh">就是「直線距離」——拿尺量兩點之間的直線長度。</div>
+<div class="term-kid" data-lang="en">"Straight-line distance" — a ruler between two points.</div>
+<div class="term-tech" data-lang="zh">d(x,y) = √Σ(xᵢ−yᵢ)²；低維 + 同單位最佳；對 outlier 敏感。</div>
+<div class="term-tech" data-lang="en">d(x,y) = √Σ(xᵢ−yᵢ)²; best in low-D with consistent units; outlier-sensitive.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Manhattan (L1)</div><div class="term-zh">曼哈頓距離</div>
+<div class="term-kid" data-lang="zh">在棋盤上只能走橫直，不能對角——加起來的格數。</div>
+<div class="term-kid" data-lang="en">On a chessboard you can only move H/V, never diagonal — sum of moves.</div>
+<div class="term-tech" data-lang="zh">d(x,y) = Σ|xᵢ−yᵢ|；高維比 Euclidean 更穩；對 outlier 較寬容。</div>
+<div class="term-tech" data-lang="en">d(x,y) = Σ|xᵢ−yᵢ|; more stable in high-D than Euclidean; more outlier-tolerant.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Minkowski (Lp)</div><div class="term-zh">Minkowski 距離</div>
+<div class="term-kid" data-lang="zh">L1、L2 的家族總稱——p 是調整旋鈕。</div>
+<div class="term-kid" data-lang="en">The family name for L1/L2 — p is the tuning knob.</div>
+<div class="term-tech" data-lang="zh">d(x,y) = (Σ|xᵢ−yᵢ|ᵖ)^(1/p)；p=1 Manhattan、p=2 Euclidean、p→∞ Chebyshev。</div>
+<div class="term-tech" data-lang="en">d(x,y) = (Σ|xᵢ−yᵢ|ᵖ)^(1/p); p=1 Manhattan, p=2 Euclidean, p→∞ Chebyshev.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Chebyshev (L∞)</div><div class="term-zh">Chebyshev 距離</div>
+<div class="term-kid" data-lang="zh">只看「差最多」的那個方向——其他都不重要。</div>
+<div class="term-kid" data-lang="en">Only the "biggest gap" direction matters — ignore the rest.</div>
+<div class="term-tech" data-lang="zh">d(x,y) = max|xᵢ−yᵢ|；下棋國王的移動數；倉儲、物流定位常用。</div>
+<div class="term-tech" data-lang="en">d(x,y) = max|xᵢ−yᵢ|; the chess king's moves; useful for warehouse/logistics positioning.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Mahalanobis</div><div class="term-zh">馬氏距離</div>
+<div class="term-kid" data-lang="zh">考慮特徵間的「拉扯」——當身高跟體重相關，要做矯正。</div>
+<div class="term-kid" data-lang="en">Accounts for "pulling" among features — if height and weight correlate, correct for it.</div>
+<div class="term-tech" data-lang="zh">d² = (x−y)ᵀΣ⁻¹(x−y)；Σ 為樣本共變異矩陣；多變量異常值偵測金標。</div>
+<div class="term-tech" data-lang="en">d² = (x−y)ᵀΣ⁻¹(x−y); Σ is the sample covariance; the gold standard for multivariate anomaly detection.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Cosine</div><div class="term-zh">餘弦相似度</div>
+<div class="term-kid" data-lang="zh">不在乎「多大」，只在乎「方向」——像看兩支箭頭指哪。</div>
+<div class="term-kid" data-lang="en">Ignores magnitude — only direction matters, like comparing arrow directions.</div>
+<div class="term-tech" data-lang="zh">sim = (x·y)/(‖x‖‖y‖)；distance = 1−sim；文本 TF-IDF、基因表現方向相似性首選。</div>
+<div class="term-tech" data-lang="en">sim = (x·y)/(‖x‖‖y‖); distance = 1−sim; the go-to for TF-IDF text and gene expression direction.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Jaccard</div><div class="term-zh">Jaccard 相似度</div>
+<div class="term-kid" data-lang="zh">兩個集合的「交集除以聯集」——共同朋友占所有朋友的比例。</div>
+<div class="term-kid" data-lang="en">"Intersection over union" — the share of mutual friends among all friends.</div>
+<div class="term-tech" data-lang="zh">J(A,B) = |A∩B|/|A∪B|；二元 / 集合資料（symptoms、SNPs）。</div>
+<div class="term-tech" data-lang="en">J(A,B) = |A∩B|/|A∪B|; for binary/set data (symptoms, SNPs).</div>
+</div>
+<div class="glossary-card"><div class="term-en">Tanimoto / Dice</div><div class="term-zh">Tanimoto / Dice</div>
+<div class="term-kid" data-lang="zh">化學分子指紋的「兄弟距離」——Tanimoto 跟 Jaccard 公式幾乎一樣。</div>
+<div class="term-kid" data-lang="en">The chemistry sibling — Tanimoto's formula is essentially Jaccard.</div>
+<div class="term-tech" data-lang="zh">Tanimoto = Jaccard 在二元情境；Dice = 2|A∩B|/(|A|+|B|)；化學 Morgan fingerprint 標準。</div>
+<div class="term-tech" data-lang="en">Tanimoto = Jaccard in binary contexts; Dice = 2|A∩B|/(|A|+|B|); standard for chemical Morgan fingerprints.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Gower</div><div class="term-zh">Gower 距離</div>
+<div class="term-kid" data-lang="zh">「混合資料」的瑞士刀——一張 EHR 表有年齡、性別、用藥、實驗室數值，Gower 都能算。</div>
+<div class="term-kid" data-lang="en">The Swiss knife for "mixed data" — age, sex, meds, lab values all in one table, Gower handles it.</div>
+<div class="term-tech" data-lang="zh">Gower 1971。每個欄位依類型分別計算 0–1 距離後加權平均；混合連續 + 類別 + 順序。</div>
+<div class="term-tech" data-lang="en">Gower 1971. Per-column 0–1 distance by type then weighted average; handles continuous + categorical + ordinal.</div>
+</div>
+<div class="glossary-card"><div class="term-en">DTW</div><div class="term-zh">動態時間扭曲</div>
+<div class="term-kid" data-lang="zh">兩段「節奏不同」的歌——DTW 會自動拉伸對齊。</div>
+<div class="term-kid" data-lang="en">Two tunes with different tempo — DTW stretches them into alignment.</div>
+<div class="term-tech" data-lang="zh">Sakoe &amp; Chiba 1978。動態規劃尋找最短對齊路徑；對長度不同的時間序列、語音、步態。</div>
+<div class="term-tech" data-lang="en">Sakoe &amp; Chiba 1978. Dynamic programming for the shortest alignment path; for variable-length time series, speech, gait.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Edit / Levenshtein</div><div class="term-zh">編輯距離</div>
+<div class="term-kid" data-lang="zh">「把 cat 改成 cut 要幾步？」插入、刪除、替換各算一步。</div>
+<div class="term-kid" data-lang="en">"How many steps to turn 'cat' into 'cut'?" Insertions, deletions, substitutions each count.</div>
+<div class="term-tech" data-lang="zh">Levenshtein 1965。字串、DNA、蛋白質序列的標準距離；變形如 Needleman-Wunsch、Smith-Waterman。</div>
+<div class="term-tech" data-lang="en">Levenshtein 1965. Standard distance for strings, DNA, proteins; variants include Needleman-Wunsch, Smith-Waterman.</div>
+</div>
+<div class="glossary-card"><div class="term-en">Curse of Dimensionality</div><div class="term-zh">維度詛咒</div>
+<div class="term-kid" data-lang="zh">當你有 1000 個欄位，每個人跟每個人都「差不多遠」——KNN 失靈。</div>
+<div class="term-kid" data-lang="en">With 1000 columns, everyone is "about equally far" from everyone — KNN breaks.</div>
+<div class="term-tech" data-lang="zh">Beyer/Aggarwal 1999/2001 證明：高維 Euclidean 下 (max−min)/min → 0；先 PCA / UMAP / Cosine 救援。</div>
+<div class="term-tech" data-lang="en">Beyer/Aggarwal 1999/2001 proved: high-D Euclidean gives (max−min)/min → 0; rescue with PCA / UMAP / Cosine.</div>
+</div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="距離度量演進時間軸" data-en="Distance Metrics Timeline">距離度量演進時間軸</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">300 BC</span><span class="tl-title" data-zh="歐幾里得《元素》" data-en="Euclid's Elements">歐幾里得《元素》</span><span class="tl-desc" data-zh="〈Elements〉Book I 奠定平面幾何與「直線距離」概念。" data-en="Book I lays out plane geometry and the 'straight-line distance' concept."></span></div>
+<div class="timeline-item"><span class="tl-year">1936</span><span class="tl-title" data-zh="Mahalanobis 距離發表" data-en="Mahalanobis distance">Mahalanobis 距離發表</span><span class="tl-desc" data-zh="P. C. Mahalanobis 在 Proceedings of the National Institute of Sciences of India 提出 covariance-aware 距離。" data-en="P. C. Mahalanobis introduces the covariance-aware distance in PNI Sciences India."></span></div>
+<div class="timeline-item"><span class="tl-year">1965</span><span class="tl-title" data-zh="Levenshtein 編輯距離" data-en="Levenshtein edit distance">Levenshtein 編輯距離</span><span class="tl-desc" data-zh="Soviet 科學家 Vladimir Levenshtein 發表字串編輯距離。" data-en="Soviet scientist Vladimir Levenshtein publishes the string edit distance."></span></div>
+<div class="timeline-item"><span class="tl-year">1971</span><span class="tl-title" data-zh="Gower 混合型係數" data-en="Gower mixed coefficient">Gower 混合型係數</span><span class="tl-desc" data-zh="John C. Gower 在 Biometrics 提出混合連續 + 類別 + 順序的距離。" data-en="John C. Gower introduces a mixed continuous + categorical + ordinal distance in Biometrics."></span></div>
+<div class="timeline-item"><span class="tl-year">1978</span><span class="tl-title" data-zh="Sakoe-Chiba DTW" data-en="Sakoe-Chiba DTW">Sakoe-Chiba DTW</span><span class="tl-desc" data-zh="Sakoe &amp; Chiba 在 IEEE Transactions 發表 Dynamic Time Warping，語音識別之祖。" data-en="Sakoe &amp; Chiba publish DTW in IEEE Transactions — the ancestor of speech recognition."></span></div>
+<div class="timeline-item"><span class="tl-year">1995</span><span class="tl-title" data-zh="生物資訊 BLAST + edit distance" data-en="Bioinformatics BLAST + edit distance">生資 BLAST 編輯距離</span><span class="tl-desc" data-zh="Frey-Slate 等人系統化將編輯距離應用到 DNA / 蛋白質序列對齊。" data-en="Frey, Slate, et al. formalize edit distances for DNA / protein alignment."></span></div>
+<div class="timeline-item"><span class="tl-year">2001</span><span class="tl-title" data-zh="高維距離悖論 (Aggarwal et al.)" data-en="High-D distance paradox (Aggarwal et al.)">高維距離悖論</span><span class="tl-desc" data-zh="ICDT 2001 證明高維 Euclidean 距離趨於相等；維度詛咒被精確化。" data-en="ICDT 2001 proves high-D Euclidean distances converge; the curse of dimensionality is formalized."></span></div>
+<div class="timeline-item"><span class="tl-year">2014</span><span class="tl-title" data-zh="Wasserstein OT 進入 ML" data-en="Wasserstein OT enters ML">Wasserstein OT 進入 ML</span><span class="tl-desc" data-zh="Cuturi 2013 Sinkhorn algorithm 讓 OT 距離可規模化；Arjovsky 2017 WGAN 大量採用。" data-en="Cuturi 2013's Sinkhorn algorithm scales OT distance; Arjovsky 2017's WGAN popularizes it."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="量子距離 kernel" data-en="Quantum distance kernels">量子距離 kernel</span><span class="tl-desc" data-zh="Schuld &amp; Killoran 等系列工作將量子線路用作非線性距離計算；首批硬體實驗於 IBM Quantum。" data-en="Schuld &amp; Killoran's line of work uses quantum circuits for nonlinear distance computation; first hardware experiments on IBM Quantum."></span></div>
+</div>
+</section>
+
+<section class="section" id="metrics">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="距離度量的四個性質" data-en="Four Properties of Distance Metrics">距離度量的四個性質</h2>
 <div data-lang="zh">
@@ -47,6 +202,36 @@
 <tr><td><strong>Gower</strong></td><td data-zh="混合型加權均值">混合型加權均值</td><td data-zh="混合連續+類別+順序（EHR 病人）">混合型 EHR</td><td data-en="Weighted average of mixed types"></td></tr>
 <tr><td><strong>DTW</strong></td><td data-zh="動態規劃最短對齊">動態規劃最短對齊</td><td data-zh="時間序列（ECG、步態、語音）">時間序列</td><td data-en="Dynamic programming alignment"></td></tr>
 </tbody></table>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">🎵</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="生活比喻" data-en="ANALOGY">生活比喻</span>
+<h4 data-zh="距離度量就是「比較人」的方式" data-en="Distance metrics are 'how we compare people'">距離度量就是「比較人」的方式</h4>
+<p data-lang="zh">想像你要找一個「跟我最像的人」。你可以問：（1）<strong>身高</strong>跟我差幾公分？這是 Euclidean。（2）我喜歡的<strong>音樂</strong>類型跟他重疊幾種？這是 Jaccard。（3）我們在 Spotify 上的播放列表<strong>方向</strong>是否一致？這是 Cosine。（4）考慮到「身高跟體重相關」，我們真的有多獨立地不同？這是 Mahalanobis。每種度量問了完全不同的問題——所以同一個你，會得到不同的「最像我」。</p>
+<p data-lang="en">Imagine you want to find "the person most like me." You could ask: (1) How many cm taller or shorter? That's Euclidean. (2) How many <strong>music genres</strong> do we share? That's Jaccard. (3) Are our Spotify playlists pointing the same <strong>direction</strong>? That's Cosine. (4) Given that height and weight correlate, how independently different are we really? That's Mahalanobis. Each metric asks a completely different question — so the same "you" gets different "most-like-me" answers.</p>
+</div>
+</div>
+
+<section class="section" id="flipExplorer">
+<div class="section-label" data-zh="互動：度量翻轉" data-en="INTERACTIVE: METRIC FLIP">互動：度量翻轉</div>
+<h2 data-zh="兩個情境下「最近」的徹底翻轉" data-en="When 'Nearest' Flips Completely">兩個情境下「最近」的徹底翻轉</h2>
+<div data-lang="zh"><p>查詢點 Q=(2, 6)；三個候選 A=(3, 2)、B=(8, 7)、C=(1, 1)。<strong>切換度量會讓「最近」翻轉</strong>——Euclidean 下 B 最近，Cosine 下 B 也很近但「方向」更接近 Q 的可能是 A。試試所有度量。</p></div>
+<div data-lang="en"><p>Query Q=(2, 6); three candidates A=(3, 2), B=(8, 7), C=(1, 1). <strong>Switching metrics flips "nearest"</strong> — under Euclidean B is closest, under Cosine B is still close but A may be more "directionally" aligned. Try all metrics.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-flip="euc">Euclidean</button>
+<button class="toggle-btn" data-flip="man">Manhattan</button>
+<button class="toggle-btn" data-flip="che">Chebyshev</button>
+<button class="toggle-btn" data-flip="cos">Cosine</button>
+<button class="toggle-btn" data-flip="mah">Mahalanobis</button>
+</div>
+<div class="chart-container"><canvas id="flipChart"></canvas></div>
+<div id="flipRanking" class="sim-stats"></div>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;margin-top:8px;" data-lang="zh">★ = 查詢點 Q；點越大 = 在當前度量下排名越前</p>
+<p style="font-size:.82rem;color:var(--c-ink-muted);text-align:center;margin-top:8px;" data-lang="en">★ = query Q; larger point = higher rank under the current metric</p>
+</div>
 </section>
 
 <section class="section">
@@ -138,6 +323,205 @@ dm = dtw.distance_matrix_fast(series_list)</pre></div>
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">Σ</div>
+<h3 data-zh="完整案例走讀：6 種距離手算" data-en="End-to-End Walkthrough: 6 Metrics by Hand">完整案例走讀：6 種距離手算</h3>
+<span class="wt-tag" data-zh="x=(5,8,0,1), y=(4,7,1,0)" data-en="x=(5,8,0,1), y=(4,7,1,0)">x=(5,8,0,1), y=(4,7,1,0)</span></div>
+<div class="wt-step"><div class="wt-label">Setup</div><div class="wt-body"><strong data-zh="兩個 4 維點：" data-en="Two 4-D points:">兩個 4 維點：</strong>
+<span data-lang="zh">x = (5, 8, 0, 1)、y = (4, 7, 1, 0)。差值 |x−y| = (1, 1, 1, 1)。<br>共變異矩陣 Σ = diag(2, 3, 0.5, 1)，Σ⁻¹ = diag(0.5, 0.333, 2, 1)。</span>
+<span data-lang="en">x = (5, 8, 0, 1), y = (4, 7, 1, 0). Diffs |x−y| = (1, 1, 1, 1).<br>Covariance Σ = diag(2, 3, 0.5, 1), Σ⁻¹ = diag(0.5, 0.333, 2, 1).</span></div></div>
+<div class="wt-step"><div class="wt-label">Euclidean</div><div class="wt-body"><strong data-zh="L2 距離：" data-en="L2 distance:">L2 距離：</strong>
+<code>d = √(1² + 1² + 1² + 1²) = √4 = 2.000</code>
+<span data-lang="zh">→ 拿尺直線量，得 2。</span>
+<span data-lang="en">→ Direct ruler measure: 2.</span></div></div>
+<div class="wt-step"><div class="wt-label">Manhattan</div><div class="wt-body"><strong data-zh="L1 距離：" data-en="L1 distance:">L1 距離：</strong>
+<code>d = 1 + 1 + 1 + 1 = 4.000</code>
+<span data-lang="zh">→ 各維差絕對值相加，是 Euclidean 的兩倍。</span>
+<span data-lang="en">→ Sum of absolute differences — twice the Euclidean value here.</span></div></div>
+<div class="wt-step"><div class="wt-label">Chebyshev</div><div class="wt-body"><strong data-zh="L∞ 距離：" data-en="L∞ distance:">L∞ 距離：</strong>
+<code>d = max(1, 1, 1, 1) = 1.000</code>
+<span data-lang="zh">→ 因為每維差相同，最大值就是 1。</span>
+<span data-lang="en">→ All dims tied at 1, so max = 1.</span></div></div>
+<div class="wt-step"><div class="wt-label">Cosine</div><div class="wt-body"><strong data-zh="餘弦距離：" data-en="Cosine distance:">餘弦距離：</strong>
+<span data-lang="zh">‖x‖ = √(25+64+0+1) = √90 ≈ 9.487；‖y‖ = √(16+49+1+0) = √66 ≈ 8.124。<br>
+x·y = 5·4 + 8·7 + 0·1 + 1·0 = 76。<br>
+sim = 76 / (9.487 × 8.124) ≈ 76 / 77.075 ≈ 0.986。<br>
+<code>d = 1 − 0.986 = 0.014</code>。方向幾乎一致——這就是為什麼 cosine 在「強度」差別大但「模式」相同時很有用。</span>
+<span data-lang="en">‖x‖ = √(25+64+0+1) = √90 ≈ 9.487; ‖y‖ = √(16+49+1+0) = √66 ≈ 8.124.<br>
+x·y = 5·4 + 8·7 + 0·1 + 1·0 = 76.<br>
+sim = 76 / (9.487 × 8.124) ≈ 0.986.<br>
+<code>d = 1 − 0.986 = 0.014</code> — directions nearly aligned. That's why cosine shines when magnitudes differ but patterns match.</span></div></div>
+<div class="wt-step"><div class="wt-label">Jaccard</div><div class="wt-body"><strong data-zh="Jaccard 距離 (二元化)：" data-en="Jaccard distance (binarized):">Jaccard 距離 (二元化)：</strong>
+<span data-lang="zh">將 &gt;0 視為 1：x_bin = (1, 1, 0, 1)、y_bin = (1, 1, 1, 0)。<br>
+交集 = {pos 1, pos 2} = 2；聯集 = {pos 1, 2, 3, 4} = 4。<br>
+<code>J = 2/4 = 0.5；d = 1 − 0.5 = 0.5</code>。</span>
+<span data-lang="en">Treat &gt;0 as 1: x_bin = (1, 1, 0, 1), y_bin = (1, 1, 1, 0).<br>
+Intersection = {pos 1, 2} = 2; union = {pos 1, 2, 3, 4} = 4.<br>
+<code>J = 2/4 = 0.5; d = 1 − 0.5 = 0.5</code>.</span></div></div>
+<div class="wt-step"><div class="wt-label">Mahalanobis</div><div class="wt-body"><strong data-zh="馬氏距離：" data-en="Mahalanobis distance:">馬氏距離：</strong>
+<span data-lang="zh">d² = (x−y)ᵀ Σ⁻¹ (x−y) = 1·0.5 + 1·0.333 + 1·2 + 1·1 = 3.833。<br>
+<code>d = √3.833 ≈ 1.958</code>。<br>
+注意第 3 維的權重最高 (2)——因為該維變異最小 (0.5)，1 單位的差距相對更顯著。</span>
+<span data-lang="en">d² = (x−y)ᵀ Σ⁻¹ (x−y) = 1·0.5 + 1·0.333 + 1·2 + 1·1 = 3.833.<br>
+<code>d = √3.833 ≈ 1.958</code>.<br>
+Note dim 3 carries the highest weight (2) — because its variance is smallest (0.5), the 1-unit gap matters most.</span></div></div>
+<div class="wt-step"><div class="wt-label">總結</div><div class="wt-body"><strong data-zh="比較表：" data-en="Summary table:">比較表：</strong>
+<span data-lang="zh">同一對 (x, y)：Euclidean=2.0、Manhattan=4.0、Chebyshev=1.0、Cosine=0.014、Jaccard=0.5、Mahalanobis=1.96。<br>
+Cosine 認為「幾乎相同」（方向接近）；Jaccard 認為「半相似」（集合差一半）；其他都認為「中等相似」。<strong>同一對資料，6 種度量，6 種結論。</strong></span>
+<span data-lang="en">Same (x, y): Euclidean=2.0, Manhattan=4.0, Chebyshev=1.0, Cosine=0.014, Jaccard=0.5, Mahalanobis=1.96.<br>
+Cosine says "nearly identical" (direction); Jaccard says "half similar" (sets); the rest say "moderately similar." <strong>One pair, six metrics, six verdicts.</strong></span></div></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="思辨" data-en="DEBATE">思辨</div>
+<h2 data-zh="三個值得爭論的問題" data-en="Three Worth-Debating Questions">三個值得爭論的問題</h2>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #1" data-en="DEBATE #1">爭論 #1</span>
+<h3 data-zh="Cosine 忽略 magnitude，何時是優勢？" data-en="Cosine ignores magnitude — when is that an advantage?">Cosine 忽略 magnitude，何時是優勢？</h3>
+<div class="disc-q" data-lang="zh">兩個文件的 TF-IDF 向量：A 出現「cancer」5 次，B 出現 50 次——它們相似嗎？</div>
+<div class="disc-q" data-lang="en">Two documents' TF-IDF vectors: A says "cancer" 5 times, B says it 50 times — are they similar?</div>
+<div class="disc-pov"><strong data-zh="優勢：" data-en="Pro:">優勢：</strong>
+<span data-lang="zh">如果它們都聚焦於癌症主題，只是「文件長短」不同——cosine 視為相似很合理（短摘要 vs 長 review article）。</span>
+<span data-lang="en">If both focus on cancer themes and differ only by document length — cosine treating them as similar makes sense (short abstract vs long review).</span></div>
+<div class="disc-pov"><strong data-zh="劣勢：" data-en="Con:">劣勢：</strong>
+<span data-lang="zh">在某些情境 magnitude 才是重點——例如基因表現量「過表現 10×」與「過表現 100×」是質的差異，cosine 會忽略。<strong>解：</strong>先 log + scale 再用 Pearson 相關。</span>
+<span data-lang="en">Sometimes magnitude is what matters — gene expression "10× overexpression" vs "100×" is qualitatively different; cosine ignores this. <strong>Fix:</strong> log + scale first, then Pearson correlation.</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #2" data-en="DEBATE #2">爭論 #2</span>
+<h3 data-zh="維度詛咒永遠是壞事嗎？" data-en="Is the curse of dimensionality always bad?">維度詛咒永遠是壞事嗎？</h3>
+<div class="disc-q" data-lang="zh">Aggarwal 2001 證明高維下 Euclidean 距離趨於相等——KNN 變得無意義。但⋯⋯真的嗎？</div>
+<div class="disc-q" data-lang="en">Aggarwal 2001 proved high-D Euclidean distances converge — KNN becomes meaningless. But is that actually always true?</div>
+<div class="disc-pov"><strong data-zh="實務派：" data-en="Practitioner:">實務派：</strong>
+<span data-lang="zh">在 omics 與 deep embedding（如 BERT 768 維、CLIP 512 維）中，KNN 仍然很有用——關鍵是「intrinsic dimensionality」遠低於 nominal dimensionality（資料躺在低維 manifold 上）。</span>
+<span data-lang="en">In omics and deep embeddings (BERT 768-D, CLIP 512-D), KNN still works well — because <strong>intrinsic dimensionality</strong> is far below nominal (data lies on a low-D manifold).</span></div>
+<div class="disc-pov"><strong data-zh="理論派：" data-en="Theorist:">理論派：</strong>
+<span data-lang="zh">原始高維「噪音 + 訊號」資料下確實崩盤。解法：先 PCA / UMAP / autoencoder 降維到 intrinsic D 約 20–50，再算距離。或改用 cosine（對 norm 不敏感）。</span>
+<span data-lang="en">For raw "noise + signal" high-D data, it does collapse. Fix: PCA / UMAP / autoencoder to intrinsic ~20–50 dims first, then compute distance. Or switch to cosine (norm-insensitive).</span></div>
+</div>
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 #3" data-en="DEBATE #3">爭論 #3</span>
+<h3 data-zh="omics 資料應該用 Euclidean 嗎？" data-en="Should you ever use Euclidean on omics data?">omics 資料應該用 Euclidean 嗎？</h3>
+<div class="disc-q" data-lang="zh">2 萬基因 × 10⁵ 細胞的 single-cell 矩陣——用 Euclidean 還是 Cosine？</div>
+<div class="disc-q" data-lang="en">A 20K-genes × 100K-cells single-cell matrix — Euclidean or Cosine?</div>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong>
+<span data-lang="zh">原始 count data 取 log-normalize 後 + Euclidean 是 Seurat 預設——大多數 paper 都這樣做。</span>
+<span data-lang="en">After log-normalization on raw counts, Euclidean is Seurat's default — most papers use this.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong>
+<span data-lang="zh">Cosine 對「technical bias」（例如不同 sequencing depth）較穩健；2023 之後新版 Scanpy 與 scVI 都建議 cosine。Wasserstein 距離（如 PhEMD）更先進但運算貴。</span>
+<span data-lang="en">Cosine is more robust to "technical bias" (e.g., differing sequencing depth); Scanpy and scVI post-2023 recommend cosine. Wasserstein (e.g., PhEMD) is more advanced but compute-heavy.</span></div>
+</div>
+</section>
+
+<section class="section" id="spotlight">
+<div class="spotlight">
+<div class="sp-icon">📺</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="經典案例" data-en="CASE STUDY">經典案例</span>
+<h4 data-zh="Netflix 2014：從 Pearson 到「學習距離」的躍升" data-en="Netflix 2014: From Pearson to 'Learned Distance'">Netflix 2014：從 Pearson 到「學習距離」的躍升</h4>
+<p data-lang="zh">2014 年 Netflix 完成從「user-user collaborative filtering with Pearson similarity」遷移到一個學習出的距離 metric（基於 deep embedding + 隱式回饋）。其 A/B test 顯示 watch time 上升 15%、unsubscribe 下降 8%。技術核心是用神經網路將每個使用者與每部電影投影到同一 128-D 向量空間，距離由 cosine + 學習的權重決定。<a href="https://netflixtechblog.com/" target="_blank">Netflix Tech Blog</a> 描述：「我們不再選擇『一個』距離度量——我們讓資料告訴我們什麼是相似。」</p>
+<p data-lang="en">In 2014 Netflix completed a migration from "user-user collaborative filtering with Pearson similarity" to a learned distance metric (deep embedding + implicit feedback). A/B testing showed watch time up 15%, unsubscribes down 8%. The technical core: a neural net projects each user and each film into the same 128-D vector space, with distance = cosine + learned weights. The Netflix tech blog wrote: "We stopped choosing 'a' distance — we let the data tell us what similar means."</p>
+<p data-lang="zh"><strong>啟示：</strong>在資料量足夠的場景，<strong>metric learning</strong>（如 ITML、Siamese network、contrastive learning）可以超越任何固定的 hand-crafted 距離。生醫應用：CellOT 2023 用學習距離整合不同實驗的單細胞資料。</p>
+<p data-lang="en"><strong>Implication:</strong> Given enough data, <strong>metric learning</strong> (ITML, Siamese networks, contrastive learning) can outperform any fixed hand-crafted distance. Biomedical example: CellOT 2023 uses a learned distance to integrate single-cell data across experiments.</p>
+</div>
+</div>
+<div class="spotlight">
+<div class="sp-icon">🎵</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實例聚光燈 / CASE STUDY" data-en="CASE STUDY">CASE STUDY</span>
+<h4 data-zh="Spotify 2014：用 word2vec 為「歌曲」造距離" data-en="Spotify 2014: word2vec Distances for Songs">Spotify 2014：用 word2vec 為「歌曲」造距離</h4>
+<div data-lang="zh"><p>2014 年 Spotify 工程團隊面臨一個經典挑戰：在 4,000 萬首歌曲中為 7,500 萬使用者做即時推薦。原本的 user-user collaborative filtering（以 Pearson similarity 為核心）在巨量 sparse matrix 上計算昂貴、且對新歌冷啟動失效。Erik Bernhardsson 與 Chris Johnson 領銜的團隊做了一個大膽決定：把「歌曲」當作「單詞」、把「使用者的播放 session」當作「句子」，直接用 Mikolov 2013 的 word2vec 訓練一個 40-D 的 song embedding——然後用 <strong>cosine similarity</strong> 在這個學到的空間中找鄰居。結果：engagement +15%、churn -3%。更重要的是，這個 embedding 自然解決了冷啟動（新歌一進入 session 就有 embedding）、自然支援 ANN 索引（Annoy 函式庫即由此誕生，2015 開源）。從這一刻起，業界明白：<strong>「正確的距離」就是「學出來的距離」</strong>。後續 Word2Vec 思維蔓延到 Pinterest (Pin2Vec)、Airbnb (Listing2Vec)、阿里 (Item2Vec)，並最終演化為今日的 dense retrieval 與 RAG。</p></div>
+<div data-lang="en"><p>In 2014, Spotify's engineering team faced a classic challenge: real-time recommendations across 40M songs for 75M users. Their user-user collaborative filtering (Pearson-similarity-based) was expensive on huge sparse matrices and failed cold-start. Led by Erik Bernhardsson and Chris Johnson, they made a bold call: treat "songs" as "words," "user listening sessions" as "sentences," and train a 40-D song embedding with Mikolov's 2013 word2vec — then use <strong>cosine similarity</strong> in this learned space to find neighbors. Engagement rose 15%, churn dropped 3%. More importantly, the embedding naturally solved cold-start (any new song picked up an embedding as soon as it appeared in a session) and supported ANN indexes (the Annoy library was born here, open-sourced 2015). From this moment on, the industry knew: <strong>"the right distance" is a <em>learned</em> distance</strong>. The Word2Vec-style trick spread to Pinterest (Pin2Vec), Airbnb (Listing2Vec), Alibaba (Item2Vec), and ultimately to today's dense retrieval and RAG pipelines.</p></div>
+<div data-lang="zh"><p><strong>啟示：</strong>當你的相似度需要捕捉「行為共現」而非「特徵重疊」時——learned embedding + cosine 幾乎永遠勝過 hand-crafted metric。生醫應用：scRNA-seq 的 Gene2Vec、藥物—靶點的 Mol2Vec 都採用相同精神。</p></div>
+<div data-lang="en"><p><strong>Implication:</strong> When your similarity must capture "behavioral co-occurrence" rather than "feature overlap," learned embedding + cosine almost always beats a hand-crafted metric. Biomedical analogs: Gene2Vec for scRNA-seq, Mol2Vec for drug-target — all in the same spirit.</p></div>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="五大常見陷阱" data-en="Five Common Pitfalls">五大常見陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① 混合單位算 Euclidean" data-en="① Mixed Units in Euclidean">① 混合單位算 Euclidean</h4>
+<p data-lang="zh">身高 (cm: 150–200) + 收入 (USD: 30K–500K)——收入差異會完全淹沒身高。Euclidean 認為「年薪差 1 萬」≈「身高差 1 萬 cm」。<strong>解：</strong>先 StandardScaler。</p>
+<p data-lang="en">Height (cm: 150–200) + income (USD: 30K–500K) — income overwhelms height. Euclidean treats "$10K income gap" ≈ "10,000 cm height gap." <strong>Fix:</strong> StandardScaler first.</p></div>
+<div class="pitfall-card"><h4 data-zh="② 忽略高維詛咒" data-en="② Ignoring High-D Curse">② 忽略高維詛咒</h4>
+<p data-lang="zh">在 2 萬維基因表達直接跑 KNN——所有點都「差不多遠」，模型沒有學到任何東西。<strong>解：</strong>先 PCA 或 UMAP 降到 30–50 維，再算距離。</p>
+<p data-lang="en">Running KNN directly on 20K-D gene expression — all points roughly equidistant, model learns nothing. <strong>Fix:</strong> PCA or UMAP to 30–50 dims first.</p></div>
+<div class="pitfall-card"><h4 data-zh="③ Cosine 套用 count data" data-en="③ Cosine on Count Data">③ Cosine 套用 count data</h4>
+<p data-lang="zh">原始文件 word-count 直接 cosine——常用詞（the、of）會主導向量方向。<strong>解：</strong>先 TF-IDF 賦予稀有詞權重，再 cosine。</p>
+<p data-lang="en">Cosine on raw word counts — common words (the, of) dominate the direction. <strong>Fix:</strong> TF-IDF first to weight rare terms, then cosine.</p></div>
+<div class="pitfall-card"><h4 data-zh="④ 假設 Cosine 是 metric" data-en="④ Assuming Cosine is a Metric">④ 假設 Cosine 是 metric</h4>
+<p data-lang="zh">Cosine distance 不滿足三角不等式——某些演算法（如 ball tree、metric tree）會給出錯誤結果。<strong>解：</strong>用 angular distance 1−cosθ/π（嚴格 metric）或改用 brute force。</p>
+<p data-lang="en">Cosine distance violates the triangle inequality — algorithms like ball trees and metric trees can return wrong results. <strong>Fix:</strong> use angular distance 1−cosθ/π (a true metric) or brute-force.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ similarity 與 distance 混用" data-en="⑤ Mixing Similarity and Distance">⑤ similarity 與 distance 混用</h4>
+<p data-lang="zh">把 cosine similarity (1=同) 直接丟進 KNN（KNN 期待 distance, 0=同）——結果完全顛倒。<strong>解：</strong>明確 <code>distance = 1 − similarity</code> 並文件化。</p>
+<p data-lang="en">Passing cosine similarity (1=same) into KNN (which expects distance, 0=same) — results flip. <strong>Fix:</strong> explicit <code>distance = 1 − similarity</code> and document it.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ 混合型用 one-hot + Euclidean" data-en="⑥ One-Hot + Euclidean for Mixed">⑥ 混合型用 one-hot + Euclidean</h4>
+<p data-lang="zh">把性別 one-hot 變成 (1,0) / (0,1)，再用 Euclidean——距離永遠是 √2，沒有資訊。<strong>解：</strong>混合型資料用 Gower 距離 (<code>cluster::daisy</code>)。</p>
+<p data-lang="en">One-hot encoding sex as (1,0)/(0,1) then Euclidean — distance is always √2, carrying no info. <strong>Fix:</strong> Gower distance for mixed types (<code>cluster::daisy</code>).</p></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="對比" data-en="CONTRAST">對比</div>
+<h2 data-zh="同一份資料、兩種度量選擇" data-en="Same Data, Two Metric Choices">同一份資料、兩種度量選擇</h2>
+<div class="contrast-2col">
+<div class="con-card bad"><h4 data-zh="盲目用 Euclidean (錯誤)" data-en="Blindly Using Euclidean (Wrong)">盲目用 Euclidean (錯誤)</h4>
+<p data-lang="zh">病人資料：年齡 (0–100)、住院天數 (0–365)、Charlson Index (0–24)、藥物數 (0–50)、是否糖尿病 (0/1)。直接 Euclidean——住院天數差異主導，糖尿病標籤幾乎沒貢獻。聚類結果按「住院長短」分群而非「臨床相似度」。</p>
+<p data-lang="en">Patient features: age (0–100), LOS (0–365), Charlson (0–24), med count (0–50), diabetes (0/1). Raw Euclidean — LOS overwhelms; diabetes label barely contributes. Clusters separate by "length of stay" rather than clinical similarity.</p></div>
+<div class="con-card good"><h4 data-zh="先選對度量 (正確)" data-en="Pick the Right Metric (Right)">先選對度量 (正確)</h4>
+<p data-lang="zh">混合型 → Gower distance（<code>cluster::daisy</code> in R / <code>gower</code> package in Python）。每個欄位依類型自動 0–1 範圍 + 加權平均。結果聚類反映「臨床相似度」——糖尿病有/無病人正確分離。</p>
+<p data-lang="en">Mixed-type → Gower distance (<code>cluster::daisy</code> in R / <code>gower</code> in Python). Each column auto-normalized to 0–1 by type + weighted mean. Clusters reflect clinical similarity — diabetic vs non-diabetic correctly separate.</p></div>
+</div>
+<div class="tip-bar" data-zh="距離選擇不是技術細節——它是 ML 系統最深層的 inductive bias。" data-en="Distance choice is not a technical detail — it is the deepest inductive bias in any ML system.">距離選擇不是技術細節——它是 ML 系統最深層的 inductive bias。</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="自我反思" data-en="Reflection Questions">自我反思</h4>
+<ol>
+<li data-lang="zh">回想你最近用 KNN 或 K-Means 的專案——你用了哪個距離？為什麼？是否考慮過其他選擇？</li>
+<li data-lang="en">Recall your most recent KNN or K-Means project — which distance did you use? Why? Did you consider alternatives?</li>
+<li data-lang="zh">對病人配對任務：年齡、性別、ICD-10 碼、實驗室數值——你會用什麼度量？混合型如何處理？</li>
+<li data-lang="en">For patient matching with age, sex, ICD-10, lab values — which metric? How handle mixed types?</li>
+<li data-lang="zh">在 1000 維資料上，KNN 的「k=5 最近鄰」實際距離跟「k=500 最近鄰」差多少？這意味著什麼？</li>
+<li data-lang="en">In 1000-D, how different are the actual distances of the "k=5 nearest" vs "k=500 nearest"? What does that imply?</li>
+<li data-lang="zh">Cosine distance 不是嚴格 metric——這在實務中會造成什麼後果？</li>
+<li data-lang="en">Cosine distance isn't a strict metric — what practical consequences does that have?</li>
+<li data-lang="zh">如果你能「學習」一個距離度量（metric learning），你會用哪個資料集驗證它比手選度量好？</li>
+<li data-lang="en">If you could "learn" a distance metric, which dataset would you use to prove it beats a hand-picked metric?</li>
+<li data-lang="zh">DTW 對長度不同的時間序列有用——但它不對稱地慢 O(N²)。何時你寧願用 Euclidean + resample？</li>
+<li data-lang="en">DTW handles variable-length time series — but it's slow O(N²). When would you prefer Euclidean + resampling?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="🌳 進階研究員" data-en="🌳 ADVANCED">🌳 進階研究員</span>
+<h4 data-zh="2023–2026 距離度量前沿" data-en="2023–2026 Distance Metric Frontier">2023–2026 距離度量前沿</h4>
+<p data-lang="zh"><strong>Wasserstein OT for omics integration (2023+)：</strong>把每個樣本視為 distribution（如 single-cell 中每個細胞是 gene expression 的 distribution）——Wasserstein 距離直接比較兩個 distribution。Cuturi 2013 Sinkhorn-EMD 讓計算可規模化；CellOT 2023 (Bunne et al., Nat Methods) 用 OT 整合不同 batch 的 single-cell 資料。<a href="https://doi.org/10.1038/s41592-023-01861-8" target="_blank">DOI</a>。</p>
+<p data-lang="en"><strong>Wasserstein OT for omics integration (2023+):</strong> treat each sample as a distribution (e.g., each cell is a distribution over genes) — Wasserstein compares distributions directly. Cuturi 2013's Sinkhorn-EMD made it scalable; CellOT 2023 (Bunne et al., Nat Methods) integrates single-cell batches via OT.</p>
+<p data-lang="zh"><strong>ITML (Information-Theoretic Metric Learning) — Davis et al. 2007：</strong>透過 must-link / cannot-link constraints 學一個 Mahalanobis-like matrix M，使 d²(x,y) = (x−y)ᵀM(x−y)。M 由 KL divergence 正則化更新。實作：<code>metric-learn</code> Python 套件。</p>
+<p data-lang="en"><strong>ITML (Information-Theoretic Metric Learning) — Davis et al. 2007:</strong> learns a Mahalanobis-like M via must-link/cannot-link constraints so that d²(x,y) = (x−y)ᵀM(x−y); M is regularized via KL divergence. Implementation: <code>metric-learn</code> Python package.</p>
+<p data-lang="zh"><strong>CLIP-style 學習距離 (Radford 2021)：</strong>用 contrastive learning 將 image + text 投影到同一 embedding 空間；推論時相同類別的 image-text pair cosine ≈ 0.8，跨類 ≈ 0.2。生醫版：BioClip 2024 把組織切片 + 病理報告對齊。</p>
+<p data-lang="en"><strong>CLIP-style learned distance (Radford 2021):</strong> contrastive learning aligns image + text in one embedding space — same-class image-text pairs reach cosine ≈ 0.8, cross-class ≈ 0.2. Biomedical analog: BioClip 2024 aligns histology slides with pathology reports.</p>
+<p data-lang="zh"><strong>Riemannian distances for manifolds (Ye et al. 2024)：</strong>當資料躺在曲面上（如 diffusion tensor 的 SPD matrix manifold），直線 Euclidean 是錯的。需要 geodesic distance：在 manifold 表面上「最短曲線」長度。應用：DTI tractography、brain connectivity 比較。</p>
+<p data-lang="en"><strong>Riemannian distances for manifolds (Ye et al. 2024):</strong> when data lies on curved surfaces (SPD matrix manifold of diffusion tensors), straight Euclidean is wrong. Use geodesic distance — the "shortest curve length" on the manifold. Applications: DTI tractography, brain connectivity.</p>
+<p data-lang="zh"><strong>Quantum distance kernels (Schuld 2024, IBM Quantum)：</strong>將特徵編碼到量子態 |ψ(x)⟩，量子線路計算 |⟨ψ(x)|ψ(y)⟩|²（quantum fidelity）。可表達某些 classical kernel 做不到的非線性。仍處於 NISQ 階段；對 ≤ 50 量子位元有效。</p>
+<p data-lang="en"><strong>Quantum distance kernels (Schuld 2024, IBM Quantum):</strong> encode features into quantum states |ψ(x)⟩; quantum circuits compute |⟨ψ(x)|ψ(y)⟩|² (quantum fidelity). Captures nonlinearities no classical kernel can. Still NISQ-era; effective at ≤ 50 qubits.</p>
+<p data-lang="zh"><strong>Code snippet (Python metric-learn ITML)：</strong></p>
+<p data-lang="en"><strong>Code snippet (Python metric-learn ITML):</strong></p>
+<p><code>from metric_learn import ITML_Supervised<br>
+itml = ITML_Supervised(num_constraints=200, random_state=42)<br>
+itml.fit(X_train, y_train)  # X is (n, d); y is labels<br>
+D = itml.pair_distance(X_test[:5], X_test[5:10])  # learned distance</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -170,6 +554,11 @@ dm = dtw.distance_matrix_fast(series_list)</pre></div>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. KNN 不支援超過 100 維</span><span data-lang="en">D. KNN doesn't support &gt;100 D</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<span data-lang="zh"><strong>歷史小故事：</strong>1936 年印度統計學家 P. C. Mahalanobis 在加爾各答的 Indian Statistical Institute 提出他現在以名字命名的距離——本意是要解決一個非常實際的問題：用人類學測量資料區分不同部族時，「身高」和「鼻寬」的尺度差異會壓倒任何分析。他發現只要先用協方差矩陣「校正」這些相關性，距離就變得有意義。這個想法直到 80 年後仍是異常偵測、多變量分析、Hotelling's T² 的基礎。一個來自加爾各答的小論文——影響了統計學整整一個世紀。</span>
+<span data-lang="en"><strong>History bite:</strong> In 1936, Indian statistician P. C. Mahalanobis at the Indian Statistical Institute in Calcutta proposed the distance now named after him — to solve a practical problem: when distinguishing tribes from anthropometric measurements, the scale gap between "height" and "nose width" overwhelmed any analysis. He realized "correcting" via the covariance matrix made the distance meaningful. 80 years later, this idea remains the foundation of anomaly detection, multivariate analysis, and Hotelling's T². One small paper from Calcutta — shaping statistics for a century.</span>
+</div>
 
 <nav class="page-nav">
 <a href="eda-visualization.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 3: 探索性資料分析 (EDA) 與視覺化" data-en="Ch 3: EDA &amp; Visualization">Ch 3: 探索性資料分析 (EDA) 與視覺化</span></a>
@@ -204,6 +593,37 @@ function updateD(m){
 document.querySelectorAll('[data-metric]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-metric]').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateD(b.dataset.metric);}));
 document.addEventListener('langchange',()=>updateD(document.querySelector('[data-metric].active').dataset.metric));
 updateD('euclidean');
+
+// Flip-nearest explorer
+const FQ={x:2,y:6}, FP={A:{x:3,y:2},B:{x:8,y:7},C:{x:1,y:1}};
+const SigmaInv=[[0.4,0],[0,1.6]]; // diag Σ⁻¹ for Mahalanobis
+const fDist={
+ euc:(a,b)=>Math.sqrt((a.x-b.x)**2+(a.y-b.y)**2),
+ man:(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y),
+ che:(a,b)=>Math.max(Math.abs(a.x-b.x),Math.abs(a.y-b.y)),
+ cos:(a,b)=>{const dot=a.x*b.x+a.y*b.y,na=Math.sqrt(a.x*a.x+a.y*a.y),nb=Math.sqrt(b.x*b.x+b.y*b.y);return 1-dot/(na*nb);},
+ mah:(a,b)=>{const dx=a.x-b.x,dy=a.y-b.y;return Math.sqrt(dx*dx*SigmaInv[0][0]+dy*dy*SigmaInv[1][1]);}
+};
+const FCOLORS={A:'#16a34a',B:'#2563eb',C:'#dc2626'};
+const flipChart=new Chart(document.getElementById('flipChart'),{type:'scatter',data:{datasets:[
+ {label:'Query ★',data:[{x:FQ.x,y:FQ.y}],backgroundColor:'rgba(217,119,6,1)',pointStyle:'star',pointRadius:18,borderColor:'#78350f',borderWidth:2},
+ {label:'A',data:[{x:FP.A.x,y:FP.A.y}],backgroundColor:FCOLORS.A,pointRadius:9},
+ {label:'B',data:[{x:FP.B.x,y:FP.B.y}],backgroundColor:FCOLORS.B,pointRadius:9},
+ {label:'C',data:[{x:FP.C.x,y:FP.C.y}],backgroundColor:FCOLORS.C,pointRadius:9}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{min:0,max:10,title:{display:true,text:'feature 1'}},y:{min:0,max:10,title:{display:true,text:'feature 2'}}},plugins:{legend:{position:'top'}}}});
+function refreshFlip(m){
+ const ds=Object.entries(FP).map(([k,p])=>[k,fDist[m](FQ,p)]).sort((a,b)=>a[1]-b[1]);
+ // resize points by rank
+ const rankMap={};ds.forEach((d,i)=>rankMap[d[0]]=i);
+ ['A','B','C'].forEach((k,i)=>{const idx=i+1;const r=rankMap[k];flipChart.data.datasets[idx].pointRadius=14-r*3;});
+ flipChart.update('none');
+ const L=I18n.get(),tag=L==='zh'?'最近':'Nearest';
+ document.getElementById('flipRanking').innerHTML=ds.map((d,i)=>`<span class="sim-stat ${i===0?'pass':'neutral'}">${i===0?'#1 '+tag+' → ':'#'+(i+1)+' '} ${d[0]}: ${d[1].toFixed(3)}</span>`).join('');
+}
+let curFlip='euc';
+document.querySelectorAll('[data-flip]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-flip]').forEach(x=>x.classList.remove('active'));b.classList.add('active');curFlip=b.dataset.flip;refreshFlip(curFlip);}));
+document.addEventListener('langchange',()=>refreshFlip(curFlip));
+refreshFlip('euc');
 
 const QF={zh:{q1_y:'Cosine 是 TF-IDF 向量相似度的標準選擇。',q1_n:'C 為正確答案。',q2_y:'Gower 距離專為混合型資料設計。',q2_n:'D 為正確答案。',q3_y:'維度詛咒：高維空間距離趨近相等。',q3_n:'B 為正確答案。'},
           en:{q1_y:'Cosine is the standard choice for TF-IDF.',q1_n:'Correct answer is C.',q2_y:'Gower distance is designed for mixed-type data.',q2_n:'Correct answer is D.',q3_y:'Curse of dimensionality — distances converge in high-D.',q3_n:'Correct answer is B.'}};

@@ -18,6 +18,187 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽（閱讀時間 ~22 分）" data-en="Chapter map (reading time ~22 min)">本章導覽（閱讀時間 ~22 分）</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="初學者" data-en="Beginner">初學者</span>
+<span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+<span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+<span class="pill teal">Apriori</span><span class="pill amber">FP-Growth</span><span class="pill violet">Eclat</span><span class="pill rose">ASEA 2026</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場故事：啤酒與尿布的傳說" data-en="Story: the beer-diapers legend">開場故事：啤酒與尿布的傳說</a></li>
+<li><a href="#glossary" data-zh="核心詞彙表（雙語）" data-en="Glossary (bilingual)">核心詞彙表（雙語）</a></li>
+<li><a href="#history" data-zh="演算法簡史 1992–2026" data-en="Algorithm timeline 1992–2026">演算法簡史 1992–2026</a></li>
+<li><a href="#walkthrough" data-zh="Apriori 手算：5 個交易" data-en="Apriori walkthrough: 5 transactions">Apriori 手算：5 個交易</a></li>
+<li><a href="#discussion" data-zh="討論：Lift = 因果？" data-en="Discussion: Lift = causation?">討論：Lift = 因果？</a></li>
+<li><a href="#pitfalls" data-zh="常見陷阱" data-en="Common pitfalls">常見陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題" data-en="Reflection questions">反思題</a></li>
+<li><a href="#advanced" data-zh="進階：ASEA 2026 與 NeuralGAR" data-en="Advanced: ASEA 2026 & NeuralGAR">進階：ASEA 2026 與 NeuralGAR</a></li>
+</ol>
+</div>
+
+<section id="story" class="section">
+<div class="section-label" data-zh="故事開場" data-en="OPENING STORY">故事開場</div>
+<h2 data-zh="場景：Walmart 的星期五夜" data-en="Scene: Walmart on a Friday Night">場景：Walmart 的星期五夜</h2>
+<div class="story-block">
+<span class="story-tag">SCENE · WALMART 1992</span>
+<h3 data-zh="啤酒、尿布、與一篇 Wall Street Journal 的傳奇" data-en="Beer, diapers, and a Wall Street Journal legend">啤酒、尿布、與一篇 Wall Street Journal 的傳奇</h3>
+<div data-lang="zh">
+<p>1992 年某天，Teradata 的 Thomas Blischok 與他的團隊在分析 Walmart 25 家分店的 120 萬筆交易資料。他們跑了當時還沒有名字的「關聯規則探勘」演算法，並在星期五傍晚的時段（下午 5–7 點）發現了一個奇特的模式：購買尿布的男性顧客，有顯著的機率也會買啤酒。</p>
+<p>1993 年 12 月 23 日，Wall Street Journal 的 Pamela Brown 寫了一篇報導，這個故事從此在資料探勘教科書裡流傳——啤酒與尿布、Walmart、男人下班順道幫太太買嬰兒用品、自己也順手帶 6 罐啤酒回家。完美的故事。</p>
+<p>真相？學界後來考證：(1) 確實有相關性，但效應遠小於傳說；(2) Walmart 從未根據此調整商品陳列；(3) 真正讓零售業擁抱關聯規則的是 1994 年 Agrawal-Srikant 在 VLDB 發表的 Apriori 演算法。但故事的力量讓「資料探勘 = 找意外的規則」這個概念深植人心——這就是本章要教你的技藝。</p>
+</div>
+<div data-lang="en">
+<p>One day in 1992, Thomas Blischok at Teradata and his team were mining 1.2M transactions from 25 Walmart stores. They ran what was then called nameless "association mining" and noticed something strange in the Friday-evening slot (5–7 p.m.): men buying diapers had a much higher chance of also buying beer.</p>
+<p>On 23 December 1993, Pamela Brown wrote it up in the Wall Street Journal, and the story has been in data-mining textbooks ever since — beer and diapers, Walmart, dads grabbing baby supplies on the way home and tossing a six-pack in for themselves. The perfect anecdote.</p>
+<p>The truth? Academia later established: (1) a correlation did exist, but the effect was weaker than legend; (2) Walmart never actually rearranged shelves based on it; (3) what really pushed retail to adopt association mining was Agrawal-Srikant's 1994 VLDB Apriori paper. But the story is so powerful that "data mining = finding surprising rules" lodged in every business person's head — and that's exactly the craft this chapter teaches.</p>
+</div>
+</div>
+</section>
+
+<section id="glossary" class="section">
+<div class="section-label" data-zh="核心詞彙" data-en="GLOSSARY">核心詞彙</div>
+<h2 data-zh="12 個關鍵術語（給每一種讀者）" data-en="12 Key Terms (for every reader)">12 個關鍵術語</h2>
+<div class="glossary-grid">
+<div class="glossary-card">
+<div class="term-en">Transaction</div><div class="term-zh">交易</div>
+<div class="term-kid" data-lang="zh">一次購物的「購物車」——裡面有什麼項目都記下來。</div>
+<div class="term-kid" data-lang="en">One shopping cart — record what items it contains.</div>
+<div class="term-tech" data-lang="zh">T_i ⊆ I，I 是全部 item 的集合。生醫例：一張處方單、一位病人 ICD 碼集合、一次手術的事件項目。</div>
+<div class="term-tech" data-lang="en">T_i ⊆ I, where I is the set of all items. Bio examples: a prescription, a patient's ICD codes, the events in one surgery.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Itemset</div><div class="term-zh">項集</div>
+<div class="term-kid" data-lang="zh">幾個東西一起出現的小組合，如 {啤酒, 尿布}。</div>
+<div class="term-kid" data-lang="en">A small combo of items that show up together, like {beer, diapers}.</div>
+<div class="term-tech" data-lang="zh">X ⊆ I 的任意子集；k-itemset 含 k 個元素。空 itemset 與全集分別 trivially 真。</div>
+<div class="term-tech" data-lang="en">Any subset X ⊆ I; a k-itemset contains k elements. Empty and full sets are trivially supported.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Support</div><div class="term-zh">支援度</div>
+<div class="term-kid" data-lang="zh">這個組合出現幾次？除以總交易數，就是支援度。</div>
+<div class="term-kid" data-lang="en">How often does this combo show up? Divide by total transactions = support.</div>
+<div class="term-tech" data-lang="zh">supp(X) = |{T : X ⊆ T}| / |D|；min_support 設太低 → 規則爆炸；太高 → 漏掉罕見但有意義的規則。</div>
+<div class="term-tech" data-lang="en">supp(X) = |{T : X ⊆ T}| / |D|; min_support too low → rule explosion, too high → miss rare-but-meaningful rules.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Confidence</div><div class="term-zh">信賴度</div>
+<div class="term-kid" data-lang="zh">買 X 的人裡有多少也買 Y？</div>
+<div class="term-kid" data-lang="en">Of the people who buy X, how many also buy Y?</div>
+<div class="term-tech" data-lang="zh">conf(X⇒Y) = P(Y|X) = supp(X∪Y)/supp(X)。經典陷阱：Y 本來就很常見時 conf 自然高，要用 lift 矯正。</div>
+<div class="term-tech" data-lang="en">conf(X⇒Y) = P(Y|X) = supp(X∪Y)/supp(X). Classic trap: if Y is already common, conf is high by default — use lift to correct.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Lift</div><div class="term-zh">提升度</div>
+<div class="term-kid" data-lang="zh">X 出現時 Y 的機率，比 Y 本來的機率高多少倍。</div>
+<div class="term-kid" data-lang="en">How much more likely Y is when X appears, compared to Y's baseline.</div>
+<div class="term-tech" data-lang="zh">lift = P(Y|X)/P(Y) = conf/supp(Y)。&gt;1 正相關、=1 獨立、&lt;1 負相關。對稱：lift(X⇒Y) = lift(Y⇒X)。</div>
+<div class="term-tech" data-lang="en">lift = P(Y|X)/P(Y) = conf/supp(Y). &gt;1 positive, =1 independent, &lt;1 negative. Symmetric: lift(X⇒Y) = lift(Y⇒X).</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Leverage</div><div class="term-zh">槓桿值</div>
+<div class="term-kid" data-lang="zh">實際出現次數 − 假如獨立應該出現的次數——差多少？</div>
+<div class="term-kid" data-lang="en">Actual co-occurrence minus what it would be if independent — the gap.</div>
+<div class="term-tech" data-lang="zh">leverage = P(X∪Y) − P(X)P(Y)。Piatetsky-Shapiro 1991。不像 lift 對「rare item」過敏，更穩定但較少用。</div>
+<div class="term-tech" data-lang="en">leverage = P(X∪Y) − P(X)P(Y). Piatetsky-Shapiro 1991. Unlike lift, not skewed by rare items — more stable, less popular.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Conviction</div><div class="term-zh">堅信度</div>
+<div class="term-kid" data-lang="zh">X 多麼「斷言」Y 一定要出現？無窮大表示完全暗示。</div>
+<div class="term-kid" data-lang="en">How strongly does X "insist" Y must appear? Infinity = X always implies Y.</div>
+<div class="term-tech" data-lang="zh">conv = (1−supp(Y))/(1−conf)。1 = 獨立，∞ = X always implies Y。對 confidence=1 很敏感。</div>
+<div class="term-tech" data-lang="en">conv = (1−supp(Y))/(1−conf). 1 = independent, ∞ = X always implies Y. Sensitive to confidence=1.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Apriori principle</div><div class="term-zh">Apriori 原理（反單調性）</div>
+<div class="term-kid" data-lang="zh">如果一小組不夠常見，加更多東西進來只會更不常見——可以跳過不算。</div>
+<div class="term-kid" data-lang="en">If a small set isn't frequent, adding more items only makes it rarer — you can skip them.</div>
+<div class="term-tech" data-lang="zh">downward closure / anti-monotone：supp(X) &lt; min_support ⇒ ∀Y ⊇ X, supp(Y) &lt; min_support。這就是 Apriori 演算法剪枝的關鍵。</div>
+<div class="term-tech" data-lang="en">Downward closure / anti-monotone: supp(X) &lt; min_support ⇒ ∀Y ⊇ X, supp(Y) &lt; min_support. The key pruning rule of Apriori.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">FP-tree / FP-Growth</div><div class="term-zh">FP-tree / FP-Growth</div>
+<div class="term-kid" data-lang="zh">把交易資料壓成一棵樹，重複的部分共用節點——只要掃資料兩次就能找頻繁項。</div>
+<div class="term-kid" data-lang="en">Compress the transactions into a tree where shared parts share nodes — just two DB scans to find frequent itemsets.</div>
+<div class="term-tech" data-lang="zh">Han-Pei-Yin 2000 (SIGMOD)；建構 prefix-tree（FP-tree），項目按頻率排序，分支共用前綴。透過遞迴 conditional FP-tree 找頻繁項集，無候選產生。</div>
+<div class="term-tech" data-lang="en">Han-Pei-Yin 2000 (SIGMOD); builds a prefix-tree (FP-tree) with items sorted by frequency, sharing prefixes. Recursive conditional FP-trees yield frequent itemsets without candidate generation.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Eclat</div><div class="term-zh">Eclat</div>
+<div class="term-kid" data-lang="zh">每個 item 記它出現過哪幾筆交易（TID list），看兩個 TID 清單的交集就知道共現次數。</div>
+<div class="term-kid" data-lang="en">For each item, list which transactions it appears in (TID list); intersect lists to get co-occurrence count.</div>
+<div class="term-tech" data-lang="zh">Zaki 2000；垂直表示法，supp(X∪Y) = |tidset(X) ∩ tidset(Y)|。記憶體效率高，適合 mid-size sparse data。</div>
+<div class="term-tech" data-lang="en">Zaki 2000; vertical representation, supp(X∪Y) = |tidset(X) ∩ tidset(Y)|. Memory-efficient, good for mid-size sparse data.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Closed itemset</div><div class="term-zh">閉合項集</div>
+<div class="term-kid" data-lang="zh">沒有更長的「同樣常見」的超集——是該支援度的代表。</div>
+<div class="term-kid" data-lang="en">No longer super-set with the same support — the "representative" at that support level.</div>
+<div class="term-tech" data-lang="zh">X closed iff ∀Y ⊃ X, supp(Y) &lt; supp(X)。Maximal itemset 更嚴格：X maximal iff ∀Y ⊃ X, Y 不頻繁。closed ⊇ maximal。</div>
+<div class="term-tech" data-lang="en">X closed iff ∀Y ⊃ X, supp(Y) &lt; supp(X). Maximal is stricter: X maximal iff ∀Y ⊃ X, Y infrequent. closed ⊇ maximal.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">ASEA (2026)</div><div class="term-zh">ASEA 2026</div>
+<div class="term-kid" data-lang="zh">把基因功能（Gene Ontology）當輔助資訊，幫關聯規則「懂生物」。</div>
+<div class="term-kid" data-lang="en">Use Gene Ontology as side info to help association rules "understand biology".</div>
+<div class="term-tech" data-lang="zh">Association Subgraph Enrichment Analysis (Nature Sci Rep 2026, DOI 10.1038/s41598-026-42584-y)；GO terms 對 rule 提供 ontology-aware enrichment score，篩出生物意義的規則。</div>
+<div class="term-tech" data-lang="en">Association Subgraph Enrichment Analysis (Nature Sci Rep 2026, DOI 10.1038/s41598-026-42584-y); GO terms give ontology-aware enrichment scores to filter biologically meaningful rules.</div>
+</div>
+</div>
+</section>
+
+<section id="history" class="section">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="關聯規則探勘簡史" data-en="A Short History of Association Mining">關聯規則探勘簡史</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1992</span><span class="tl-title" data-zh="Walmart 啤酒-尿布傳說" data-en="Walmart beer-diapers legend">Walmart 啤酒-尿布傳說</span><span class="tl-desc" data-zh="Teradata + Blischok 分析 120 萬筆交易；1993 年 12 月 WSJ 報導，傳奇誕生。" data-en="Teradata + Blischok mine 1.2M transactions; WSJ Dec 1993 article spawns the legend."></span></div>
+<div class="timeline-item"><span class="tl-year">1993</span><span class="tl-title" data-zh="Agrawal-Imieliński-Swami：首篇關聯規則論文" data-en="Agrawal-Imieliński-Swami: first association-rule paper">Agrawal-Imieliński-Swami：首篇關聯規則論文</span><span class="tl-desc" data-zh="SIGMOD 93；正式定義 support, confidence；IBM Almaden Research Center 三人組。" data-en="SIGMOD 93; formally defines support, confidence; IBM Almaden Research Center trio."></span></div>
+<div class="timeline-item"><span class="tl-year">1994</span><span class="tl-title" data-zh="Agrawal-Srikant：Apriori 演算法" data-en="Agrawal-Srikant: Apriori algorithm">Agrawal-Srikant：Apriori 演算法</span><span class="tl-desc" data-zh="VLDB 94；anti-monotone 剪枝原理；獲 2008 SIGMOD Test of Time。" data-en="VLDB 94; anti-monotone pruning; won 2008 SIGMOD Test of Time Award."></span></div>
+<div class="timeline-item"><span class="tl-year">2000</span><span class="tl-title" data-zh="Han-Pei-Yin：FP-Growth" data-en="Han-Pei-Yin: FP-Growth">Han-Pei-Yin：FP-Growth</span><span class="tl-desc" data-zh="SIGMOD 00；FP-tree 結構 + 兩次 DB scan；10–100× 比 Apriori 快。" data-en="SIGMOD 00; FP-tree + 2 DB scans; 10–100× faster than Apriori."></span></div>
+<div class="timeline-item"><span class="tl-year">2000</span><span class="tl-title" data-zh="Zaki：Eclat 垂直 tidlist" data-en="Zaki: Eclat vertical tidlists">Zaki：Eclat 垂直 tidlist</span><span class="tl-desc" data-zh="DMKD 04；垂直表示法 + 集合交集，記憶體效率高。" data-en="DMKD 04; vertical representation + tidset intersection, memory-efficient."></span></div>
+<div class="timeline-item"><span class="tl-year">2005</span><span class="tl-title" data-zh="arules R 套件" data-en="arules R package">arules R 套件</span><span class="tl-desc" data-zh="Hahsler et al.；Apriori、Eclat、規則視覺化的事實標準。" data-en="Hahsler et al.; de facto standard for Apriori, Eclat, rule visualization in R."></span></div>
+<div class="timeline-item"><span class="tl-year">2014</span><span class="tl-title" data-zh="mlxtend Python：apriori + fpgrowth" data-en="mlxtend Python: apriori + fpgrowth">mlxtend Python：apriori + fpgrowth</span><span class="tl-desc" data-zh="Sebastian Raschka 個人套件成為 Python 標準。" data-en="Sebastian Raschka's package became the Python standard."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="NeuralGAR：神經網路關聯規則" data-en="NeuralGAR: neural association rules">NeuralGAR：神經網路關聯規則</span><span class="tl-desc" data-zh="WWW 24；embedding-based 規則挖掘，超越 lift 的相似度度量。" data-en="WWW 24; embedding-based rule mining, similarity beyond lift."></span></div>
+<div class="timeline-item"><span class="tl-year">2026</span><span class="tl-title" data-zh="ASEA：ontology-driven 生醫關聯規則" data-en="ASEA: ontology-driven biomedical rules">ASEA：ontology-driven 生醫關聯規則</span><span class="tl-desc" data-zh="Nature Sci Rep 2026（DOI 10.1038/s41598-026-42584-y）；融合 GO 本體。" data-en="Nature Sci Rep 2026 (DOI 10.1038/s41598-026-42584-y); fuses Gene Ontology."></span></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="比喻" data-en="ANALOGY">比喻</div>
+<h2 data-zh="一句話講清楚關聯規則" data-en="One-Sentence Analogy">一句話講清楚關聯規則</h2>
+<div class="analogy-box">
+<div class="ana-icon">🎧</div>
+<div class="ana-body">
+<span class="ana-tag">SPOTIFY ANALOGY</span>
+<h4 data-zh="關聯規則就是 Spotify 的「聽 A 的人也聽 B」" data-en="Association rules = Spotify's &quot;people who liked A also liked B&quot;">關聯規則就是 Spotify 的「聽 A 的人也聽 B」</h4>
+<p data-lang="zh">關聯規則做的事，跟 Spotify、Netflix、Amazon 的「相關推薦」很像——只不過是用「購物車一起出現」、「同一張處方一起開」、「同一患者同時帶 ICD 碼」當作「聽過」。<br>三大指標可以這樣理解：<strong>support</strong> 是「歌曲熱門度」（你不會推薦沒人聽過的歌）、<strong>confidence</strong> 是「聽 A 的人裡有多少也聽 B」、<strong>lift</strong> 是「B 真的因為 A 才更可能被聽，還是 B 本來就是排行榜冠軍」。</p>
+<p data-lang="en">Association rules do what Spotify/Netflix/Amazon's "related" features do — except "co-occurrence in a cart", "co-prescription", or "co-ICD-code in one patient" replaces "listened to".<br>The three metrics map cleanly: <strong>support</strong> is "song popularity" (you don't recommend a song nobody's heard), <strong>confidence</strong> is "of A-listeners, how many also like B", <strong>lift</strong> is "does B truly get a boost from A, or is B just always #1 anyway".</p>
+</div>
+</div>
+
+<details class="detail-toggle">
+<summary data-zh="點開看：Lift = 因果關係嗎？" data-en="Click: does lift mean causation?">點開看：Lift = 因果關係嗎？</summary>
+<div class="detail-body">
+<div data-lang="zh">不是。Lift 只測「統計相關」，不測「因果」。經典反例：{雨傘} ⇒ {下雨} lift 很高，但帶雨傘不會「導致」下雨。生醫上更危險：{某藥} ⇒ {某副作用} 高 lift 可能是 (1) 因果、(2) confounding（兩者都被疾病嚴重度引起）、(3) 反向因果（副作用先出現所以才開藥）、(4) Berkson's bias（只看住院病人）。對策：將 lift 作為「值得進一步研究的訊號」，而非結論——後續配合 RCT 或 Mendelian Randomization。</div>
+<div data-lang="en">No. Lift measures statistical association, not causation. Classic counter-example: {umbrella} ⇒ {rain} has high lift, but carrying an umbrella doesn't cause rain. In biomedicine it's worse: {drug} ⇒ {adverse event} with high lift could be (1) causal, (2) confounding (both caused by disease severity), (3) reverse causation (adverse event preceded the prescription), (4) Berkson's bias (only hospitalized patients). Fix: treat lift as "signal worth investigating", not a conclusion — follow up with RCT or Mendelian Randomization.</div>
+</div>
+</details>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動 KPI" data-en="KPI BOARD">互動 KPI</div>
+<h2 data-zh="關鍵指標一覽" data-en="Key Numbers at a Glance">關鍵指標一覽</h2>
+<div class="kpi-grid">
+<div class="kpi-card"><span class="kpi-num">&gt; 1</span><span class="kpi-label" data-zh="lift 正相關" data-en="lift positive">lift 正相關</span></div>
+<div class="kpi-card"><span class="kpi-num">2</span><span class="kpi-label" data-zh="FP-Growth DB scan" data-en="FP-Growth DB scans">FP-Growth DB scan</span></div>
+<div class="kpi-card"><span class="kpi-num">10–100×</span><span class="kpi-label" data-zh="FP-Growth vs Apriori" data-en="FP-Growth vs Apriori">FP vs Apriori</span></div>
+<div class="kpi-card"><span class="kpi-num">9835</span><span class="kpi-label" data-zh="arules Groceries 交易數" data-en="arules Groceries N">Groceries N</span></div>
+<div class="kpi-card"><span class="kpi-num">2008</span><span class="kpi-label" data-zh="Apriori Test of Time" data-en="Apriori Test of Time">Apriori TOT</span></div>
+<div class="kpi-card"><span class="kpi-num">2026</span><span class="kpi-label" data-zh="ASEA 發表年" data-en="ASEA published">ASEA published</span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="交易、項集、規則" data-en="Transactions, Itemsets, Rules">交易、項集、規則</h2>
@@ -166,6 +347,183 @@ plt.barh([str(s) <span class="kw">for</span> s <span class="kw">in</span> rules.
 </div>
 </section>
 
+<section id="walkthrough" class="section">
+<div class="section-label" data-zh="逐步演算" data-en="WALKTHROUGH">逐步演算</div>
+<h2 data-zh="Apriori 手算：5 筆購物交易、min_support = 0.4" data-en="Apriori By Hand: 5 transactions, min_support = 0.4">Apriori 手算：5 筆交易</h2>
+<div class="walkthrough">
+<div class="walkthrough-header">
+<div class="wt-num">6</div>
+<h3 data-zh="T1{麵包,牛奶} T2{麵包,尿布,啤酒,蛋} T3{牛奶,尿布,啤酒,可樂} T4{麵包,牛奶,尿布,啤酒} T5{麵包,牛奶,尿布,可樂}" data-en="T1{bread,milk} T2{bread,diapers,beer,eggs} T3{milk,diapers,beer,cola} T4{bread,milk,diapers,beer} T5{bread,milk,diapers,cola}">T1–T5（5 筆購物車）</h3>
+<span class="wt-tag">min_supp=0.4 (2/5)</span>
+</div>
+<div class="wt-step"><span class="wt-label">Step 1</span><div class="wt-body">
+<span data-lang="zh"><strong>找 1-itemset。</strong>計算每個 item 的支援度：<code>麵包: 4/5=0.8</code>、<code>牛奶: 4/5=0.8</code>、<code>尿布: 4/5=0.8</code>、<code>啤酒: 3/5=0.6</code>、<code>可樂: 2/5=0.4</code>、<code>蛋: 1/5=0.2</code>。<br><strong>L1 = {麵包, 牛奶, 尿布, 啤酒, 可樂}（蛋被剪掉）。</strong></span>
+<span data-lang="en"><strong>Find 1-itemsets.</strong> Compute support per item: <code>bread: 4/5=0.8</code>, <code>milk: 4/5=0.8</code>, <code>diapers: 4/5=0.8</code>, <code>beer: 3/5=0.6</code>, <code>cola: 2/5=0.4</code>, <code>eggs: 1/5=0.2</code>.<br><strong>L1 = {bread, milk, diapers, beer, cola} (eggs pruned).</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 2</span><div class="wt-body">
+<span data-lang="zh"><strong>產生候選 2-itemset C2。</strong>L1 中兩兩配對（C(5,2)=10 個）：{麵包,牛奶}、{麵包,尿布}、{麵包,啤酒}、{麵包,可樂}、{牛奶,尿布}、{牛奶,啤酒}、{牛奶,可樂}、{尿布,啤酒}、{尿布,可樂}、{啤酒,可樂}。</span>
+<span data-lang="en"><strong>Generate candidate 2-itemsets C2.</strong> All pairs from L1 (C(5,2)=10): {bread,milk}, {bread,diapers}, {bread,beer}, {bread,cola}, {milk,diapers}, {milk,beer}, {milk,cola}, {diapers,beer}, {diapers,cola}, {beer,cola}.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 3</span><div class="wt-body">
+<span data-lang="zh"><strong>剪枝 + 算支援度。</strong>掃 DB 一遍：<code>{麵包,牛奶}: 3/5=0.6 ✓</code>、<code>{麵包,尿布}: 3/5=0.6 ✓</code>、<code>{麵包,啤酒}: 2/5=0.4 ✓</code>、<code>{麵包,可樂}: 1/5=0.2 ✗</code>、<code>{牛奶,尿布}: 3/5=0.6 ✓</code>、<code>{牛奶,啤酒}: 2/5=0.4 ✓</code>、<code>{牛奶,可樂}: 2/5=0.4 ✓</code>、<code>{尿布,啤酒}: 3/5=0.6 ✓</code>、<code>{尿布,可樂}: 2/5=0.4 ✓</code>、<code>{啤酒,可樂}: 1/5=0.2 ✗</code>。<br><strong>L2 = 8 個項集。</strong></span>
+<span data-lang="en"><strong>Prune + count support.</strong> One DB scan: <code>{bread,milk}: 0.6 ✓</code>, <code>{bread,diapers}: 0.6 ✓</code>, <code>{bread,beer}: 0.4 ✓</code>, <code>{bread,cola}: 0.2 ✗</code>, <code>{milk,diapers}: 0.6 ✓</code>, <code>{milk,beer}: 0.4 ✓</code>, <code>{milk,cola}: 0.4 ✓</code>, <code>{diapers,beer}: 0.6 ✓</code>, <code>{diapers,cola}: 0.4 ✓</code>, <code>{beer,cola}: 0.2 ✗</code>.<br><strong>L2 = 8 itemsets.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 4</span><div class="wt-body">
+<span data-lang="zh"><strong>產生 C3。</strong>從 L2 自連，保留 prefix 相同者：{麵包,牛奶,尿布}、{麵包,牛奶,啤酒}、{麵包,尿布,啤酒}、{牛奶,尿布,啤酒}、{牛奶,尿布,可樂}、{麵包,牛奶,可樂}。<strong>Apriori 剪枝：</strong>{麵包,牛奶,可樂} 含 {麵包,可樂}（不在 L2），刪除。共 5 個候選。</span>
+<span data-lang="en"><strong>Generate C3.</strong> Self-join L2, keep same-prefix joins: {bread,milk,diapers}, {bread,milk,beer}, {bread,diapers,beer}, {milk,diapers,beer}, {milk,diapers,cola}, {bread,milk,cola}. <strong>Apriori prune:</strong> {bread,milk,cola} contains {bread,cola} (not in L2), drop. 5 candidates remain.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 5</span><div class="wt-body">
+<span data-lang="zh"><strong>掃 DB 算 C3 支援度。</strong><code>{麵包,牛奶,尿布}: 2/5=0.4 ✓</code>（T4, T5）、<code>{麵包,牛奶,啤酒}: 1/5=0.2 ✗</code>、<code>{麵包,尿布,啤酒}: 2/5=0.4 ✓</code>（T2, T4）、<code>{牛奶,尿布,啤酒}: 2/5=0.4 ✓</code>（T3, T4）、<code>{牛奶,尿布,可樂}: 2/5=0.4 ✓</code>（T3, T5）。<br><strong>L3 = 4 個 3-itemset。</strong></span>
+<span data-lang="en"><strong>DB scan for C3 support.</strong> <code>{bread,milk,diapers}: 0.4 ✓</code> (T4, T5), <code>{bread,milk,beer}: 0.2 ✗</code>, <code>{bread,diapers,beer}: 0.4 ✓</code> (T2, T4), <code>{milk,diapers,beer}: 0.4 ✓</code> (T3, T4), <code>{milk,diapers,cola}: 0.4 ✓</code> (T3, T5).<br><strong>L3 = 4 3-itemsets.</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 6</span><div class="wt-body">
+<span data-lang="zh"><strong>由頻繁項集產生規則。</strong>以 {尿布, 啤酒} 為例（supp=0.6）：<br>• 規則 {尿布} ⇒ {啤酒}：conf = 0.6/0.8 = 0.75，lift = 0.75/0.6 = <strong>1.25</strong>（正相關）<br>• 規則 {啤酒} ⇒ {尿布}：conf = 0.6/0.6 = 1.0，lift = 1.0/0.8 = <strong>1.25</strong>（對稱！）<br>由 {麵包, 尿布, 啤酒}（supp=0.4）：<br>• {尿布, 啤酒} ⇒ {麵包}：conf = 0.4/0.6 = 0.67，lift = 0.67/0.8 = <strong>0.83</strong>（負相關！）<br>注意：lift 對稱、conf 不對稱、規則的方向依賴使用情境。</span>
+<span data-lang="en"><strong>Derive rules from frequent itemsets.</strong> Take {diapers, beer} (supp=0.6):<br>• {diapers} ⇒ {beer}: conf = 0.6/0.8 = 0.75, lift = 0.75/0.6 = <strong>1.25</strong> (positive)<br>• {beer} ⇒ {diapers}: conf = 0.6/0.6 = 1.0, lift = 1.0/0.8 = <strong>1.25</strong> (symmetric!)<br>From {bread, diapers, beer} (supp=0.4):<br>• {diapers, beer} ⇒ {bread}: conf = 0.4/0.6 = 0.67, lift = 0.67/0.8 = <strong>0.83</strong> (negative!)<br>Note: lift is symmetric, confidence isn't, and rule direction depends on use-case.</span>
+</div></div>
+</div>
+<div class="tip-bar"><span data-zh="關鍵觀察：5 筆交易、6 個 item 已產生 4 個 3-itemset 與 ~20 條規則——真實的 9835 筆 Groceries 可能產生 10,000+ 條規則，因此 min_support 與 Top-N 排序是必要的。" data-en="Key takeaway: 5 transactions, 6 items already yield 4 3-itemsets and ~20 rules — real 9835-row Groceries can yield 10,000+ rules, so min_support and Top-N ranking are essential.">關鍵觀察：5 筆 6 項即可產生 ~20 條規則——真實 9835 筆 Groceries 可達 10,000+ 條，min_support 與 Top-N 排序不可少。</span></div>
+</section>
+
+<section id="discussion" class="section">
+<div class="section-label" data-zh="思辨" data-en="DISCUSSION">思辨</div>
+<h2 data-zh="三個常被爭辯的問題" data-en="Three Hotly Debated Questions">三個常被爭辯的問題</h2>
+
+<div class="discussion-card">
+<span class="disc-label">Q · CAUSATION</span>
+<h3 data-zh="Lift &gt; 1 代表「因果」嗎？" data-en="Does Lift > 1 mean causation?">Lift &gt; 1 代表「因果」嗎？</h3>
+<p class="disc-q" data-lang="zh">不！Lift 只是統計相關性。Pearl 因果推論常引用「冰淇淋與溺水」例：兩者 lift &gt; 2，但都是被「夏天」這個 confounder 引起。</p>
+<p class="disc-q" data-lang="en">No! Lift is just statistical association. Pearl's causal inference loves the "ice cream and drowning" example: both have lift &gt; 2 but are jointly caused by "summer" — a confounder.</p>
+<div class="disc-pov">
+<strong data-zh="保守派：" data-en="Conservative:">保守派：</strong>
+<span data-lang="zh">「關聯規則只能告訴你『值得進一步研究』，要做 RCT 才能斷因果。」</span>
+<span data-lang="en">"Association rules only tell you 'worth investigating'. RCTs are needed for causation."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="實用派：" data-en="Pragmatist:">實用派：</strong>
+<span data-lang="zh">「商業推薦不需要因果——只要規則能提升下單率，就是好規則。Spotify 不必證明 A 致使 B。」</span>
+<span data-lang="en">"Business recommendations don't need causation — if the rule lifts conversion, it works. Spotify doesn't need to prove A causes B."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="生醫派：" data-en="Biomedicine:">生醫派：</strong>
+<span data-lang="zh">「藥物 X ⇒ 副作用 Y 的 lift 是訊號，後續需 Mendelian Randomization、negative control 或 self-controlled case series 驗證。」</span>
+<span data-lang="en">"Drug X ⇒ AE Y lift is a signal; needs Mendelian Randomization, negative controls, or self-controlled case series to verify."</span>
+</div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · SPEED</span>
+<h3 data-zh="FP-Growth 真的比 Apriori 快 10–100×？什麼時候？" data-en="Is FP-Growth really 10–100× faster than Apriori? When?">FP-Growth 真的比 Apriori 快 10–100×？什麼時候？</h3>
+<p class="disc-q" data-lang="zh">是的，但前提：(1) 密集資料 (dense data)，(2) min_support 低（會產生大量候選），(3) item 數 d &gt; 數百。在稀疏資料 + 高 min_support 時，Apriori 反而可能勝出，因為 FP-tree 構建成本 &gt; 候選剪枝節省。實務上：transactions ≤ 1000、items ≤ 50、min_support ≥ 0.1 → Apriori OK；否則 FP-Growth。</p>
+<p class="disc-q" data-lang="en">Yes, but only when: (1) data is dense, (2) min_support is low (lots of candidates), (3) item count d &gt; few hundreds. On sparse data + high min_support, Apriori can win because FP-tree construction cost &gt; candidate-pruning savings. Rule of thumb: transactions ≤ 1000, items ≤ 50, min_support ≥ 0.1 → Apriori is fine; otherwise FP-Growth.</p>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · OBSOLETE?</span>
+<h3 data-zh="關聯規則在 embedding 時代是否已過時？" data-en="Are association rules obsolete in the embedding era?">關聯規則在 embedding 時代是否已過時？</h3>
+<p class="disc-q" data-lang="zh">不完全。embedding-based 推薦（Word2Vec、Item2Vec、BERT4Rec）在大規模、行為資料上勝出。但關聯規則在 (1) 可解釋性、(2) 冷啟動、(3) 監管環境（金融、醫療） 仍有優勢——一條「{aspirin, warfarin} ⇒ {GI bleed}」可以寫進臨床指引；一個 768-d embedding 不行。NeuralGAR (WWW 2024) 是嘗試結合兩者的最新方向：用 embedding 度量相似性，但輸出仍為可讀規則。</p>
+<p class="disc-q" data-lang="en">Not entirely. Embedding-based recommenders (Word2Vec, Item2Vec, BERT4Rec) win on large-scale behavioral data. But association rules still excel in (1) interpretability, (2) cold-start, (3) regulated settings (finance, healthcare) — a rule "{aspirin, warfarin} ⇒ {GI bleed}" can be written into clinical guidelines; a 768-d embedding cannot. NeuralGAR (WWW 2024) tries to bridge both: embedding-based similarity but readable rule output.</p>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🍺</div>
+<div class="sp-body">
+<span class="sp-tag">SPOTLIGHT · 1992</span>
+<h4 data-zh="Walmart 啤酒-尿布：傳奇的真相考證" data-en="Walmart beer-diapers: the legend, fact-checked">Walmart 啤酒-尿布：傳奇的真相考證</h4>
+<p data-lang="zh">DJ Power（Decision Support Systems Resources 創辦人）2002 年的考證文章證實：(1) 確實有此分析，由 Thomas Blischok 在 Teradata（前 NCR）執行；(2) 樣本是 25 家分店、120 萬筆交易、夜間 5–7 點；(3) lift 約 1.3——確實「正相關」但遠不到傳說的「強相關」；(4) Walmart 從未根據此調整貨架——商品擺放決策還有十幾個其他因素。<strong>但傳奇本身比真相重要：</strong>這個故事讓 Apriori 在 1994 年發表後 5 年內被全美零售業普遍採用。1993 年 12 月 23 日的 WSJ 報導，被列為「資料探勘進入主流」的 marker——比 KDD 第一次年會 1995 年早。</p>
+<p data-lang="en">DJ Power's 2002 fact-check (founder of Decision Support Systems Resources) confirmed: (1) the analysis really happened — Thomas Blischok at Teradata (then NCR) ran it; (2) sample was 25 stores, 1.2M transactions, evening 5–7 p.m.; (3) lift was ~1.3 — yes "positive" but nowhere near the legendary "strong"; (4) Walmart never actually rearranged shelves — there were a dozen other inputs into placement. <strong>But the legend mattered more than the truth:</strong> the story drove every US retailer to adopt Apriori within 5 years of its 1994 publication. The 23 Dec 1993 WSJ article is now marked as the moment "data mining entered the mainstream" — earlier than the first KDD conference in 1995.</p>
+</div>
+</div>
+
+<section id="pitfalls" class="section">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="關聯規則 五大常見錯誤" data-en="Five Common Mistakes">關聯規則 五大常見錯誤</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card">
+<h4 data-zh="min_support 太低" data-en="min_support too low">min_support 太低</h4>
+<p data-lang="zh">設 0.001 想「找全」，結果跑出 50 萬條規則——人類無法檢視。<strong>對策：</strong>先用 0.05 試水溫、視業務調整；嚴格生醫研究多用 0.01。</p>
+<p data-lang="en">Set 0.001 hoping to "find everything" → 500K rules, unreviewable. <strong>Fix:</strong> start with 0.05, adjust by use-case; strict biomedical work often uses 0.01.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="只看 confidence 不看 lift" data-en="Only confidence, no lift">只看 confidence 不看 lift</h4>
+<p data-lang="zh">「{啤酒} ⇒ {麵包} conf=0.95」——但 supp(麵包)=0.92，lift 才 1.03，幾乎是巧合。<strong>對策：</strong>固定 min_confidence，按 lift 排序 Top-N。</p>
+<p data-lang="en">"{beer} ⇒ {bread} conf=0.95" — but supp(bread)=0.92, lift just 1.03, near-coincidence. <strong>Fix:</strong> set min_confidence, then rank Top-N by lift.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="Lift 對稀有 item 偏誤" data-en="Lift biased toward rare items">Lift 對稀有 item 偏誤</h4>
+<p data-lang="zh">{罕見藥A} ⇒ {罕見藥B} 因為兩者 supp 都很小，lift 容易爆量。<strong>對策：</strong>同時看 leverage（絕對差）或 conviction；做 Fisher exact test。</p>
+<p data-lang="en">{rareA} ⇒ {rareB}: both supports tiny, lift explodes. <strong>Fix:</strong> also check leverage (absolute deviation) or conviction; run Fisher exact test.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="無多重檢定校正" data-en="No multiple-testing correction">無多重檢定校正</h4>
+<p data-lang="zh">10,000 條規則每條 p &lt; 0.05——500 條會「偶然」顯著。<strong>對策：</strong>BH-FDR 或 Bonferroni 校正；arules 的 <code>interestMeasure(measure="fisher")</code> 可直接給。</p>
+<p data-lang="en">10,000 rules each at p &lt; 0.05 → 500 will be "significant" by chance. <strong>Fix:</strong> BH-FDR or Bonferroni; arules <code>interestMeasure(measure="fisher")</code> gives it directly.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="忽略時序性" data-en="Ignoring temporal order">忽略時序性</h4>
+<p data-lang="zh">關聯規則把「先買 A 再買 B」視為「A 與 B 共現」——但臨床上「先腎衰再用 X 藥」與「先用 X 藥再腎衰」意義完全不同。<strong>對策：</strong>需順序時改用 Ch 12 的序列模式探勘。</p>
+<p data-lang="en">Association rules treat "buy A then B" as "A and B co-occur" — but "kidney failure then drug X" is utterly different from "drug X then kidney failure" in clinical terms. <strong>Fix:</strong> use sequential mining (Ch 12) when order matters.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="把 one-hot 連續變數丟進去" data-en="Throwing one-hot continuous data in">把 one-hot 連續變數丟進去</h4>
+<p data-lang="zh">「年齡=35」當成 item 沒意義。<strong>對策：</strong>連續變數先 discretize（如 age_bucket: 0–18, 19–40, 41–65, 65+）才能進 Apriori。</p>
+<p data-lang="en">"Age=35" as an item is meaningless. <strong>Fix:</strong> discretize continuous variables (e.g., age_bucket: 0–18, 19–40, 41–65, 65+) before feeding Apriori.</p>
+</div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="不好的做法" data-en="Bad practice">不好的做法</h4>
+<p data-lang="zh"><code>apriori(D, supp=0.001, conf=0.5)</code> 跑出 80,000 條規則，按 conf 排序取 Top 10，寫進結論「啤酒導致買尿布」。</p>
+<p data-lang="en"><code>apriori(D, supp=0.001, conf=0.5)</code> spits 80,000 rules, sort by conf, take Top 10, write "beer causes diapers" in the conclusion.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好的做法" data-en="Good practice">好的做法</h4>
+<p data-lang="zh">(1) 設業務合理的 min_support；(2) 按 lift 排序、加 Fisher exact + BH-FDR；(3) 檢視 top-30 規則的生物意義；(4) 只將 lift &gt; 2 + 統計顯著的規則作為「待驗證假設」；(5) 後續 RCT / Mendelian Randomization 驗證因果。</p>
+<p data-lang="en">(1) set business-reasonable min_support; (2) rank by lift, add Fisher exact + BH-FDR; (3) inspect top-30 for biological meaning; (4) treat only lift &gt; 2 + statistically significant rules as "hypotheses worth testing"; (5) follow with RCT / Mendelian Randomization to claim causation.</p>
+</div>
+</div>
+
+<section id="reflection" class="section">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<h2 data-zh="留下來想想" data-en="Take a Minute, Think">留下來想想</h2>
+<div class="reflection-q">
+<h4 data-zh="動筆寫下你的回答（或心裡想 30 秒也好）" data-en="Write your answer (or just think 30 seconds)">動筆寫下你的回答（或心裡想 30 秒也好）</h4>
+<ol>
+<li data-lang="zh">為什麼說 lift 對稱、confidence 不對稱？兩個指標哪個對「推薦」更有用？</li>
+<li data-lang="en">Why is lift symmetric but confidence isn't? Which is more useful for recommendations?</li>
+<li data-lang="zh">Apriori 原理（反單調性）若不存在，Apriori 演算法會變成什麼？</li>
+<li data-lang="en">If the Apriori principle (anti-monotonicity) didn't hold, what would Apriori become?</li>
+<li data-lang="zh">為什麼 FP-Growth 比 Apriori 快但記憶體用量高？這權衡何時划算？</li>
+<li data-lang="en">Why is FP-Growth faster but more memory-hungry than Apriori? When is the trade worth it?</li>
+<li data-lang="zh">如果有 10 億筆交易，你會選 Apriori、FP-Growth、還是改用 embedding 方法？</li>
+<li data-lang="en">With 1B transactions, would you pick Apriori, FP-Growth, or switch to embeddings?</li>
+<li data-lang="zh">關聯規則探勘和 collaborative filtering 的關係是什麼？</li>
+<li data-lang="en">What's the relationship between association rule mining and collaborative filtering?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced" class="section">
+<div class="section-label" data-zh="進階" data-en="ADVANCED">進階</div>
+<h2 data-zh="2024–2026 最前沿" data-en="2024–2026 Frontier">2024–2026 最前沿</h2>
+<div class="advanced-note">
+<span class="adv-label">SOTA · 2024–2026</span>
+<h4 data-zh="從規則探勘到 ontology-aware + NeuralGAR + 聯邦學習" data-en="From rules to ontology-aware + NeuralGAR + federated">從規則探勘到 ontology-aware 與深度學習</h4>
+<p data-lang="zh"><strong>ASEA（2026 Nature Sci Rep）。</strong>Association Subgraph Enrichment Analysis（DOI 10.1038/s41598-026-42584-y）將 Gene Ontology / Disease Ontology 與關聯規則結合：每條規則的 antecedent / consequent 都映射到 ontology term，再以 GO graph 距離 + hypergeometric enrichment 計算「生物意義 score」。應用於 ICD-10 + 處方 + lab events 共現，發現 27 個原本被傳統 lift 排序漏掉的新假設。</p>
+<p data-lang="en"><strong>ASEA (2026 Nature Sci Rep).</strong> Association Subgraph Enrichment Analysis (DOI 10.1038/s41598-026-42584-y) fuses Gene Ontology / Disease Ontology with association rules: rule antecedents/consequents map to ontology terms, then GO-graph distance + hypergeometric enrichment compute a "biological meaning score". Applied to ICD-10 + prescriptions + lab events, surfaced 27 novel hypotheses missed by traditional lift ranking.</p>
+<p data-lang="zh"><strong>NeuralGAR（WWW 2024）。</strong>用 Transformer 學 item embedding，再以 embedding 相似度 + 規則格式輸出。在 Amazon Reviews 2023 上比經典 Apriori 的下單率提升 23%。但可解釋性不如純規則，目前限於電商。</p>
+<p data-lang="en"><strong>NeuralGAR (WWW 2024).</strong> Uses a Transformer to learn item embeddings, then outputs rules via embedding similarity. On Amazon Reviews 2023, 23% conversion lift over classical Apriori. Less interpretable than pure rules; currently confined to e-commerce.</p>
+<p data-lang="zh"><strong>聯邦關聯規則探勘（2025）。</strong>FedAR、FedFP 等框架讓多家醫院在不分享原始 transactions 的前提下共同找規則——僅交換加密的 itemset count。對 HIPAA / GDPR 環境特別重要；2025 KDD 有專場 tutorial。</p>
+<p data-lang="en"><strong>Federated association rule mining (2025).</strong> FedAR, FedFP frameworks let multiple hospitals mine rules without sharing raw transactions — only encrypted itemset counts. Critical for HIPAA / GDPR; KDD 2025 has a dedicated tutorial.</p>
+<p data-lang="zh"><strong>Constraint-based mining。</strong>除了 min_support 還可加 (1) item constraint（「規則必須含某藥」）、(2) length constraint（「規則 ≤ 5 個 item」）、(3) ontology constraint（「antecedent 與 consequent 不可在同 GO branch」）。R 的 <code>arules</code> 與 Python 的 SPMF library 都支援。</p>
+<p data-lang="en"><strong>Constraint-based mining.</strong> Beyond min_support, add (1) item constraints ("rule must contain drug X"), (2) length constraints ("rule ≤ 5 items"), (3) ontology constraints ("antecedent and consequent not in same GO branch"). Supported by R's <code>arules</code> and Python's SPMF.</p>
+<p data-lang="zh"><strong>論文路徑。</strong>Agrawal-Imieliński-Swami 1993 (SIGMOD); Agrawal-Srikant 1994 (VLDB); Han-Pei-Yin 2000 (SIGMOD, FP-Growth); Zaki 2000 (DMKD, Eclat); Hahsler 2005 (JSS, arules); Piatetsky-Shapiro 1991 (KDD); ASEA 2026 (Nature Sci Rep 10.1038/s41598-026-42584-y); NeuralGAR 2024 (WWW)。</p>
+<p data-lang="en"><strong>Paper trail.</strong> Agrawal-Imieliński-Swami 1993 (SIGMOD); Agrawal-Srikant 1994 (VLDB); Han-Pei-Yin 2000 (SIGMOD, FP-Growth); Zaki 2000 (DMKD, Eclat); Hahsler 2005 (JSS, arules); Piatetsky-Shapiro 1991 (KDD); ASEA 2026 (Nature Sci Rep 10.1038/s41598-026-42584-y); NeuralGAR 2024 (WWW).</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -198,6 +556,12 @@ plt.barh([str(s) <span class="kw">for</span> s <span class="kw">in</span> rules.
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 支援度永遠 = 信賴度</span><span data-lang="en">D. Support always equals confidence</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="歷史小註：" data-en="Historical note:">歷史小註：</strong>
+<span data-lang="zh">Rakesh Agrawal 在 1993 年寫第一篇關聯規則論文時，是 IBM Almaden Research Center 的資深研究員，當時年僅 38 歲。1994 年的 Apriori 論文發表在 VLDB——一個資料庫頂會——而非當年才剛起步的 KDD 會議。原因？「機器學習」與「資料庫」仍是兩個社群，互相觀望。Agrawal 把資料探勘定位為「資料庫上的探索性查詢」，使這篇論文進入 DBMS 圈。後來他持續引領，2014 年獲得 ACM SIGMOD Edgar F. Codd Innovations Award。一個「順手分析購物車」的故事，最終讓他成為當代資料探勘的奠基者。</span>
+<span data-lang="en">Rakesh Agrawal was 38 when he wrote the first association-rule paper in 1993, a senior researcher at IBM Almaden. The 1994 Apriori paper was published at VLDB — a DB top venue — not at the then-nascent KDD. Why? "Machine learning" and "databases" were still separate tribes circling each other. Agrawal positioned data mining as "exploratory queries on databases", which got the paper into the DBMS world. He kept leading the field and won the ACM SIGMOD Edgar F. Codd Innovations Award in 2014. A "let's analyze shopping carts" story ended up making him a founder of modern data mining.</span>
+</div>
 
 <nav class="page-nav">
 <a href="density-based-dbscan.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 10: 密度型與機率型分群" data-en="Ch 10: Density-Based and Probabilistic Clustering">Ch 10: 密度型與機率型分群</span></a>

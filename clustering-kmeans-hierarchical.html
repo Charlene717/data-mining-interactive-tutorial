@@ -18,6 +18,187 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽（閱讀時間 ~22 分）" data-en="Chapter map (reading time ~22 min)">本章導覽（閱讀時間 ~22 分）</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="初學者" data-en="Beginner">初學者</span>
+<span class="level-badge l-mid" data-zh="中階" data-en="Intermediate">中階</span>
+<span class="level-badge l-adv" data-zh="進階" data-en="Advanced">進階</span>
+<span class="pill teal">K-Means</span><span class="pill amber">k-means++</span><span class="pill violet">Ward</span><span class="pill rose">silhouette</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場故事：5 群還是 12 群？" data-en="Story: 5 or 12 clusters?">開場故事：5 群還是 12 群？</a></li>
+<li><a href="#glossary" data-zh="核心詞彙表（雙語）" data-en="Glossary (bilingual)">核心詞彙表（雙語）</a></li>
+<li><a href="#history" data-zh="演算法簡史 1957–2024" data-en="Algorithm timeline 1957–2024">演算法簡史 1957–2024</a></li>
+<li><a href="#walkthrough" data-zh="手算 K-Means：6 點 K=2" data-en="Hand walkthrough: 6 points, K=2">手算 K-Means：6 點 K=2</a></li>
+<li><a href="#discussion" data-zh="討論：怎麼挑 K？" data-en="Discussion: how to pick K?">討論：怎麼挑 K？</a></li>
+<li><a href="#pitfalls" data-zh="常見陷阱" data-en="Common pitfalls">常見陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題" data-en="Reflection questions">反思題</a></li>
+<li><a href="#advanced" data-zh="進階：2024–2026 SOTA" data-en="Advanced: 2024–2026 SOTA">進階：2024–2026 SOTA</a></li>
+</ol>
+</div>
+
+<section id="story" class="section">
+<div class="section-label" data-zh="故事開場" data-en="OPENING STORY">故事開場</div>
+<h2 data-zh="場景：50,000 個單細胞" data-en="Scene: 50,000 Single Cells">場景：50,000 個單細胞</h2>
+<div class="story-block">
+<span class="story-tag">SCENE · 2024</span>
+<h3 data-zh="同一份資料、兩種真相" data-en="One Dataset, Two Truths">同一份資料、兩種真相</h3>
+<div data-lang="zh">
+<p>實驗室凌晨三點。生物資訊師 Mei 正在分析來自人類腦皮層的 50,000 個單細胞 scRNA-seq 資料，希望找出細胞類型。她按教科書順序：先 PCA 取前 30 維，再標準化。第一次嘗試 K-Means、K=5：得到 5 個漂亮的球形群，看起來很乾淨——興奮地寄給 PI。</p>
+<p>PI 回信只有一句：「你怎麼知道是 5 群？」隔天她改用 Ward + Euclidean 階層式分群，剪不同高度——畫出來的 dendrogram 顯示有 12 個嵌套的細胞亞群。silhouette 在 K=5、K=8、K=12 處都有局部峰。再跑 Gap statistic：3 個 K 值統計上都顯著。Tabula Muris 的論文用了 23 種。</p>
+<p>哪一個才是「真」群數？這正是本章要回答的問題：K-Means 給你「劃分」、階層式給你「結構」、兩者都對——只是回答不同層次的問題。</p>
+</div>
+<div data-lang="en">
+<p>3 a.m. in the lab. Bioinformatician Mei is staring at a 50,000-cell scRNA-seq dataset from human cortex, hoping to find cell types. She runs the textbook pipeline: PCA down to 30 components, then standard scaling. First try: K-Means with K=5 — five gorgeous spherical blobs. She emails the PI, excited.</p>
+<p>The PI replies: "How did you know it was 5?" Next morning, she tries Ward + Euclidean hierarchical clustering and cuts the dendrogram at several heights: 12 nested sub-types appear. The silhouette curve has local peaks at K=5, K=8, and K=12. Gap statistic flags three K values as significant. Tabula Muris used 23.</p>
+<p>Which is the "true" number? This is exactly what this chapter answers: K-Means hands you a <em>partition</em>; hierarchical hands you <em>structure</em>; both are right — they just answer different questions.</p>
+</div>
+</div>
+</section>
+
+<section id="glossary" class="section">
+<div class="section-label" data-zh="核心詞彙" data-en="GLOSSARY">核心詞彙</div>
+<h2 data-zh="12 個關鍵術語（給每一種讀者）" data-en="12 Key Terms (for every reader)">12 個關鍵術語</h2>
+<div class="glossary-grid">
+<div class="glossary-card">
+<div class="term-en">Clustering</div><div class="term-zh">分群</div>
+<div class="term-kid" data-lang="zh">把長得像的玩具放一堆，不像的放別堆——但沒有大人告訴你哪些是同一類。</div>
+<div class="term-kid" data-lang="en">Putting similar toys in piles — but nobody told you which is which.</div>
+<div class="term-tech" data-lang="zh">無監督學習：將 N 個物件分為 K 群使群內相似度高、群間相似度低；目標函數常為 WCSS、平均 silhouette、log-likelihood。</div>
+<div class="term-tech" data-lang="en">Unsupervised partition of N objects into K groups maximizing intra-cluster similarity. Common objectives: WCSS, mean silhouette, log-likelihood.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Centroid</div><div class="term-zh">質心</div>
+<div class="term-kid" data-lang="zh">一群點的「平均位置」，像一群孩子的中心點。</div>
+<div class="term-kid" data-lang="en">The average location of a group — the centre of mass.</div>
+<div class="term-tech" data-lang="zh">μ_k = (1/|C_k|) Σ_{x∈C_k} x；對 L2 距離為最小化 Σ ‖x − μ_k‖² 的 minimizer。</div>
+<div class="term-tech" data-lang="en">μ_k = (1/|C_k|) Σ_{x∈C_k} x; minimizer of Σ ‖x − μ_k‖² under L2.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Lloyd's algorithm</div><div class="term-zh">Lloyd 演算法</div>
+<div class="term-kid" data-lang="zh">「指派→平均」反覆做，直到沒人換組為止。</div>
+<div class="term-kid" data-lang="en">Repeat "assign → average" until nobody switches groups.</div>
+<div class="term-tech" data-lang="zh">EM-like 兩步：(E) 指派每點到最近 μ_k；(M) 重算 μ_k = mean(C_k)。對 K-Means 目標函數單調遞減，保證收斂至局部最小。</div>
+<div class="term-tech" data-lang="en">EM-like two-step: (E) assign each x to nearest μ_k; (M) recompute μ_k as mean of C_k. Monotone decrease in K-Means objective, converges to local minimum.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">k-means++</div><div class="term-zh">k-means++ 初始化</div>
+<div class="term-kid" data-lang="zh">先挑一個座位，下一個座位要離已挑過的越遠越好——讓初始位置散得開。</div>
+<div class="term-kid" data-lang="en">Pick a seed; the next seed favours points far from existing seeds — spread the starts.</div>
+<div class="term-tech" data-lang="zh">Arthur & Vassilvitskii 2007；機率 ∝ d(x, 最近已挑質心)²。期望近似比 O(log K)，遠優於隨機 init。</div>
+<div class="term-tech" data-lang="en">Arthur & Vassilvitskii 2007; sample with probability ∝ d(x, nearest chosen)². Expected O(log K) approximation, far better than random init.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Inertia / WCSS</div><div class="term-zh">類內平方和</div>
+<div class="term-kid" data-lang="zh">每個小孩離自己組中心多遠？把所有距離平方加起來，越小越緊密。</div>
+<div class="term-kid" data-lang="en">How far is each kid from their own group's centre? Sum the squared distances — lower means tighter groups.</div>
+<div class="term-tech" data-lang="zh">WCSS = Σ_k Σ_{x∈C_k} ‖x − μ_k‖²。K 增加時必然單調遞減——這就是 elbow 法的依據。</div>
+<div class="term-tech" data-lang="en">WCSS = Σ_k Σ_{x∈C_k} ‖x − μ_k‖². Monotonically decreasing in K — the basis of the elbow heuristic.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Silhouette coefficient</div><div class="term-zh">輪廓係數</div>
+<div class="term-kid" data-lang="zh">如果你離自己組比較近、離別人組比較遠，分數就高（最高 1）。</div>
+<div class="term-kid" data-lang="en">If you're closer to your own group than the next group, you score high (max 1).</div>
+<div class="term-tech" data-lang="zh">s(i) = (b−a)/max(a,b)；a=同群平均距、b=最近他群平均距。範圍 [-1, 1]，平均 s 越大越好。Rousseeuw 1987。</div>
+<div class="term-tech" data-lang="en">s(i) = (b−a)/max(a,b); a = mean within-cluster distance, b = mean distance to nearest other cluster. Range [-1, 1]; higher is better. Rousseeuw 1987.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Gap statistic</div><div class="term-zh">Gap 統計量</div>
+<div class="term-kid" data-lang="zh">把資料隨機洗牌當對照組，比較真的 WCSS 比洗牌後低多少。</div>
+<div class="term-kid" data-lang="en">Compare real WCSS against a shuffled "no-cluster" baseline — how much better are we?</div>
+<div class="term-tech" data-lang="zh">Tibshirani 2001：Gap(K) = E*[log W_K] − log W_K，使用 bootstrap 自參考分佈估期望。選使 Gap(K) ≥ Gap(K+1) − s_{K+1} 的最小 K。</div>
+<div class="term-tech" data-lang="en">Tibshirani 2001: Gap(K) = E*[log W_K] − log W_K, expectation estimated via bootstrap from a reference distribution. Pick smallest K with Gap(K) ≥ Gap(K+1) − s_{K+1}.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">K-Medoids (PAM)</div><div class="term-zh">K-中位點</div>
+<div class="term-kid" data-lang="zh">不用「平均座位」，改用「真正存在的點」當中心，比較不怕怪人 (outlier)。</div>
+<div class="term-kid" data-lang="en">Use an actual data point as the centre, not a hypothetical average — robust to weirdos (outliers).</div>
+<div class="term-tech" data-lang="zh">Partitioning Around Medoids (Kaufman & Rousseeuw 1990)：質心限為真實樣本，最小化絕對距離總和；可搭配任意距離（Gower、Manhattan）。</div>
+<div class="term-tech" data-lang="en">Partitioning Around Medoids (Kaufman & Rousseeuw 1990): centre restricted to actual data points; minimizes sum of absolute distances; works with any distance (Gower, Manhattan).</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Agglomerative hierarchical</div><div class="term-zh">凝聚式階層分群</div>
+<div class="term-kid" data-lang="zh">從每個人都是一群，最像的兩群合併，再合併，再合併⋯⋯像家族樹由下往上長。</div>
+<div class="term-kid" data-lang="en">Start with each point alone; merge the two most similar; repeat — bottom-up family tree.</div>
+<div class="term-tech" data-lang="zh">每步合併「最近」兩群，由 linkage 函數定義「最近」。複雜度 O(N² log N)（heap-based）至 O(N³)（naive）。</div>
+<div class="term-tech" data-lang="en">At each step merge the two nearest clusters under a linkage function. Complexity O(N² log N) heap-based to O(N³) naive.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Ward linkage</div><div class="term-zh">Ward 連結</div>
+<div class="term-kid" data-lang="zh">合併時挑「讓總體變最小」的兩群——最小化亂度。</div>
+<div class="term-kid" data-lang="en">Merge whichever pair causes the smallest jump in overall spread.</div>
+<div class="term-tech" data-lang="zh">Ward 1963：ΔE = |C_a||C_b|/(|C_a|+|C_b|) · ‖μ_a − μ_b‖²；只在歐氏距離下定義良好。傾向產生大小相近的球狀群。</div>
+<div class="term-tech" data-lang="en">Ward 1963: ΔE = |C_a||C_b|/(|C_a|+|C_b|) · ‖μ_a − μ_b‖²; well-defined only under Euclidean. Tends to produce balanced, spherical clusters.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Dendrogram</div><div class="term-zh">樹狀圖</div>
+<div class="term-kid" data-lang="zh">像家族樹：縱軸是「合併距離」、橫軸是樣本，剪不同高度就得到不同群數。</div>
+<div class="term-kid" data-lang="en">A family tree: y-axis is "merge distance," x-axis is samples; cut at different heights for different K.</div>
+<div class="term-tech" data-lang="zh">遞迴二元樹，葉=樣本、節點高=合併時的 linkage 距離。提供 multi-resolution view；可由 cophenetic distance 評估保真度。</div>
+<div class="term-tech" data-lang="en">A recursive binary tree: leaves = samples, node height = linkage distance at merge. Gives a multi-resolution view; fidelity assessed by cophenetic distance.</div>
+</div>
+<div class="glossary-card">
+<div class="term-en">Cophenetic correlation</div><div class="term-zh">餘弦相關係數</div>
+<div class="term-kid" data-lang="zh">樹狀圖把兩個人放多遠？vs 他們真實的差距？越像越好。</div>
+<div class="term-kid" data-lang="en">How far apart does the tree put two points vs how far they actually are? Closer match = better tree.</div>
+<div class="term-tech" data-lang="zh">corr(cophenetic distance, original pairwise distance)；>0.75 一般視為 dendrogram 忠實保留原距離結構。Sokal & Rohlf 1962。</div>
+<div class="term-tech" data-lang="en">corr(cophenetic distance, original pairwise distance); >0.75 generally taken as the dendrogram faithfully preserving structure. Sokal & Rohlf 1962.</div>
+</div>
+</div>
+</section>
+
+<section id="history" class="section">
+<div class="section-label" data-zh="歷史" data-en="HISTORY">歷史</div>
+<h2 data-zh="分群演算法簡史" data-en="A Short History of Clustering">分群演算法簡史</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1957</span><span class="tl-title" data-zh="Lloyd 在 Bell Labs 提出 K-Means" data-en="Lloyd at Bell Labs invents K-Means">Lloyd 在 Bell Labs 提出 K-Means</span><span class="tl-desc" data-zh="原為 PCM 通訊量化問題；論文 1982 才正式發表，但已內部流傳 25 年。" data-en="Originally for PCM communication quantization; not formally published until 1982, but circulated internally for 25 years."></span></div>
+<div class="timeline-item"><span class="tl-year">1963</span><span class="tl-title" data-zh="Ward 提出 minimum-variance linkage" data-en="Ward proposes minimum-variance linkage">Ward 提出 minimum-variance linkage</span><span class="tl-desc" data-zh="J. Amer. Stat. Assoc.；至今仍是 hierarchical clustering 最常用的 linkage。" data-en="J. Amer. Stat. Assoc.; still the most-used linkage in hierarchical clustering today."></span></div>
+<div class="timeline-item"><span class="tl-year">1967</span><span class="tl-title" data-zh="MacQueen 正式命名「k-means」" data-en="MacQueen formally names &quot;k-means&quot;">MacQueen 正式命名「k-means」</span><span class="tl-desc" data-zh="Berkeley 5th Symp.；獨立於 Lloyd 提出 online 變體。" data-en="Berkeley 5th Symp.; proposed an online variant independent of Lloyd."></span></div>
+<div class="timeline-item"><span class="tl-year">1979</span><span class="tl-title" data-zh="Hartigan & Wong：改良 k-means" data-en="Hartigan & Wong: improved k-means">Hartigan & Wong：改良 k-means</span><span class="tl-desc" data-zh="Applied Statistics 28(1)，R 預設 algorithm = &quot;Hartigan-Wong&quot;。" data-en="Applied Statistics 28(1); the default in R's stats::kmeans."></span></div>
+<div class="timeline-item"><span class="tl-year">1987</span><span class="tl-title" data-zh="Rousseeuw 提出 silhouette" data-en="Rousseeuw introduces silhouette">Rousseeuw 提出 silhouette</span><span class="tl-desc" data-zh="J. Comp. Appl. Math.；逐點分群品質指標的開山之作。" data-en="J. Comp. Appl. Math.; the seminal per-point clustering-quality metric."></span></div>
+<div class="timeline-item"><span class="tl-year">2001</span><span class="tl-title" data-zh="Tibshirani Gap statistic" data-en="Tibshirani Gap statistic">Tibshirani Gap statistic</span><span class="tl-desc" data-zh="JRSS-B；以 bootstrap 對照分佈嚴格估計 K。" data-en="JRSS-B; rigorous K-estimation via bootstrap reference distribution."></span></div>
+<div class="timeline-item"><span class="tl-year">2007</span><span class="tl-title" data-zh="Arthur–Vassilvitskii：k-means++" data-en="Arthur–Vassilvitskii: k-means++">Arthur–Vassilvitskii：k-means++</span><span class="tl-desc" data-zh="SODA；O(log K) 期望近似比，現為 sklearn / R 預設 init。" data-en="SODA; O(log K) expected approximation, now the default init in sklearn / R."></span></div>
+<div class="timeline-item"><span class="tl-year">2015</span><span class="tl-title" data-zh="Mini-batch K-Means 進入 sklearn" data-en="Mini-batch K-Means lands in sklearn">Mini-batch K-Means 進入 sklearn</span><span class="tl-desc" data-zh="Sculley 2010 Web-scale K-Means；隨機 mini-batch 更新，10M 點/分。" data-en="Based on Sculley 2010 Web-scale K-Means; stochastic mini-batch updates, 10M points/min."></span></div>
+<div class="timeline-item"><span class="tl-year">2024</span><span class="tl-title" data-zh="sklearn 1.5 Lloyd 收斂加速" data-en="sklearn 1.5 Lloyd convergence speedup">sklearn 1.5 Lloyd 收斂加速</span><span class="tl-desc" data-zh="OpenMP + 鬆弛容忍度，預設 algorithm=&quot;lloyd&quot; 比 1.0 快 1.3–2×。" data-en="OpenMP + relaxed tolerance; algorithm=&quot;lloyd&quot; 1.3–2× faster than 1.0."></span></div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="比喻" data-en="ANALOGY">比喻</div>
+<h2 data-zh="一句話講清楚這兩種分群" data-en="One-Sentence Analogies">一句話講清楚這兩種分群</h2>
+<div class="analogy-box">
+<div class="ana-icon">🧑‍🏫</div>
+<div class="ana-body">
+<span class="ana-tag">CLASSROOM ANALOGY</span>
+<h4 data-zh="K-Means：分組坐位；Hierarchical：建家族樹" data-en="K-Means: pick seats; Hierarchical: build a family tree">K-Means：分組坐位；Hierarchical：建家族樹</h4>
+<p data-lang="zh">想像一群學生站在操場上。<strong>K-Means</strong> 像是請 K 個老師散開站好——每個學生走到「最近」的老師那邊，然後老師走到自己學生群的中心。重複，直到沒人換組。<strong>階層式</strong> 則是先把每位學生當「家族」，找到最相近的兩個家族合併成核心家庭，再合併成大家族，再合併成整個社區——畫成樹，剪不同高度就得不同分組。</p>
+<p data-lang="en">Picture students on a playground. <strong>K-Means</strong> is like K teachers spreading out — each student walks to the nearest teacher; each teacher moves to the centre of their students. Repeat until no one switches. <strong>Hierarchical</strong> starts with every student as a one-person "family"; merge the two closest into a nuclear family, then merge into extended families, then a whole community — draw the tree, cut at any height for any K.</p>
+</div>
+</div>
+
+<details class="detail-toggle">
+<summary data-zh="點開看：為何 K-Means 容易卡在局部最小？" data-en="Click: why does K-Means get stuck in local minima?">點開看：為何 K-Means 容易卡在局部最小？</summary>
+<div class="detail-body">
+<div data-lang="zh">K-Means 最小化的 WCSS 是 <strong>非凸</strong> 函數（隨 partition 階梯式變化）。Lloyd 演算法每步單調遞減，但只保證收斂到當下 basin 的底；對稱配置如「兩群被分成上下半」是常見的局部最小。對策：(1) 多重 random init 取最佳（<code>n_init=25</code> 是慣例），(2) k-means++（讓初始質心遠離已選），(3) 用 hierarchical 結果做為 init。</div>
+<div data-lang="en">K-Means minimizes WCSS, which is <strong>non-convex</strong> (stepwise in the partition). Lloyd's algorithm decreases monotonically but only finds the bottom of the current basin; symmetric mistakes like "splitting two clusters into top and bottom halves" are classic local minima. Fixes: (1) many random inits (<code>n_init=25</code> is standard), (2) k-means++ (seeds far apart), (3) initialize from hierarchical labels.</div>
+</div>
+</details>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="互動 KPI" data-en="KPI BOARD">互動 KPI</div>
+<h2 data-zh="關鍵指標一覽" data-en="Key Numbers at a Glance">關鍵指標一覽</h2>
+<div class="kpi-grid">
+<div class="kpi-card"><span class="kpi-num">O(NKi)</span><span class="kpi-label" data-zh="K-Means 複雜度" data-en="K-Means cost">K-Means 複雜度</span></div>
+<div class="kpi-card"><span class="kpi-num">O(N²log N)</span><span class="kpi-label" data-zh="階層式複雜度" data-en="Hierarchical cost">階層式複雜度</span></div>
+<div class="kpi-card"><span class="kpi-num">≥ 25</span><span class="kpi-label" data-zh="建議 n_init" data-en="Recommended n_init">建議 n_init</span></div>
+<div class="kpi-card"><span class="kpi-num">&gt; 0.5</span><span class="kpi-label" data-zh="silhouette 通過門檻" data-en="silhouette pass">silhouette 通過</span></div>
+<div class="kpi-card"><span class="kpi-num">&gt; 0.75</span><span class="kpi-label" data-zh="cophenetic 通過" data-en="cophenetic pass">cophenetic 通過</span></div>
+<div class="kpi-card"><span class="kpi-num">23</span><span class="kpi-label" data-zh="Tabula Muris 細胞型數" data-en="Tabula Muris cell types">Tabula Muris 細胞型數</span></div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="兩大派典：劃分式 vs 階層式" data-en="Two Paradigms: Partitional vs Hierarchical">兩大派典：劃分式 vs 階層式</h2>
@@ -169,6 +350,181 @@ agg = <span class="func">AgglomerativeClustering</span>(n_clusters=<span class="
 </div>
 </section>
 
+<section id="walkthrough" class="section">
+<div class="section-label" data-zh="逐步演算" data-en="WALKTHROUGH">逐步演算</div>
+<h2 data-zh="K-Means 手算：6 個點、K = 2" data-en="K-Means By Hand: 6 points, K=2">K-Means 手算：6 個點、K = 2</h2>
+<div class="walkthrough">
+<div class="walkthrough-header">
+<div class="wt-num">6</div>
+<h3 data-zh="資料 A(1,1) B(1.5,2) C(3,4) D(5,7) E(3.5,5) F(4.5,5)" data-en="Data A(1,1) B(1.5,2) C(3,4) D(5,7) E(3.5,5) F(4.5,5)">A(1,1) B(1.5,2) C(3,4) D(5,7) E(3.5,5) F(4.5,5)</h3>
+<span class="wt-tag">K=2 · Lloyd</span>
+</div>
+<div class="wt-step"><span class="wt-label">Step 1</span><div class="wt-body">
+<span data-lang="zh"><strong>初始化質心。</strong>隨機挑 <code>c1 = A = (1, 1)</code>、<code>c2 = D = (5, 7)</code>（最遠的兩點，k-means++ 也會這樣挑）。</span>
+<span data-lang="en"><strong>Initialize centroids.</strong> Pick <code>c1 = A = (1, 1)</code>, <code>c2 = D = (5, 7)</code> — the two farthest points, also what k-means++ would pick.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 2</span><div class="wt-body">
+<span data-lang="zh"><strong>指派每點。</strong>A→c1 (d=0)、B→c1 (d=1.12)、C→c1 (d=3.61)；D→c2 (d=0)、E→c2 (d=2.5)、F→c2 (d=2.06)。<br>C1 = {A, B, C}；C2 = {D, E, F}。</span>
+<span data-lang="en"><strong>Assign each point.</strong> A→c1 (d=0), B→c1 (d=1.12), C→c1 (d=3.61); D→c2 (d=0), E→c2 (d=2.5), F→c2 (d=2.06).<br>C1 = {A, B, C}; C2 = {D, E, F}.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 3</span><div class="wt-body">
+<span data-lang="zh"><strong>更新質心。</strong>c1 = mean(A,B,C) = ((1+1.5+3)/3, (1+2+4)/3) = <code>(1.83, 2.33)</code>。c2 = mean(D,E,F) = <code>(4.33, 5.67)</code>。</span>
+<span data-lang="en"><strong>Update centroids.</strong> c1 = mean(A,B,C) = <code>(1.83, 2.33)</code>. c2 = mean(D,E,F) = <code>(4.33, 5.67)</code>.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 4</span><div class="wt-body">
+<span data-lang="zh"><strong>再指派。</strong>距離重算後：A、B 仍歸 C1；C 距 c1=2.32、距 c2=2.05，<em>切換</em> 至 C2。D、E、F 仍歸 C2。<br>C1 = {A, B}；C2 = {C, D, E, F}。</span>
+<span data-lang="en"><strong>Reassign.</strong> Recomputing: A, B stay in C1; C is 2.32 from c1 and 2.05 from c2 — <em>switches</em> to C2. D, E, F stay.<br>C1 = {A, B}; C2 = {C, D, E, F}.</span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 5</span><div class="wt-body">
+<span data-lang="zh"><strong>再更新質心。</strong>c1 = (1.25, 1.5)；c2 = (4.0, 5.25)。第三輪指派與上一輪相同——<strong>收斂！</strong></span>
+<span data-lang="en"><strong>Update again.</strong> c1 = (1.25, 1.5); c2 = (4.0, 5.25). The third pass yields the same assignment — <strong>converged!</strong></span>
+</div></div>
+<div class="wt-step"><span class="wt-label">Step 6</span><div class="wt-body">
+<span data-lang="zh"><strong>WCSS 計算。</strong>WCSS = ‖A − c1‖² + ‖B − c1‖² + ‖C − c2‖² + ‖D − c2‖² + ‖E − c2‖² + ‖F − c2‖² ≈ 0.31 + 0.31 + 2.56 + 4.06 + 0.31 + 0.31 ≈ <code>7.85</code>。<br>對比 K=3：WCSS 降到 ~2.1，但 silhouette 可能下降——這就是「複雜度 vs 緊密度」的拉鋸。</span>
+<span data-lang="en"><strong>WCSS calculation.</strong> WCSS = ‖A − c1‖² + ‖B − c1‖² + ‖C − c2‖² + ‖D − c2‖² + ‖E − c2‖² + ‖F − c2‖² ≈ 0.31 + 0.31 + 2.56 + 4.06 + 0.31 + 0.31 ≈ <code>7.85</code>.<br>For K=3: WCSS drops to ~2.1, but silhouette may dip — the classic "complexity vs tightness" trade-off.</span>
+</div></div>
+</div>
+<div class="tip-bar"><span data-zh="動手做：把這六點用 sklearn 重跑，比較與手算結果——分群是少數能完全手算驗證的演算法之一。" data-en="Try it: rerun these six points in sklearn and compare to the hand calc — clustering is one of the few algorithms you can fully verify by hand.">動手做：把這六點用 sklearn 重跑，比較與手算結果——分群是少數能完全手算驗證的演算法之一。</span></div>
+</section>
+
+<section id="discussion" class="section">
+<div class="section-label" data-zh="思辨" data-en="DISCUSSION">思辨</div>
+<h2 data-zh="三個常被爭辯的問題" data-en="Three Hotly Debated Questions">三個常被爭辯的問題</h2>
+
+<div class="discussion-card">
+<span class="disc-label">Q · METHOD</span>
+<h3 data-zh="怎麼挑 K？Elbow / Silhouette / Gap 意見不一時聽誰的？" data-en="How to pick K? When Elbow, Silhouette, Gap disagree?">怎麼挑 K？Elbow / Silhouette / Gap 意見不一時聽誰的？</h3>
+<p class="disc-q" data-lang="zh">三個指標各有偏好：Elbow 主觀、Silhouette 偏好分得開的群、Gap 統計嚴謹但慢。實務上常出現 Elbow K=4、Silhouette K=6、Gap K=8。</p>
+<p class="disc-q" data-lang="en">Three criteria, three preferences: Elbow is subjective; Silhouette favours well-separated clusters; Gap is rigorous but slow. You'll often see Elbow K=4, Silhouette K=6, Gap K=8.</p>
+<div class="disc-pov">
+<strong data-zh="觀點 A（生物學家）：" data-en="Pov A (biologist):">觀點 A（生物學家）：</strong>
+<span data-lang="zh">「我有先驗知識——我知道腦皮層有 6 大細胞型。直接 K=6 並驗證亞型。」</span>
+<span data-lang="en">"I have priors — cortex has 6 broad cell types. Set K=6 and validate sub-types."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="觀點 B（統計學家）：" data-en="Pov B (statistician):">觀點 B（統計學家）：</strong>
+<span data-lang="zh">「Gap statistic 給出統計顯著的 K——任何主觀挑法都是 cherry picking。」</span>
+<span data-lang="en">"Gap statistic gives a significant K — any subjective pick is cherry picking."</span>
+</div>
+<div class="disc-pov">
+<strong data-zh="觀點 C（資料科學家）：" data-en="Pov C (data scientist):">觀點 C（資料科學家）：</strong>
+<span data-lang="zh">「下游任務（分類準確率、生物意義）說了算——選讓下游表現最好的 K。」</span>
+<span data-lang="en">"Let the downstream task decide — pick the K that maximizes downstream classification or biological interpretability."</span>
+</div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · BIAS</span>
+<h3 data-zh="K-Means 真的「偏好球狀群」嗎？" data-en="Is K-Means truly biased toward spherical clusters?">K-Means 真的「偏好球狀群」嗎？</h3>
+<p class="disc-q" data-lang="zh">是的——因為 WCSS 用歐氏距離平方。即使真實群是橢圓或鏈狀，K-Means 會把它切成幾個球。診斷：跑完 K-Means 後檢查每群的 covariance——若特徵值差很大就是被切碎了。對策：(1) PCA 後 whitening、(2) GMM with full covariance、(3) DBSCAN。</p>
+<p class="disc-q" data-lang="en">Yes — because WCSS uses squared Euclidean distance. Even if the true clusters are elliptical or chain-shaped, K-Means slices them into spheres. Diagnosis: after K-Means, check per-cluster covariance — large eigenvalue spread means you fragmented an elongated cluster. Fixes: (1) PCA + whitening, (2) GMM with full covariance, (3) DBSCAN.</p>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label">Q · LINKAGE</span>
+<h3 data-zh="生物資料該用 Ward 還是 Average linkage？" data-en="For biology: Ward or average linkage?">生物資料該用 Ward 還是 Average linkage？</h3>
+<p class="disc-q" data-lang="zh">基因表現 / scRNA-seq 通常用 Ward + Euclidean——產生大小相近的緊湊群，適合 patient subtyping。<strong>系統發育 (phylogenetics)</strong> 則用 Average linkage (UPGMA) + 演化距離，理論上是 ultrametric tree。Single linkage 在 microbial 16S 上常見但容易 chain。</p>
+<p class="disc-q" data-lang="en">For gene-expression / scRNA-seq: Ward + Euclidean — yields balanced compact groups, great for patient subtyping. <strong>Phylogenetics</strong> uses average linkage (UPGMA) + evolutionary distance, theoretically an ultrametric tree. Single linkage is common in 16S microbial work but chains easily.</p>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🌟</div>
+<div class="sp-body">
+<span class="sp-tag">SPOTLIGHT · 2019</span>
+<h4 data-zh="Tabula Muris Senis：跨組織老化圖譜" data-en="Tabula Muris Senis: cross-tissue aging atlas">Tabula Muris Senis：跨組織老化圖譜</h4>
+<p data-lang="zh">2019 年 Nature 發表的 Tabula Muris Senis 計畫測序了老鼠 23 個組織、~ 350,000 個細胞，定義 23 種共通細胞型。<strong>方法</strong>：先做 hierarchical clustering 找 broad-class、再 Louvain on KNN graph 細分亞型——hybrid 方法成為 scRNA-seq 標準作業。所有結果以 cell-type ontology 表示，下游研究者可直接呼叫。</p>
+<p data-lang="en">The 2019 Nature paper sequenced 23 mouse tissues, ~350,000 cells, defining 23 shared cell types. <strong>Pipeline</strong>: hierarchical clustering for broad classes, then Louvain on a KNN graph for sub-types — this hybrid became the standard scRNA-seq workflow. Results were exported as a cell-type ontology, queryable by any downstream user.</p>
+</div>
+</div>
+
+<section id="pitfalls" class="section">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="K-Means / 階層式 五大常見錯誤" data-en="Five Common Mistakes">K-Means / 階層式 五大常見錯誤</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card">
+<h4 data-zh="忘了 scaling" data-en="Forgetting to scale">忘了 scaling</h4>
+<p data-lang="zh">基因表現 TPM 範圍 0–10⁵，年齡 0–100——不 scale，年齡完全沒影響。<strong>對策：</strong>K-Means 前一定 <code>StandardScaler</code> 或 <code>log1p</code>。</p>
+<p data-lang="en">Gene TPM ranges 0–10⁵, age 0–100. Without scaling, age has zero influence. <strong>Fix:</strong> always <code>StandardScaler</code> or <code>log1p</code> before K-Means.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="K 固定不驗證" data-en="K fixed without validation">K 固定不驗證</h4>
+<p data-lang="zh">用 K=3 因為「直覺」——但 silhouette、gap、生物意義都該檢查。<strong>對策：</strong>掃 K=2–15，畫 elbow + silhouette + gap 三聯圖。</p>
+<p data-lang="en">"K=3 because intuition" — but silhouette, gap, and biological meaning should all be checked. <strong>Fix:</strong> sweep K=2–15, plot elbow + silhouette + gap together.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="K-Means 跑類別變數" data-en="K-Means on categorical features">K-Means 跑類別變數</h4>
+<p data-lang="zh">「性別=男/女」做 one-hot 進 K-Means 沒道理——平均「0.5 男」是什麼？<strong>對策：</strong>K-Modes (Huang 1998) 或 K-Prototypes（混合）。</p>
+<p data-lang="en">One-hot encoding gender into K-Means makes no sense — what is "0.5 male"? <strong>Fix:</strong> K-Modes (Huang 1998) or K-Prototypes (mixed).</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="Ward + 非歐距離" data-en="Ward with non-Euclidean">Ward + 非歐距離</h4>
+<p data-lang="zh">Ward 的數學定義只在歐氏空間有意義；對 Manhattan、Gower、cosine 用 Ward 是統計上的錯誤。<strong>對策：</strong>非歐距離請改用 average/complete linkage。</p>
+<p data-lang="en">Ward is only well-defined in Euclidean space; using Ward with Manhattan, Gower, or cosine is a statistical error. <strong>Fix:</strong> use average/complete linkage for non-Euclidean distances.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="Dendrogram 剪一刀不驗證" data-en="Cutting dendrogram without testing">Dendrogram 剪一刀不驗證</h4>
+<p data-lang="zh">剪在 h=2.5 因為「畫起來剛好」——但 bootstrap stability 才告訴你哪個分支可信。<strong>對策：</strong>pvclust（Suzuki & Shimodaira 2006）給每節點 p-value。</p>
+<p data-lang="en">Cutting at h=2.5 because "it looks right" — but bootstrap stability tells you which branches are reliable. <strong>Fix:</strong> use pvclust (Suzuki & Shimodaira 2006) for per-node p-values.</p>
+</div>
+<div class="pitfall-card">
+<h4 data-zh="忽略 outlier 影響" data-en="Ignoring outliers">忽略 outlier 影響</h4>
+<p data-lang="zh">一個極端值能把 K-Means 質心拉走、把 Ward 的合併方向扭曲。<strong>對策：</strong>K-Medoids (PAM) 對 outlier 比 K-Means 穩健；或先以 IQR 過濾。</p>
+<p data-lang="en">A single outlier can drag a K-Means centroid or skew a Ward merge. <strong>Fix:</strong> K-Medoids (PAM) is more robust; or filter outliers via IQR first.</p>
+</div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="不好的做法" data-en="Bad practice">不好的做法</h4>
+<p data-lang="zh">直接 <code>KMeans(n_clusters=5).fit(raw_data)</code>，不 scale、不掃 K、不驗證。報告寫「5 個亞型」就送 PI。</p>
+<p data-lang="en">Just <code>KMeans(n_clusters=5).fit(raw_data)</code> — no scaling, no K sweep, no validation. Email PI saying "5 sub-types".</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好的做法" data-en="Good practice">好的做法</h4>
+<p data-lang="zh">(1) <code>log1p</code> + <code>StandardScaler</code>；(2) <code>n_init=25, init="k-means++"</code>；(3) 掃 K=2–15、看 silhouette + gap；(4) 用 bootstrap stability 驗證；(5) 與生物學標註對齊。</p>
+<p data-lang="en">(1) <code>log1p</code> + <code>StandardScaler</code>; (2) <code>n_init=25, init="k-means++"</code>; (3) sweep K=2–15 with silhouette + gap; (4) bootstrap stability; (5) align with biological annotation.</p>
+</div>
+</div>
+
+<section id="reflection" class="section">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<h2 data-zh="留下來想想" data-en="Take a Minute, Think">留下來想想</h2>
+<div class="reflection-q">
+<h4 data-zh="動筆寫下你的回答（或心裡想 30 秒也好）" data-en="Write your answer (or just think 30 seconds)">動筆寫下你的回答（或心裡想 30 秒也好）</h4>
+<ol>
+<li data-lang="zh">為什麼 K-Means 的 WCSS 隨 K 增加單調遞減？這意味著 K=N 時 WCSS=0——這對嗎？</li>
+<li data-lang="en">Why does WCSS monotonically decrease with K? That means K=N gives WCSS=0 — is that right?</li>
+<li data-lang="zh">想像你的資料分布是兩條平行直線（如基因 X 與其轉錄產物）。K-Means 會給出什麼樣的分群？階層式呢？</li>
+<li data-lang="en">Suppose your data lies on two parallel lines (e.g., gene X and its transcript). What partition does K-Means give? Hierarchical?</li>
+<li data-lang="zh">silhouette = 0.3 算「好」嗎？取決於什麼？</li>
+<li data-lang="en">Is a silhouette of 0.3 "good"? It depends on what?</li>
+<li data-lang="zh">Ward 與 GMM (spherical Σ) 有何關係？如果有，是巧合嗎？</li>
+<li data-lang="en">What's the relationship between Ward and GMM (spherical Σ)? If any, is it a coincidence?</li>
+<li data-lang="zh">為什麼說「K-Means 是 EM 的特例」？</li>
+<li data-lang="en">Why is K-Means often called "a special case of EM"?</li>
+</ol>
+</div>
+</section>
+
+<section id="advanced" class="section">
+<div class="section-label" data-zh="進階" data-en="ADVANCED">進階</div>
+<h2 data-zh="2024–2026 最前沿" data-en="2024–2026 Frontier">2024–2026 最前沿</h2>
+<div class="advanced-note">
+<span class="adv-label">SOTA · 2024–2026</span>
+<h4 data-zh="從 mini-batch 到 streaming + consensus" data-en="From mini-batch to streaming + consensus">從 mini-batch 到 streaming + consensus</h4>
+<p data-lang="zh"><strong>Streaming K-Means。</strong>BIRCH (Zhang 1996) 至今仍是大型流式資料的標準預處理：建 CF-tree 樹存匯總統計，再對葉節點 K-Means。2024 cuML 在 GPU 上把 BIRCH + Mini-batch K-Means 結合，處理 10M+ 點 &lt; 30 秒。</p>
+<p data-lang="en"><strong>Streaming K-Means.</strong> BIRCH (Zhang 1996) is still the go-to preprocessing for large streaming data: build a CF-tree of summary statistics, then K-Means on the leaves. In 2024 cuML chained BIRCH + Mini-batch K-Means on GPU to process 10M+ points in &lt; 30 s.</p>
+<p data-lang="zh"><strong>Consensus clustering。</strong>Monti et al. 2003 (Mach. Learn.) — 反覆對 subsample 跑 K-Means，記錄每對樣本「在同一群」的頻率，得到 consensus matrix。這是 TCGA cancer subtyping 的標配，至今仍寫進 BMC Bioinformatics 教程。延伸：<code>ConsensusClusterPlus</code> R 套件 (Wilkerson 2010)、<code>SHC</code> 階層版本 (2024)。</p>
+<p data-lang="en"><strong>Consensus clustering.</strong> Monti et al. 2003 (Mach. Learn.) — re-run K-Means on subsamples, count how often each pair lands together, build a consensus matrix. Standard in TCGA cancer subtyping, still in BMC Bioinformatics tutorials. Extensions: <code>ConsensusClusterPlus</code> R package (Wilkerson 2010), <code>SHC</code> sub-hierarchical clustering (2024).</p>
+<p data-lang="zh"><strong>單細胞的當代做法。</strong>2026 Seurat v5、Scanpy 1.10 預設都不再用 K-Means——而是 PCA → KNN graph → <strong>Leiden</strong> (Traag et al. 2019)。原因：Leiden 不需事先指定 K、自動決定群數、處理弱連結時比 Louvain 穩定。K-Means 退居「展示 / 初篩」的角色。</p>
+<p data-lang="en"><strong>Modern single-cell practice.</strong> Seurat v5 and Scanpy 1.10 (2026) no longer use K-Means by default — they use PCA → KNN graph → <strong>Leiden</strong> (Traag et al. 2019). Reason: Leiden needs no K, decides cluster count automatically, and is more stable than Louvain on weakly connected graphs. K-Means is now a "demo / first-pass" tool.</p>
+<p data-lang="zh"><strong>論文路徑。</strong>Lloyd 1957/1982 (IEEE Trans Inf Theory); Ward 1963 (JASA); Arthur–Vassilvitskii 2007 (SODA); Tibshirani 2001 (JRSS-B); Monti 2003 (Mach Learn 52); Wilkerson 2010 (Bioinformatics); Traag 2019 (Sci Rep); Tabula Muris Consortium 2018, 2020 (Nature); Stuart 2019 (Cell, Seurat v3)。</p>
+<p data-lang="en"><strong>Paper trail.</strong> Lloyd 1957/1982 (IEEE Trans Inf Theory); Ward 1963 (JASA); Arthur–Vassilvitskii 2007 (SODA); Tibshirani 2001 (JRSS-B); Monti 2003 (Mach Learn 52); Wilkerson 2010 (Bioinformatics); Traag 2019 (Sci Rep); Tabula Muris Consortium 2018, 2020 (Nature); Stuart 2019 (Cell, Seurat v3).</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -201,6 +557,12 @@ agg = <span class="func">AgglomerativeClustering</span>(n_clusters=<span class="
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 真實標籤的 k</span><span data-lang="en">D. The k from true labels</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="歷史小註：" data-en="Historical note:">歷史小註：</strong>
+<span data-lang="zh">Stuart Lloyd 在 1957 年 Bell Labs 內部技術備忘錄寫下「PCM 量化」演算法（即 K-Means），但因為公司視為機密，論文直到 <strong>1982</strong> 才在 IEEE Trans. Inf. Theory 發表——比 MacQueen 1967 的「k-means」命名晚了 15 年。同時間 1965 年 Forgy 也獨立提出幾乎一樣的演算法，所以有時稱 Lloyd–Forgy 演算法。一個跑了 70 年仍是 sklearn 預設的演算法，背後是這樣的故事。</span>
+<span data-lang="en">Stuart Lloyd wrote down the "PCM quantization" algorithm (i.e., K-Means) in a 1957 Bell Labs internal memo, but the company kept it confidential, so the paper wasn't published until <strong>1982</strong> in IEEE Trans. Inf. Theory — 15 years after MacQueen coined "k-means" in 1967. Forgy independently proposed essentially the same algorithm in 1965, hence the alternative name Lloyd–Forgy. An algorithm still the sklearn default 70 years later — with that backstory.</span>
+</div>
 
 <nav class="page-nav">
 <a href="model-evaluation.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 8: 模型評估與調參" data-en="Ch 8: Model Evaluation &amp; Hyperparameter Tuning">Ch 8: 模型評估與調參</span></a>

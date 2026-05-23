@@ -18,6 +18,48 @@
 </header>
 <main class="content-wrap">
 
+<div class="section-toc">
+<strong data-zh="本章導覽 · 約 40 分鐘" data-en="In This Chapter · ~40 min">本章導覽</strong>
+<div class="pill-row">
+<span class="level-badge l-beg" data-zh="入門" data-en="Beginner">入門</span>
+<span class="level-badge l-mid" data-zh="進階" data-en="Intermediate">進階</span>
+<span class="level-badge l-adv" data-zh="研究" data-en="Research">研究</span>
+<span class="pill teal" data-zh="⏱ 40 分鐘閱讀" data-en="⏱ 40-min read">⏱ 40 分鐘閱讀</span>
+<span class="pill amber" data-zh="🧪 1 互動模擬" data-en="🧪 1 interactive sim">🧪 1 互動模擬</span>
+<span class="pill violet" data-zh="📝 3 測驗題" data-en="📝 3 quiz Qs">📝 3 測驗題</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="🌐 故事：1998 史丹佛車庫的 PageRank" data-en="🌐 Story: 1998 Stanford garage PageRank">🌐 故事：1998 史丹佛車庫的 PageRank</a></li>
+<li><a href="#glossary" data-zh="📖 名詞地圖（兒童版＋技術版）" data-en="📖 Glossary (kid + tech)">📖 名詞地圖</a></li>
+<li><a href="#history" data-zh="📜 時間線：從 1736 Euler 到 2026 圖基礎模型" data-en="📜 Timeline: Euler 1736 to graph FMs 2026">📜 時間線</a></li>
+<li><a href="#walkthrough" data-zh="🧮 手算 PageRank：4 節點圖、6 步走完" data-en="🧮 Hand-trace PageRank on 4-node graph">🧮 手算 PageRank</a></li>
+<li><a href="#discussion" data-zh="💬 三大研究議題討論" data-en="💬 3 research discussions">💬 三大研究議題討論</a></li>
+<li><a href="#pitfalls" data-zh="🚧 常見地雷與修正" data-en="🚧 Pitfalls & fixes">🚧 常見地雷與修正</a></li>
+<li><a href="#reflection" data-zh="💭 反思問題" data-en="💭 Reflection questions">💭 反思問題</a></li>
+<li><a href="#advanced" data-zh="🔬 進階：PrimeKG / 等變 GNN / 圖基礎模型" data-en="🔬 Advanced: PrimeKG / equivariant GNN / graph FMs">🔬 進階：圖基礎模型 2025-2026</a></li>
+</ol>
+</div>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="案例" data-en="CASE">案例</span>
+<h3 data-zh="🌐 1998 史丹佛車庫：兩個博士生發現「網頁是一張圖」" data-en="🌐 1998 Stanford garage: two PhDs realise the web is a graph">🌐 1998 史丹佛車庫：兩個博士生發現「網頁是一張圖」</h3>
+<div data-lang="zh">
+<p>1996 年，史丹佛大學電腦系兩位博士生 Larry Page 與 Sergey Brin 為了找一個能「自動排序網頁重要性」的方法而陷入苦思。當時的搜尋引擎 (AltaVista、Lycos) 依靠 keyword 配對 + TF-IDF——但搜「university」回傳的第一頁可能是某個無人問津的學生個人網頁，因為他剛好把「university」這詞放了 50 次。</p>
+<p>Page 注意到一個現象：<strong>網頁本質上是「節點」、超連結是「邊」</strong>。整個 WWW 不是「一堆獨立文件」，而是「一張巨大的有向圖」。他與 Brin 從學術引文分析得到靈感：在科學圈，「<em>被很多人引用</em>」是衡量論文重要性的核心指標——尤其是「被重要的人引用」。為什麼網頁不能用同樣邏輯？</p>
+<p>1998 年初，他們在 <em>Proceedings of WWW7</em> 發表 "The Anatomy of a Large-Scale Hypertextual Web Search Engine"——其中提出 <strong>PageRank</strong> 公式：PR(v) = (1−d)/N + d · Σ PR(u)/L(u)。這個簡單的「隨機漫步 + 阻尼因子」改變了世界：他們成立的公司叫 Google。直到 2026 年的今天，PageRank 的變體仍在搜尋、推薦、藥物網路分析、論文影響力評估、新聞傳播研究——所有需要「重要性排序」的地方持續扮演核心角色。</p>
+<p>真正的革命不是演算法的複雜度，而是「<strong>把資料看成圖</strong>」這個轉念。</p>
+</div>
+<div data-lang="en">
+<p>1996. Two Stanford CS PhD students, Larry Page and Sergey Brin, wrestle with "how to auto-rank web pages by importance". The search engines of the day (AltaVista, Lycos) used keyword matching + TF-IDF — searching "university" might return some random student page that happened to repeat "university" 50 times.</p>
+<p>Page notices: <strong>web pages are nodes; hyperlinks are edges</strong>. The whole WWW is not "a pile of documents" but "a giant directed graph". From academic citation analysis they borrow the insight: in science, "<em>cited often</em>" is the core importance metric — especially "<em>cited by the important</em>". Why not pages?</p>
+<p>Early 1998, "The Anatomy of a Large-Scale Hypertextual Web Search Engine" in <em>WWW7</em> — proposing <strong>PageRank</strong>: PR(v) = (1−d)/N + d · Σ PR(u)/L(u). This simple "random walk + damping" reshaped the world: the company they founded is called Google. By 2026, PageRank variants still power search, recommendation, drug-network analysis, paper-impact scoring, news propagation — anywhere "importance ranking" is needed.</p>
+<p>The revolution wasn't algorithmic complexity — it was the leap of seeing data <strong>as a graph</strong>.</p>
+</div>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="什麼是圖？" data-en="What is a Graph?">什麼是圖？</h2>
@@ -28,6 +70,59 @@
 <div data-lang="en">
 <p>A graph G=(V,E) consists of <strong>nodes (V)</strong> and <strong>edges (E)</strong>. Structurally: (1) <strong>directed vs undirected</strong> (Twitter follow vs Facebook friend), (2) <strong>weighted vs unweighted</strong> (PPI confidence), (3) <strong>homogeneous vs heterogeneous</strong> (drug–gene–disease KG), (4) <strong>static vs dynamic / temporal</strong>.</p>
 <p>Tasks: <strong>centrality</strong> (important nodes), <strong>community detection</strong> (modules), <strong>node embedding</strong> (vectors for downstream ML), <strong>link prediction</strong>, <strong>knowledge-graph reasoning</strong>. Biomedical use: drug repurposing, side-effect prediction, disease-gene ranking.</p>
+</div>
+
+<div class="analogy-box">
+<div class="ana-icon">🎉</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="圖探勘像「參加一場大派對」" data-en="Graph mining is like attending a big party">圖探勘像「參加一場大派對」</h4>
+<p data-lang="zh"><strong>Degree centrality</strong>＝看誰握手最多；<strong>Betweenness</strong>＝看誰是「不同圈子之間的橋樑」；<strong>PageRank</strong> 是「你紅，是因為很多紅人知道你」——靠重要鄰居傳遞名氣；<strong>Community detection (Louvain/Leiden)</strong> 是「找出派對中自然形成的小圈圈」；<strong>GNN message passing</strong> 是「每個人把自己知道的講給鄰居，再聽鄰居的，更新自己的世界觀，再講給下一輪鄰居」——多輪後，你的「個人簡介」就含有全派對的脈絡資訊。</p>
+<p data-lang="en"><strong>Degree centrality</strong> = "who shakes the most hands?". <strong>Betweenness</strong> = "who bridges different cliques?". <strong>PageRank</strong> = "you're famous because famous people know you" — importance propagates via important neighbours. <strong>Community detection (Louvain/Leiden)</strong> = "find the cliques forming naturally". <strong>GNN message passing</strong> = "each person tells neighbours what they know, listens, updates their worldview, tells the next round" — after a few rounds, your "profile" carries the entire party's context.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="名詞地圖" data-en="GLOSSARY">名詞地圖</div>
+<h2 data-zh="關鍵名詞（小孩版 + 技術版）" data-en="Key Terms (Kid + Tech)">關鍵名詞（小孩版 + 技術版）</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Graph (V, E)</div><div class="term-zh">圖</div><div class="term-kid" data-lang="zh">「點」(V) + 「線」(E)；學校＝點，朋友關係＝線。</div><div class="term-kid" data-lang="en">"Dots" (V) + "lines" (E); a school = dot, friendships = lines.</div><div class="term-tech" data-lang="zh">G=(V,E)；E ⊆ V×V；有向／無向、加權／無加權、簡單／多重圖等多種變體。</div><div class="term-tech" data-lang="en">G=(V,E); E ⊆ V×V; directed/undirected, weighted/unweighted, simple/multigraph variants.</div></div>
+<div class="glossary-card"><div class="term-en">Directed / Undirected</div><div class="term-zh">有向 / 無向</div><div class="term-kid" data-lang="zh">「Twitter follow」是有向（A 追蹤 B 不代表 B 追蹤 A）；「Facebook 朋友」是無向。</div><div class="term-kid" data-lang="en">"Twitter follow" is directed (A→B ≠ B→A); "Facebook friend" is undirected.</div><div class="term-tech" data-lang="zh">有向圖：(u,v) ≠ (v,u)；adjacency matrix 通常非對稱。</div><div class="term-tech" data-lang="en">Directed: (u,v) ≠ (v,u); adjacency matrix is asymmetric.</div></div>
+<div class="glossary-card"><div class="term-en">Adjacency matrix</div><div class="term-zh">鄰接矩陣</div><div class="term-kid" data-lang="zh">N × N 的表，第 (i,j) 格是 1 表示 i 和 j 有連線。</div><div class="term-kid" data-lang="en">N × N table; entry (i,j) = 1 means i links to j.</div><div class="term-tech" data-lang="zh">A ∈ ℝ^{N×N}；sparse storage (CSR)；A^k 第 (i,j) 格 = i→j 長度 k 路徑數。</div><div class="term-tech" data-lang="en">A ∈ ℝ^{N×N}; sparse storage (CSR); (A^k)_{ij} = number of length-k paths i→j.</div></div>
+<div class="glossary-card"><div class="term-en">Degree / Degree distribution</div><div class="term-zh">度 / 度分布</div><div class="term-kid" data-lang="zh">某點連的線數；「有幾個朋友」。</div><div class="term-kid" data-lang="en">Number of edges per node; "how many friends".</div><div class="term-tech" data-lang="zh">d(v) = |neighbors(v)|；real-world 多為 power-law (scale-free)。</div><div class="term-tech" data-lang="en">d(v) = |neighbors(v)|; real-world graphs typically power-law (scale-free).</div></div>
+<div class="glossary-card"><div class="term-en">Centrality (degree, betweenness, closeness)</div><div class="term-zh">中心性</div><div class="term-kid" data-lang="zh">「誰是派對最重要的人？」有「人脈廣」「橋樑」「親近」三種看法。</div><div class="term-kid" data-lang="en">"Who's most important at the party?" — three lenses: well-connected, bridge, close-to-everyone.</div><div class="term-tech" data-lang="zh">Degree、Betweenness (σ_st(v)/σ_st)、Closeness (1/Σd(v,u))。算法複雜度差異大。</div><div class="term-tech" data-lang="en">Degree, Betweenness (σ_st(v)/σ_st), Closeness (1/Σd(v,u)); compute-cost varies sharply.</div></div>
+<div class="glossary-card"><div class="term-en">PageRank</div><div class="term-zh">PageRank</div><div class="term-kid" data-lang="zh">「重要鄰居會讓你也重要」；像紅人圈的友誼。</div><div class="term-kid" data-lang="en">"Important neighbours make you important" — celebrity friendship.</div><div class="term-tech" data-lang="zh">PR(v) = (1−d)/N + d·Σ_{u→v} PR(u)/L(u)；d=0.85 經典；Power iteration 求解。</div><div class="term-tech" data-lang="en">PR(v) = (1−d)/N + d·Σ_{u→v} PR(u)/L(u); d=0.85 classic; solved by power iteration.</div></div>
+<div class="glossary-card"><div class="term-en">Damping factor d</div><div class="term-zh">阻尼因子</div><div class="term-kid" data-lang="zh">隨機漫步的「跟連結走 vs 隨機跳」比例。</div><div class="term-kid" data-lang="en">Random surfer's "follow link vs random teleport" ratio.</div><div class="term-tech" data-lang="zh">d=1 易 dangling node 黑洞；d=0 全隨機；d=0.85 經驗最佳。</div><div class="term-tech" data-lang="en">d=1 risks dangling-node sinks; d=0 = pure random; d=0.85 empirically best.</div></div>
+<div class="glossary-card"><div class="term-en">Community detection / Modularity Q</div><div class="term-zh">社群偵測</div><div class="term-kid" data-lang="zh">找「派對裡自然形成的小圈圈」。</div><div class="term-kid" data-lang="en">Find "naturally forming cliques at the party".</div><div class="term-tech" data-lang="zh">Modularity Q = (1/2m) Σ [A_{ij} − k_i k_j/2m] δ(c_i, c_j)；Q∈[−0.5, 1]。</div><div class="term-tech" data-lang="en">Modularity Q = (1/2m) Σ [A_{ij} − k_i k_j/2m] δ(c_i, c_j); Q∈[−0.5, 1].</div></div>
+<div class="glossary-card"><div class="term-en">Louvain / Leiden</div><div class="term-zh">Louvain / Leiden</div><div class="term-kid" data-lang="zh">兩種最常用的社群偵測算法；Leiden 是 Louvain 的升級版。</div><div class="term-kid" data-lang="en">Two most-used community algorithms; Leiden upgrades Louvain.</div><div class="term-tech" data-lang="zh">Louvain (Blondel 2008) 偶有不連通社群；Leiden (Traag 2019) 加 refinement + fast-local-move，<em>保證每社群連通</em>。</div><div class="term-tech" data-lang="en">Louvain (Blondel 2008) may yield disconnected communities; Leiden (Traag 2019) adds refinement + fast-local-move — <em>guarantees connected</em>.</div></div>
+<div class="glossary-card"><div class="term-en">Random walk / DeepWalk / node2vec</div><div class="term-zh">隨機漫步 + 嵌入</div><div class="term-kid" data-lang="zh">在圖上「走走走」收集鄰居資訊，當成句子餵 Word2Vec。</div><div class="term-kid" data-lang="en">"Walk walk walk" collecting neighbours, treat as sentences for Word2Vec.</div><div class="term-tech" data-lang="zh">DeepWalk (Perozzi 2014)；node2vec (Grover 2016) 加 BFS/DFS 偏向參數 p, q。</div><div class="term-tech" data-lang="en">DeepWalk (Perozzi 2014); node2vec (Grover 2016) adds BFS/DFS bias parameters p, q.</div></div>
+<div class="glossary-card"><div class="term-en">GraphSAGE / GCN / GAT</div><div class="term-zh">GNN 三巨頭</div><div class="term-kid" data-lang="zh">每層讓每個節點「聽鄰居」「更新自己」——多輪後就懂全圖。</div><div class="term-kid" data-lang="en">Each layer, every node "listens" then "updates" — after a few layers it knows the whole graph.</div><div class="term-tech" data-lang="zh">GCN (Kipf 2017)：H' = σ(D̂^{−1/2}ÂD̂^{−1/2}HW)；GraphSAGE (Hamilton 2017) 抽樣；GAT (Veličković 2018) 自注意力。</div><div class="term-tech" data-lang="en">GCN (Kipf 2017): H' = σ(D̂^{−1/2}ÂD̂^{−1/2}HW); GraphSAGE (Hamilton 2017) samples neighbours; GAT (Veličković 2018) uses attention.</div></div>
+<div class="glossary-card"><div class="term-en">Message passing</div><div class="term-zh">訊息傳遞</div><div class="term-kid" data-lang="zh">「鄰居告訴你他知道的、你聽完更新自己、再告訴下個輪迴」。</div><div class="term-kid" data-lang="en">"Neighbours tell you what they know, you update, you tell next round."</div><div class="term-tech" data-lang="zh">aggregate (Σ, mean, max, attention) + update (MLP)；k 層覆蓋 k-hop。</div><div class="term-tech" data-lang="en">aggregate (Σ, mean, max, attention) + update (MLP); k layers cover k-hop.</div></div>
+<div class="glossary-card"><div class="term-en">Knowledge Graph / RDF triple</div><div class="term-zh">知識圖譜 / 三元組</div><div class="term-kid" data-lang="zh">「主詞-關係-受詞」一條條的事實：阿斯匹靈 — 治療 — 頭痛。</div><div class="term-kid" data-lang="en">"subject-relation-object" facts: Aspirin — treats — Headache.</div><div class="term-tech" data-lang="zh">(h, r, t) RDF triple；TransE: ‖h+r−t‖；RotatE：旋轉於複空間。</div><div class="term-tech" data-lang="en">(h, r, t) RDF triple; TransE: ‖h+r−t‖; RotatE: rotation in complex space.</div></div>
+<div class="glossary-card"><div class="term-en">Link prediction</div><div class="term-zh">連結預測</div><div class="term-kid" data-lang="zh">「預測誰跟誰會變朋友」「哪個藥可能治什麼病」。</div><div class="term-kid" data-lang="en">"Predict who will befriend whom" / "which drug might treat which disease".</div><div class="term-tech" data-lang="zh">score(u, v) → 機率；Adamic-Adar / Jaccard / GNN-edge-classifier / KG 三元組分數。</div><div class="term-tech" data-lang="en">score(u, v) → probability; Adamic-Adar / Jaccard / GNN-edge-classifier / KG triple-score.</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="時間線" data-en="TIMELINE">時間線</div>
+<h2 data-zh="從 1736 Euler 到 2026 圖基礎模型" data-en="From Euler (1736) to graph foundation models (2026)">從 1736 Euler 到 2026 圖基礎模型</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1736</span> <span class="tl-title" data-zh="Euler 哥尼斯堡七橋" data-en="Euler Königsberg bridges">Euler 哥尼斯堡七橋</span><span class="tl-desc" data-lang="zh">Euler 用「圖論」解決「能否一次走完七座橋」——圖論誕生時刻。</span><span class="tl-desc" data-lang="en">Euler invented "graph theory" to solve "can you walk all 7 bridges once?" — birth of graph theory.</span></div>
+<div class="timeline-item"><span class="tl-year">1965</span> <span class="tl-title" data-zh="Watts-Strogatz 小世界" data-en="Watts-Strogatz small world">Watts-Strogatz 小世界</span><span class="tl-desc" data-lang="zh">提出「六度分離」與「小世界網路」的數學模型。</span><span class="tl-desc" data-lang="en">Mathematical model of "six degrees of separation" and small-world networks.</span></div>
+<div class="timeline-item"><span class="tl-year">1998</span> <span class="tl-title" data-zh="Page-Brin PageRank" data-en="Page-Brin PageRank">Page-Brin PageRank</span><span class="tl-desc" data-lang="zh">WWW7 論文發表，1998 年 9 月 Google 正式成立——改變網際網路。</span><span class="tl-desc" data-lang="en">WWW7 paper; Google founded Sept 1998 — changed the internet.</span></div>
+<div class="timeline-item"><span class="tl-year">2008</span> <span class="tl-title" data-zh="Blondel Louvain" data-en="Blondel Louvain">Blondel Louvain</span><span class="tl-desc" data-lang="zh">J. Stat. Mech.；快速社群偵測，2008-2019 主導生物網路分析。</span><span class="tl-desc" data-lang="en">J. Stat. Mech.; fast community detection — ruled biological-network analysis 2008-2019.</span></div>
+<div class="timeline-item"><span class="tl-year">2014</span> <span class="tl-title" data-zh="Perozzi DeepWalk" data-en="Perozzi DeepWalk">Perozzi DeepWalk</span><span class="tl-desc" data-lang="zh">KDD；首度把 Word2Vec 思想搬到圖上——random walk → embedding。</span><span class="tl-desc" data-lang="en">KDD; first to port Word2Vec to graphs — random walk → embedding.</span></div>
+<div class="timeline-item"><span class="tl-year">2016</span> <span class="tl-title" data-zh="Grover-Leskovec node2vec" data-en="Grover-Leskovec node2vec">Grover-Leskovec node2vec</span><span class="tl-desc" data-lang="zh">KDD；加 p, q 參數平衡 BFS/DFS，可同時抓社群與結構等價。</span><span class="tl-desc" data-lang="en">KDD; p, q parameters balance BFS/DFS — captures both community and structural equivalence.</span></div>
+<div class="timeline-item"><span class="tl-year">2017</span> <span class="tl-title" data-zh="Kipf-Welling GCN" data-en="Kipf-Welling GCN">Kipf-Welling GCN</span><span class="tl-desc" data-lang="zh">ICLR；現代 GNN 的「BERT 時刻」——譜方法簡化為一階近似，可直接 mini-batch。</span><span class="tl-desc" data-lang="en">ICLR; the "BERT moment" of modern GNNs — spectral methods simplified to first-order, mini-batch friendly.</span></div>
+<div class="timeline-item"><span class="tl-year">2017</span> <span class="tl-title" data-zh="Hamilton GraphSAGE" data-en="Hamilton GraphSAGE">Hamilton GraphSAGE</span><span class="tl-desc" data-lang="zh">NeurIPS；引入鄰居抽樣，<em>inductive</em>——可推到未見過的新節點。</span><span class="tl-desc" data-lang="en">NeurIPS; introduces neighbour sampling, <em>inductive</em> — generalises to unseen nodes.</span></div>
+<div class="timeline-item"><span class="tl-year">2017</span> <span class="tl-title" data-zh="Himmelstein Hetionet" data-en="Himmelstein Hetionet">Himmelstein Hetionet</span><span class="tl-desc" data-lang="zh">eLife；47k nodes/2.2M edges 生醫異質圖，預測藥物再利用包括「尼古丁 → 阿茲海默」。</span><span class="tl-desc" data-lang="en">eLife; 47k nodes/2.2M edges biomedical heterograph — predicted "nicotine → Alzheimer's" amongst others.</span></div>
+<div class="timeline-item"><span class="tl-year">2018</span> <span class="tl-title" data-zh="Veličković GAT" data-en="Veličković GAT">Veličković GAT</span><span class="tl-desc" data-lang="zh">ICLR；自注意力加進 GNN，可學「哪個鄰居重要」。</span><span class="tl-desc" data-lang="en">ICLR; attention enters GNN — learn "which neighbour matters".</span></div>
+<div class="timeline-item"><span class="tl-year">2019</span> <span class="tl-title" data-zh="Traag Leiden" data-en="Traag Leiden">Traag Leiden</span><span class="tl-desc" data-lang="zh">Scientific Reports；refinement + fast-local-move；現為 Scanpy / Seurat v5 預設。</span><span class="tl-desc" data-lang="en">Scientific Reports; refinement + fast-local-move; default in Scanpy / Seurat v5.</span></div>
+<div class="timeline-item"><span class="tl-year">2023</span> <span class="tl-title" data-zh="PrimeKG 生醫 KG" data-en="PrimeKG biomedical KG">PrimeKG 生醫 KG</span><span class="tl-desc" data-lang="zh">Chandak et al. Nat Sci Data；4M+ relations 跨 10 個生醫資料庫——「藥物再利用 KG」基準。</span><span class="tl-desc" data-lang="en">Chandak et al. Nat Sci Data; 4M+ relations across 10 biomedical DBs — drug-repurposing KG benchmark.</span></div>
+<div class="timeline-item"><span class="tl-year">2024</span> <span class="tl-title" data-zh="PyG 2.5 + DGL 2.x" data-en="PyG 2.5 + DGL 2.x">PyG 2.5 + DGL 2.x</span><span class="tl-desc" data-lang="zh">兩大 GNN 框架成熟，異質圖、temporal graph、大規模 mini-batch 一條龍。</span><span class="tl-desc" data-lang="en">Two flagship GNN frameworks mature — heterograph, temporal graph, large-scale mini-batch.</span></div>
+<div class="timeline-item"><span class="tl-year">2025</span> <span class="tl-title" data-zh="等變 GNN + 幾何深度學習" data-en="Equivariant GNN + geometric DL">等變 GNN + 幾何深度學習</span><span class="tl-desc" data-lang="zh">Bronstein 等變理論主導；AlphaFold-3 在多體互動上展現威力；蛋白質-小分子預測新典範。</span><span class="tl-desc" data-lang="en">Bronstein equivariance theory dominates; AlphaFold-3 stuns on multi-body interactions — new paradigm for protein-ligand.</span></div>
+<div class="timeline-item"><span class="tl-year">2026</span> <span class="tl-title" data-zh="圖基礎模型 + LLM 整合" data-en="Graph foundation models + LLM">圖基礎模型 + LLM 整合</span><span class="tl-desc" data-lang="zh">早期圖 FM 嘗試 zero-shot 跨領域 (社交 → 蛋白網路)；LLM + KG 在醫療 QA 達 SOTA。</span><span class="tl-desc" data-lang="en">Early graph FM attempts zero-shot transfer (social → protein); LLM + KG hits SOTA on medical QA.</span></div>
 </div>
 </section>
 
@@ -178,6 +273,148 @@ emb   = {n: model.wv[n] <span class="kw">for</span> n <span class="kw">in</span>
 </div></div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算演練" data-en="HAND-TRACE">手算演練</div>
+<h2 data-zh="PageRank：4 節點圖、6 步走完" data-en="PageRank in 6 Steps on a 4-node Graph">PageRank：4 節點圖、6 步走完</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">PR</div><h3 data-zh="情境：4 節點有向圖，d=0.85，N=4" data-en="Setup: 4-node directed graph, d=0.85, N=4">情境：4 節點有向圖，d=0.85，N=4</h3><span class="wt-tag">N=4 · d=0.85 · 10 iters</span></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>建邊：</strong>A→B, A→C, B→C, C→A, D→A。out-degree L(A)=2, L(B)=1, L(C)=1, L(D)=1。觀察：節點 C 被 A, B 都連到，可能 PR 高；D 沒人連，PR 低。</div><div class="wt-body" data-lang="en"><strong>Edges:</strong> A→B, A→C, B→C, C→A, D→A. out-degrees L(A)=2, L(B)=1, L(C)=1, L(D)=1. Note: C is linked by A and B — likely high PR; D has no inbound — low.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>初始化：</strong>PR(A) = PR(B) = PR(C) = PR(D) = 1/4 = <code>0.25</code>。基底項 (1−d)/N = 0.15/4 = <code>0.0375</code>。</div><div class="wt-body" data-lang="en"><strong>Initialise:</strong> PR(A) = PR(B) = PR(C) = PR(D) = 1/4 = <code>0.25</code>. Base term (1−d)/N = 0.15/4 = <code>0.0375</code>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>核心公式：</strong>PR(v) = 0.0375 + 0.85 · Σ_{u→v} PR(u)/L(u)。例如 PR(A) 來自 C→A 與 D→A：PR(A)' = 0.0375 + 0.85·(PR(C)/1 + PR(D)/1)。</div><div class="wt-body" data-lang="en"><strong>Core formula:</strong> PR(v) = 0.0375 + 0.85 · Σ_{u→v} PR(u)/L(u). E.g. PR(A) gets contribution from C→A and D→A: PR(A)' = 0.0375 + 0.85·(PR(C)/1 + PR(D)/1).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>第 1 次迭代：</strong>PR(A)=0.0375 + 0.85·(0.25+0.25)=<code>0.463</code> ; PR(B)=0.0375+0.85·(0.25/2)=<code>0.144</code> ; PR(C)=0.0375+0.85·(0.25/2+0.25/1)=<code>0.357</code> ; PR(D)=0.0375 (沒人連)。和≈1（小誤差，因 D 為 dangling — 實際算法需重新分配）。</div><div class="wt-body" data-lang="en"><strong>Iter 1:</strong> PR(A)=0.0375 + 0.85·(0.25+0.25)=<code>0.463</code> ; PR(B)=0.0375+0.85·(0.25/2)=<code>0.144</code> ; PR(C)=0.0375+0.85·(0.25/2+0.25/1)=<code>0.357</code> ; PR(D)=0.0375 (no inbound). Sum ≈ 1 (small drift; D is dangling — real solver redistributes).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>迭代 10 次後收斂：</strong>PR(A)=<code>0.32</code>, PR(B)=<code>0.20</code>, PR(C)=<code>0.36</code>, PR(D)=<code>0.12</code>。Power iteration 通常在 30 步內 ε=1e-6 收斂。</div><div class="wt-body" data-lang="en"><strong>Converged after 10 iters:</strong> PR(A)=<code>0.32</code>, PR(B)=<code>0.20</code>, PR(C)=<code>0.36</code>, PR(D)=<code>0.12</code>. Power iteration usually hits ε=1e-6 within 30 steps.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 6</div><div class="wt-body" data-lang="zh"><strong>排名：</strong>C &gt; A &gt; B &gt; D。即使 D 沒人連，仍有 0.12 是 baseline (1−d)/N 提供。<em>洞見：</em>C 雖然 out-degree 也只有 1，但因被「重要的 A、B」連到，名氣傳染上來。</div><div class="wt-body" data-lang="en"><strong>Ranking:</strong> C &gt; A &gt; B &gt; D. Even with no inbound, D keeps 0.12 from baseline (1−d)/N. <em>Insight:</em> C only has out-degree 1, but is linked by "the important A and B" — fame propagates.</div></div>
+</div>
+<div class="formula-box">
+PR(v) = (1−d)/N + d · Σ_{u→v} PR(u) / L(u)<span class="f-where" data-lang="zh">d = 阻尼因子（通常 0.85）；L(u) = u 的出度；矩陣形式：PR = (1−d)/N·1 + d·Mᵀ PR，求 stationary distribution。</span><span class="f-where" data-lang="en">d = damping (typically 0.85); L(u) = u's out-degree; matrix form: PR = (1−d)/N·1 + d·Mᵀ PR — the stationary distribution.</span>
+</div>
+<details class="detail-toggle"><summary data-zh="🔬 為什麼 d=0.85？為什麼存在「dangling node」問題？" data-en="🔬 Why d=0.85? Why is there a 'dangling node' problem?">🔬 為什麼 d=0.85？為什麼存在「dangling node」問題？</summary>
+<div class="detail-body">
+<p data-lang="zh"><strong>d=0.85 的由來：</strong>Page-Brin 1998 試了 d∈{0.5, 0.75, 0.85, 0.95}，發現 d=0.85 在「收斂速度 vs 結果穩定」間最好。理論上 d 越小 → 收斂越快但 PR 過度均勻；d 越大 → 區分度高但 dangling node sink 嚴重、收斂慢。</p>
+<p data-lang="zh"><strong>Dangling node：</strong>沒有出邊的節點（D 雖然在我們的例子有 A 的進邊，但沒出邊就會「吸收」隨機漫步機率）。實務上解法：(1) 把 dangling node 的 PR 在每次迭代後平均分到所有節點；(2) 加上虛擬邊讓它連回所有節點。</p>
+<p data-lang="en"><strong>Why d=0.85:</strong> Page-Brin (1998) tried d∈{0.5, 0.75, 0.85, 0.95} and found d=0.85 best balances convergence speed and stability. Smaller d → faster convergence but flatter PR; larger d → sharper differentiation but worse dangling-node sinks and slower convergence.</p>
+<p data-lang="en"><strong>Dangling node:</strong> a node with no out-edges absorbs random-walk probability. Fixes: (1) redistribute its PR evenly each iter; (2) add virtual edges back to all nodes.</p>
+</div></details>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="研究討論" data-en="DISCUSSION">研究討論</div>
+<h2 data-zh="三個值得思考的真問題" data-en="Three Real Questions Worth Pondering">三個值得思考的真問題</h2>
+<div class="discussion-card">
+<span class="disc-label">Q1</span>
+<h3 data-zh="PageRank 衡量「相關性」還是「人氣」？" data-en="Does PageRank measure relevance or popularity?">PageRank 衡量「相關性」還是「人氣」？</h3>
+<p class="disc-q" data-lang="zh">PageRank 本質上是「人氣」測度——和搜尋 query「相關性」其實是兩件事。</p>
+<p class="disc-q" data-lang="en">PageRank fundamentally measures "popularity" — distinct from query "relevance".</p>
+<div class="disc-pov" data-lang="zh"><strong>純人氣觀點：</strong>PageRank 不看內容，只看「誰被誰連」。Wikipedia 的 PR 永遠超高，無論你搜什麼。所以早期 Google 是「PR + TF-IDF」乘法 — PR 量人氣、TF-IDF 量主題相關。</div>
+<div class="disc-pov" data-lang="en"><strong>Pure popularity:</strong> PageRank ignores content — only "who links whom". Wikipedia's PR is always huge, no matter the query. Early Google multiplied PR × TF-IDF — PR for fame, TF-IDF for topical relevance.</div>
+<div class="disc-pov" data-lang="zh"><strong>個人化 PageRank：</strong>2002 Topic-Sensitive PR、2003 Personalised PR 把 base teleport vector 改為 query-biased，於是 PR 變成 "query-aware fame"。現代搜尋（BERT-based ranking + RAG）已大幅減少純 PR 權重，但對學術 KG / 藥物網路 PR 仍是強信號。</div>
+<div class="disc-pov" data-lang="en"><strong>Personalised PR:</strong> Topic-Sensitive PR (2002), Personalised PR (2003) reshape the base teleport vector to be query-biased — PR becomes "query-aware fame". Modern search (BERT-ranker + RAG) downweights raw PR, but in academic KGs / drug networks it remains a strong signal.</div>
+</div>
+<div class="discussion-card">
+<span class="disc-label">Q2</span>
+<h3 data-zh="2026 年 Louvain 還有地位嗎？" data-en="Does Louvain still have a place in 2026?">2026 年 Louvain 還有地位嗎？</h3>
+<p class="disc-q" data-lang="zh">Leiden 在 Scanpy / Seurat v5 已是預設；許多 paper 把 Louvain 列為「應淘汰」。</p>
+<p class="disc-q" data-lang="en">Leiden is the Scanpy / Seurat v5 default; many papers call Louvain "to be retired".</p>
+<div class="disc-pov" data-lang="zh"><strong>Pro-Leiden：</strong>保證連通性 + fast-local-move + 收斂更快；Traag 2019 證明 Louvain 偶有「分裂社群」(disconnected community)，違反我們對「社群」的直觀理解。多數新分析應預設 Leiden。</div>
+<div class="disc-pov" data-lang="en"><strong>Pro-Leiden:</strong> connectivity guarantee + fast-local-move + faster convergence; Traag 2019 proved Louvain sometimes returns "disconnected communities" — violating our intuition. New analyses should default to Leiden.</div>
+<div class="disc-pov" data-lang="zh"><strong>Louvain 仍有用：</strong>(1) 老 paper 可重現性（reproducing 2014-2018 結果）；(2) 教學情境（演算法更易解釋）；(3) 在某些 sparse 圖上速度仍有優勢。實務：報告新分析用 Leiden，但「歷史對齊」用 Louvain。</div>
+<div class="disc-pov" data-lang="en"><strong>Louvain still useful:</strong> (1) reproducing 2014-2018 papers; (2) teaching (more explainable); (3) sometimes faster on very sparse graphs. Practical: new analyses → Leiden, historical alignment → Louvain.</div>
+</div>
+<div class="discussion-card">
+<span class="disc-label">Q3</span>
+<h3 data-zh="生醫 KG 上 GNN 真的有那麼神嗎？" data-en="Are GNNs really that magical on biomedical KGs?">生醫 KG 上 GNN 真的有那麼神嗎？</h3>
+<p class="disc-q" data-lang="zh">PrimeKG、Hetionet 等 KG 上 GNN 論文滿坑滿谷——但 Nelson et al. 2022 質疑：很多「藥物再利用」預測在實驗中失敗。</p>
+<p class="disc-q" data-lang="en">PrimeKG, Hetionet GNN papers proliferate — but Nelson et al. 2022 reports many "drug repurposing" predictions failed in wet-lab.</p>
+<div class="disc-pov" data-lang="zh"><strong>Pro-GNN：</strong>GNN 能整合異質節點（藥、基因、疾病）、利用結構訊號、做歸納（新節點不必重訓）。Hetionet 預測「nicotine → Alzheimer」最終得到弱實驗支持；DrugBank-GNN 對 COVID 重定位有實際成功。</div>
+<div class="disc-pov" data-lang="en"><strong>Pro-GNN:</strong> handles heterogeneous nodes (drug/gene/disease), exploits structure, inductive on new nodes. Hetionet's "nicotine → Alzheimer" got weak experimental support; DrugBank-GNN had real success in COVID repurposing.</div>
+<div class="disc-pov" data-lang="zh"><strong>反方：</strong>很多 KG 邊有<em>系統性偏差</em>（藥物-副作用 KG 常 over-report 已上市藥）；GNN 在小 KG 過擬合；over-smoothing；解釋性低。Nelson 2022 在 Nat Mach Intell 主張：「結構訊號不足以替代 mechanism。」</div>
+<div class="disc-pov" data-lang="en"><strong>Counter:</strong> Many KG edges have <em>systematic bias</em> (drug-AE KGs over-report marketed drugs); GNNs overfit small KGs; over-smoothing; low interpretability. Nelson 2022 (Nat Mach Intell): "structural signal cannot replace mechanism."</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label" data-zh="實戰案例" data-en="SPOTLIGHT">實戰案例</div>
+<div class="spotlight">
+<div class="sp-icon">💊</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="案例" data-en="CASE">案例</span>
+<h4 data-zh="Hetionet (Himmelstein 2017 eLife)：47k 節點 + 220 萬邊 = 藥物再利用 KG 典範" data-en="Hetionet (Himmelstein 2017 eLife): 47k nodes + 2.2M edges = drug-repurposing KG benchmark">Hetionet (Himmelstein 2017 eLife)：47k 節點 + 220 萬邊 = 藥物再利用 KG 典範</h4>
+<p data-lang="zh">Daniel Himmelstein 在 UCSF 博士論文期間整合了 29 個生醫資料庫（DrugBank、UniProt、DisGeNET、SIDER、GO 等），建出 <strong>Hetionet v1.0</strong>：47,031 個節點（涵蓋 compound、gene、disease、symptom、pathway、anatomy 等 11 種）+ 2,250,197 條邊（24 種關係）。論文發在 eLife 2017，且<strong>整個資料庫開源</strong>，至今 GitHub 仍有人 fork。</p>
+<p data-lang="en">During his UCSF PhD, Daniel Himmelstein merged 29 biomedical databases (DrugBank, UniProt, DisGeNET, SIDER, GO, etc.) into <strong>Hetionet v1.0</strong>: 47,031 nodes (11 types: compound, gene, disease, symptom, pathway, anatomy…) + 2,250,197 edges (24 relations). eLife 2017, <strong>fully open</strong>; still forked on GitHub today.</p>
+<p data-lang="zh">最戲劇性的發現：他們用 <em>DWPC (degree-weighted path count)</em> 計算「drug → disease」隱含路徑，預測了 209 個藥物再利用機會。其中「<strong>尼古丁 → 阿茲海默症</strong>」被排序很高——當時看似荒謬。但 2018-2022 多項臨床前研究確實顯示尼古丁透過 α7-nAChR 對 Aβ 累積有保護效果（Nordberg et al. 2020），雖未進入臨床但機制部分得到驗證。</p>
+<p data-lang="en">Most dramatic finding: using <em>DWPC (degree-weighted path count)</em> for "drug → disease" implicit paths, they predicted 209 repurposing opportunities. "<strong>Nicotine → Alzheimer's</strong>" ranked high — seemingly absurd. But 2018-2022 preclinical work showed nicotine's α7-nAChR-mediated protection against Aβ accumulation (Nordberg et al. 2020); not yet clinical but mechanistically supported.</p>
+<p data-lang="zh">教訓：(1) <strong>異質性 + 規模</strong>是生醫 KG 的關鍵；(2) <em>開源 + 可重現</em>讓社群能擴展；(3) 預測必須由實驗驗證；(4) 之後的 PrimeKG (2023) 規模放大 100×，但 Hetionet 仍是教學與基準的入門首選。</p>
+<p data-lang="en">Lessons: (1) <strong>heterogeneity + scale</strong> are the keys for biomedical KGs; (2) <em>open + reproducible</em> lets communities extend; (3) predictions must be validated experimentally; (4) PrimeKG (2023) is 100× larger, but Hetionet remains the teaching benchmark.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="常見陷阱" data-en="PITFALLS">常見陷阱</div>
+<h2 data-zh="六個地雷與修正" data-en="Six Pitfalls & Fixes">六個地雷與修正</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="① 對「不連通圖」套 Louvain" data-en="① Louvain on disconnected graphs">① 對「不連通圖」套 Louvain</h4><p data-lang="zh">Louvain 對不連通圖會把每個連通分量當社群，結果 trivial。<strong>修正：</strong>先用 connected_components 把圖切開分別偵測，或改用 Leiden（可處理）。</p><p data-lang="en">Louvain on disconnected graphs trivially marks each component as its own community. <strong>Fix:</strong> split via connected_components first, or use Leiden (handles this).</p></div>
+<div class="pitfall-card"><h4 data-zh="② 忽略邊權重" data-en="② Ignoring edge weights">② 忽略邊權重</h4><p data-lang="zh">PPI 網路中 STRING score 700 vs 900 的邊意義天差地別；忽略 weight 等於丟掉訊號。<strong>修正：</strong>centrality / community / GNN 都需設 weight；NetworkX 的 weight='conf' 參數。</p><p data-lang="en">In PPI nets, STRING 700 vs 900 edges differ enormously; ignoring weight throws away signal. <strong>Fix:</strong> set weight= in centrality / community / GNN; NetworkX accepts weight='conf'.</p></div>
+<div class="pitfall-card"><h4 data-zh="③ 對未清理的圖算中心性" data-en="③ Centrality on uncleaned graph">③ 對未清理的圖算中心性</h4><p data-lang="zh">自迴圈、重複邊、isolated node 都會扭曲 centrality。<strong>修正：</strong>計算前用 <code>G.remove_edges_from(nx.selfloop_edges(G))</code>、移除孤立點、合併平行邊。</p><p data-lang="en">Self-loops, duplicate edges, isolates distort centrality. <strong>Fix:</strong> <code>G.remove_edges_from(nx.selfloop_edges(G))</code>, drop isolates, merge parallel edges first.</p></div>
+<div class="pitfall-card"><h4 data-zh="④ GNN 在小圖過擬合" data-en="④ GNN overfitting on small graphs">④ GNN 在小圖過擬合</h4><p data-lang="zh">N&lt;500 節點訓 GCN 兩層 → train 99% / test 60%。<strong>修正：</strong>用 dropout / edge-drop / mixup；可考慮 GraphSAGE + neighbour sampling；或退回 node2vec + LightGBM。</p><p data-lang="en">N&lt;500 nodes for 2-layer GCN → 99% train / 60% test. <strong>Fix:</strong> dropout / edge-drop / mixup; switch to GraphSAGE + sampling; or fall back to node2vec + LightGBM.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑤ 把有向邊當無向" data-en="⑤ Treating directed as undirected">⑤ 把有向邊當無向</h4><p data-lang="zh">Twitter follow、基因調控 (TF → target) 都是有向，丟掉方向 → PageRank 失準、社群定義錯。<strong>修正：</strong>networkx 用 DiGraph；GNN 用 directed message passing；KG 永遠保留 (h, r, t) 順序。</p><p data-lang="en">Twitter follows / gene regulation (TF → target) are directed; flattening kills PageRank and miscalls communities. <strong>Fix:</strong> networkx DiGraph; directed message passing in GNN; always keep (h, r, t) order in KG.</p></div>
+<div class="pitfall-card"><h4 data-zh="⑥ GNN over-smoothing" data-en="⑥ GNN over-smoothing">⑥ GNN over-smoothing</h4><p data-lang="zh">5+ 層 GCN 後所有節點 embedding 變相似，分類掉到 random。<strong>修正：</strong>限制 ≤3 層；用 residual / PairNorm / GCNII；或改用 graph attention + 邊 dropout。</p><p data-lang="en">After 5+ GCN layers, all embeddings collapse to similar — classification drops to random. <strong>Fix:</strong> ≤3 layers; use residual / PairNorm / GCNII; or graph attention + edge dropout.</p></div>
+</div>
+
+<h3 data-zh="壞做法 vs 好做法" data-en="Bad vs Good Practice">壞做法 vs 好做法</h3>
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞做法" data-en="Bad practice">壞做法</h4>
+<p data-lang="zh">把生醫 KG 的所有邊讀進 NetworkX、跑 betweenness centrality（不顧 KG 有自迴圈、重複邊、不連通分量），輸出 top-10 排名直接報告為「最重要基因」。</p>
+<p data-lang="en">Load all KG edges into NetworkX, run betweenness centrality (ignoring self-loops, duplicates, disconnected components), report top-10 as "most important genes".</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好做法" data-en="Good practice">好做法</h4>
+<p data-lang="zh">先 audit：自迴圈、平行邊、connected_components、degree distribution；分別跑 degree / PageRank / betweenness 並交叉驗證；用 Leiden 找模組、檢查連通性；GNN 用 GraphSAGE + neighbour sampling，做 5-fold edge-split CV；最後請生物學家評估 top-10 是否符合領域常識。</p>
+<p data-lang="en">Audit first: self-loops, parallel edges, components, degree distribution; cross-check degree / PageRank / betweenness; Leiden for modules with connectivity check; GraphSAGE + sampling for GNN with 5-fold edge-split CV; biologists review top-10 for domain plausibility.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="reflection">
+<div class="section-label" data-zh="反思" data-en="REFLECTION">反思</div>
+<div class="reflection-q">
+<h4 data-zh="閉上書本前先想想……" data-en="Before closing this chapter, ponder…">閉上書本前先想想……</h4>
+<ol>
+<li data-lang="zh">為什麼 PageRank d=1 會有「dangling node sink」問題？d=0 又會怎樣？怎麼證明 d=0.85 收斂？</li>
+<li data-lang="en">Why does d=1 cause "dangling node sinks" in PageRank? What happens at d=0? Can you prove convergence at d=0.85?</li>
+<li data-lang="zh">Leiden 比 Louvain 多「refinement」一步，是怎麼保證連通的？舉一個 Louvain 失敗但 Leiden 成功的反例。</li>
+<li data-lang="en">How does Leiden's extra "refinement" step guarantee connected communities? Give a counter-example where Louvain fails and Leiden succeeds.</li>
+<li data-lang="zh">node2vec 的 p, q 參數如何讓 random walk 偏向 BFS 或 DFS？為何 BFS 偏向「結構等價」、DFS 偏向「社群」？</li>
+<li data-lang="en">How do node2vec's p, q parameters bias random walks toward BFS or DFS? Why is BFS "structural equivalence" and DFS "community"?</li>
+<li data-lang="zh">GNN 在 5+ 層時為何 over-smoothing？這在物理（heat diffusion）上有什麼類比？</li>
+<li data-lang="en">Why does GNN over-smooth at 5+ layers? What's the physical analogy (heat diffusion)?</li>
+<li data-lang="zh">設計一個用生醫 KG 預測「老藥新用」的 pipeline——你會用哪些 graph 演算法 + 哪些驗證步驟？</li>
+<li data-lang="en">Design a drug-repurposing pipeline on a biomedical KG — which graph algorithms and validation steps would you use?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="section-label" data-zh="研究前沿" data-en="ADVANCED / SOTA">研究前沿</div>
+<div class="advanced-note">
+<span class="adv-label">SOTA 2025-2026</span>
+<h4 data-zh="從 PrimeKG 到圖基礎模型" data-en="From PrimeKG to graph foundation models">從 PrimeKG 到圖基礎模型</h4>
+<p data-lang="zh"><strong>PrimeKG (Chandak 2023, Nat Sci Data)</strong>：4,050,249 relations、129,375 nodes、10 種節點 / 30 種邊；整合 20+ biomedical 資料庫；藥物-疾病 link prediction 為新 standard benchmark。</p>
+<p data-lang="en"><strong>PrimeKG (Chandak 2023, Nat Sci Data)</strong>: 4,050,249 relations, 129,375 nodes, 10 node types / 30 edge types; integrates 20+ DBs; drug-disease link prediction is the new standard benchmark.</p>
+<p data-lang="zh"><strong>Geometric Deep Learning (Bronstein 2024 book)</strong>：把 GNN、CNN、Transformer 統一在「對稱性 / 等變性」框架下。<em>等變 GNN</em> (E(3)-equivariant) 在 3D 蛋白質、小分子上達 SOTA（AlphaFold-3 用到）。</p>
+<p data-lang="en"><strong>Geometric Deep Learning (Bronstein 2024 book)</strong>: unifies GNN, CNN, Transformer under "symmetry / equivariance". <em>E(3)-equivariant GNN</em> hits SOTA on 3D proteins / small molecules (used in AlphaFold-3).</p>
+<p data-lang="zh"><strong>LLM + KG (2024-25)</strong>：把 KG 子圖檢索 → LLM context，用 LLM 在 KG 上做 reasoning。Lasso-GPT、KG-RAG、HuatuoGPT-II 在醫療 QA 上比純 LLM 提升 10-20% accuracy（降低幻覺）。</p>
+<p data-lang="en"><strong>LLM + KG (2024-25)</strong>: retrieve KG subgraph → LLM context, LLM reasons on KG. Lasso-GPT, KG-RAG, HuatuoGPT-II push medical QA accuracy +10-20% over pure LLM (lower hallucination).</p>
+<p data-lang="zh"><strong>Spectral vs Spatial GNN：</strong>2024 仍在辯——譜方法 (ChebNet, GraphConv) 數學優雅但難 scale；空間方法 (GCN, GAT, GraphSAGE) 主流但理論基礎弱。Bo 2023 統一兩者，BernNet / GPRGNN 為 hybrid 範例。</p>
+<p data-lang="en"><strong>Spectral vs Spatial GNN:</strong> still debated in 2024 — spectral (ChebNet, GraphConv) elegant but hard to scale; spatial (GCN, GAT, GraphSAGE) practical but weaker theory. Bo 2023 unifies them; BernNet / GPRGNN are hybrid exemplars.</p>
+<p data-lang="zh"><strong>2026 圖基礎模型 (Graph FM)：</strong>OneForAll (Liu 2024 ICLR)、GraphAny (2025)、GFM 等嘗試「<em>跨領域 zero-shot</em>」——同一模型在社交、引文、蛋白質網路間遷移。仍處早期，但被視為「圖界的 BERT」候選。</p>
+<p data-lang="en"><strong>2026 Graph FMs:</strong> OneForAll (Liu 2024 ICLR), GraphAny (2025), GFM attempt "<em>cross-domain zero-shot</em>" — same model transferring between social, citation, protein nets. Still early, but seen as the "BERT moment" candidate for graphs.</p>
+<p data-lang="zh"><strong>未來方向：</strong>(a) <a href="#">causal GNN</a>（區分相關 vs 因果鄰居）；(b) <code>temporal GNN</code> (dynamic graphs, ICU patient trajectories)；(c) <em>privacy-preserving graph learning</em>（聯邦 GNN，跨醫院 KG 整合）；(d) GNN + LLM 對 multi-hop QA 的整合。</p>
+<p data-lang="en"><strong>Frontiers:</strong> (a) <a href="#">causal GNN</a> (separate correlation vs causal neighbours); (b) <code>temporal GNN</code> (dynamic graphs, ICU trajectories); (c) <em>privacy-preserving graph learning</em> (federated GNN across hospitals); (d) GNN + LLM for multi-hop QA.</p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="2">
@@ -210,6 +447,12 @@ emb   = {n: model.wv[n] <span class="kw">for</span> n <span class="kw">in</span>
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 隨機 dropout</span><span data-lang="en">D. Random dropout</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="軼事：" data-en="Anecdote:">軼事：</strong>
+<span data-lang="zh">PageRank 的名字其實取自「Larry Page」而非「Web Page」——這是 Page 本人 1998 年論文中刻意留下的「雙關」。當時他被同事們調侃「你的演算法叫 PageRank，剛好你姓 Page」，Page 後來在 2004 Google IPO 訪談中承認：「對，是想留個 pun」。另一個鮮為人知的事實：1996 年 Page 與 Brin 最早把這個專案叫 "BackRub"——因為它「追蹤反向連結」(back-links)。多虧後來改名 PageRank，否則我們今天可能要說「我用 BackRub 排序網頁」。</span>
+<span data-lang="en">PageRank is named after "Larry Page", not "web page" — a pun Page deliberately left in the 1998 paper. Colleagues teased him: "your algorithm is PageRank — your surname is Page". He admitted at Google's 2004 IPO interview: "Yes, intended pun". Less known: in 1996, Page and Brin first named the project "BackRub" — for "tracking back-links". Thank goodness for the renaming, or we'd still be saying "I used BackRub to rank pages".</span>
+</div>
 
 <nav class="page-nav">
 <a href="time-series-mining.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 15: 時間序列探勘" data-en="Ch 15: Time Series Mining">Ch 15: 時間序列探勘</span></a>

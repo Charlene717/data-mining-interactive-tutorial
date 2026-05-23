@@ -18,6 +18,318 @@
 </header>
 <main class="content-wrap">
 
+<aside class="section-toc">
+<strong data-zh="本章閱讀地圖 · ~35 min" data-en="Reading Map · ~35 min">本章閱讀地圖 · ~35 min</strong>
+<div class="pill-row">
+<span class="pill teal" data-zh="⏱ 估時 35 分" data-en="⏱ ~35 min">⏱ 估時 35 分</span>
+<span class="level-badge l-beg" data-zh="初學友善" data-en="Beginner">初學友善</span>
+<span class="level-badge l-mid" data-zh="進階深入" data-en="Intermediate">進階深入</span>
+<span class="level-badge l-adv" data-zh="研究員彩蛋" data-en="Advanced">研究員彩蛋</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場：肺結節要相信誰" data-en="Story: Whose vote on the lung nodule?">開場：肺結節要相信誰</a></li>
+<li><a href="#glossary" data-zh="關鍵詞彙 ×12（小孩+專家雙版本）" data-en="Glossary (kid + tech)">關鍵詞彙 ×12（小孩+專家雙版本）</a></li>
+<li><a href="#history" data-zh="從 1958 Perceptron 到 sklearn 1.6 時間軸" data-en="Timeline from 1958 Perceptron to sklearn 1.6">時間軸</a></li>
+<li><a href="#walkthrough" data-zh="手算 KNN：569 位乳癌病人逐步算" data-en="Worked example: KNN on 569 patients">手算 KNN</a></li>
+<li><a href="#discussion" data-zh="三題爭論：可解釋 vs 準確" data-en="Three debates">三題爭論</a></li>
+<li><a href="#pitfalls" data-zh="陷阱 6 連發" data-en="Six pitfalls">陷阱 6 連發</a></li>
+<li><a href="#reflection" data-zh="反思題 ×5" data-en="Reflection ×5">反思題</a></li>
+<li><a href="#advanced" data-zh="2024–2026 進階：Newton-Cholesky、Conformal" data-en="Advanced 2024–2026: Newton-Cholesky, Conformal">進階研究員彩蛋</a></li>
+</ol>
+</aside>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="情境劇" data-en="SCENE">情境劇</span>
+<h3 data-zh="放射科的 14:37 — 同一顆結節，兩個答案" data-en="14:37 in Radiology — One Nodule, Two Answers">放射科的 14:37</h3>
+<div data-lang="zh">
+<p>下午兩點半，林醫師盯著 LDCT 第 217 張切片：左上葉一顆 7 mm 結節，邊緣分葉、實心 65%、密度 −180 HU。她按下按鈕，AI 助手吐出兩個獨立答案——KNN 模組看遍歷史 12 萬顆結節，找出最像的 7 顆鄰居 (其中 5 顆惡性) → <strong>P(惡)=0.71</strong>；Logistic Regression 把這顆結節塞進線性方程，輸出 <strong>P(惡)=0.43</strong>，並列出每個係數的勝算比 (OR=1.8 / 0.9 / 2.4 / …)。</p>
+<p>誰對？她兩個都不能盲信。KNN 沒模型可審，無法解釋為什麼那 7 顆鄰居最像；Logistic Regression 給了人話般的係數，卻假設了線性。林醫師最後把兩個機率「平均後再校準」，並轉診——這就是本章要學的：何時相信「鄰居投票」、何時相信「公式」、何時兩個都不能只看一個。</p>
+</div>
+<div data-lang="en">
+<p>It's 2:37 PM. Dr Lin stares at slice 217 of an LDCT — left upper lobe, 7 mm nodule, lobulated edges, 65% solid, −180 HU. She clicks the AI button. Two independent answers pop up: a KNN module rifles through 120,000 historical nodules, finds the 7 most similar (5 were malignant) → <strong>P(malignant)=0.71</strong>. A Logistic Regression module dumps the nodule into a linear equation and outputs <strong>P(malignant)=0.43</strong>, with odds ratios for every feature (OR=1.8 / 0.9 / 2.4 / …).</p>
+<p>Who's right? She can't blindly trust either. KNN has no model to audit — there's no explanation for why those 7 neighbours were closest. Logistic Regression hands her human-readable coefficients but assumes linearity. Dr Lin ends up averaging the two probabilities, recalibrating, and ordering a follow-up — exactly what this chapter is about: when to trust the "neighbour vote", when to trust the "formula", and when neither single number is enough.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="關鍵詞彙" data-en="GLOSSARY">關鍵詞彙</div>
+<h2 data-zh="關鍵詞 · 小孩版 + 專家版" data-en="Key Terms · Kid + Tech Version">關鍵詞 · 雙版本</h2>
+<p data-lang="zh">每個詞我們同時給「向五歲孩子解釋」與「研究員定義」兩個版本——這是 Feynman Technique 的核心：能用小孩語言講清楚，才算真的懂。</p>
+<p data-lang="en">For each term we give a "explain it to a 5-year-old" version <em>and</em> a researcher-grade definition — that's the Feynman Technique: if you can teach a child, you've really understood.</p>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Classification</div><div class="term-zh">分類</div>
+<div class="term-kid" data-lang="zh">把東西分到不同的盒子裡——蘋果或橘子。</div>
+<div class="term-kid" data-lang="en">Putting things into labelled boxes — apple or orange.</div>
+<div class="term-tech" data-lang="zh">監督式學習中，學一個函數 f: X→{0,…,K-1}，將特徵向量映射到離散標籤。</div>
+<div class="term-tech" data-lang="en">Supervised learning of f: X→{0,…,K-1}, mapping feature vectors to discrete labels.</div></div>
+
+<div class="glossary-card"><div class="term-en">KNN</div><div class="term-zh">K 最近鄰</div>
+<div class="term-kid" data-lang="zh">問你周圍最近的 5 個朋友穿什麼，跟著穿。</div>
+<div class="term-kid" data-lang="en">Ask your 5 closest friends what they're wearing, copy them.</div>
+<div class="term-tech" data-lang="zh">非參數惰性學習器：預測時對訓練資料做 k-NN 查詢，回傳多數類別或加權平均。</div>
+<div class="term-tech" data-lang="en">Non-parametric lazy learner: at predict time, query the training set for k nearest and return majority vote or weighted avg.</div></div>
+
+<div class="glossary-card"><div class="term-en">K (hyperparameter)</div><div class="term-zh">鄰居數 K</div>
+<div class="term-kid" data-lang="zh">要問幾個朋友？1 個太極端，100 個太混雜。</div>
+<div class="term-kid" data-lang="en">How many friends to ask? 1 = too extreme, 100 = too muddled.</div>
+<div class="term-tech" data-lang="zh">控制 bias-variance 取捨；常用 √n 作起點再以 CV 校準。多數投票需 K 為奇數避免平票。</div>
+<div class="term-tech" data-lang="en">Controls bias-variance trade-off; rule of thumb K≈√n then refine via CV. Choose odd K to avoid ties in binary.</div></div>
+
+<div class="glossary-card"><div class="term-en">Decision Boundary</div><div class="term-zh">決策邊界</div>
+<div class="term-kid" data-lang="zh">畫一條線分開蘋果和橘子的地圖。</div>
+<div class="term-kid" data-lang="en">A line on the map separating apple-land from orange-land.</div>
+<div class="term-tech" data-lang="zh">特徵空間中分類器預測類別發生切換的等高線/曲面 {x : P(y=1|x)=0.5}。</div>
+<div class="term-tech" data-lang="en">The hyper-surface {x : P(y=1|x)=0.5} where the classifier flips its predicted class.</div></div>
+
+<div class="glossary-card"><div class="term-en">Logistic Regression</div><div class="term-zh">邏輯迴歸</div>
+<div class="term-kid" data-lang="zh">不是迴歸——是用一條 S 形曲線把分數變成「機率」。</div>
+<div class="term-kid" data-lang="en">Not really regression — uses an S-curve to turn scores into probabilities.</div>
+<div class="term-tech" data-lang="zh">線性 log-odds 模型 log(p/(1-p))=β₀+β·x，以 MLE 估參，輸出校準 (Platt-able) 機率。</div>
+<div class="term-tech" data-lang="en">Linear log-odds model log(p/(1-p))=β₀+β·x, fit by MLE, outputs (Platt-calibratable) probabilities.</div></div>
+
+<div class="glossary-card"><div class="term-en">Sigmoid / Logit</div><div class="term-zh">Sigmoid / Logit</div>
+<div class="term-kid" data-lang="zh">把任何數字壓成 0 到 1 之間的 S 形曲線。</div>
+<div class="term-kid" data-lang="en">Squashes any number into a smooth S between 0 and 1.</div>
+<div class="term-tech" data-lang="zh">σ(z)=1/(1+e<sup>−z</sup>)；logit=σ⁻¹=ln(p/(1-p))，將機率單調對應到全實數軸。</div>
+<div class="term-tech" data-lang="en">σ(z)=1/(1+e<sup>−z</sup>); logit=σ⁻¹=ln(p/(1-p)) monotonically maps prob to ℝ.</div></div>
+
+<div class="glossary-card"><div class="term-en">Odds Ratio (OR)</div><div class="term-zh">勝算比</div>
+<div class="term-kid" data-lang="zh">多吃一根香蕉，得病機率變成原本的多少倍？</div>
+<div class="term-kid" data-lang="en">Eat one more banana → how many times more likely to get sick?</div>
+<div class="term-tech" data-lang="zh">e<sup>β<sub>j</sub></sup>：x<sub>j</sub> 增 1 單位導致勝算 (odds=p/(1-p)) 之乘法因子。OR=1 即無效應。</div>
+<div class="term-tech" data-lang="en">e<sup>β<sub>j</sub></sup>: multiplicative factor on odds (p/(1-p)) per unit increase in x<sub>j</sub>. OR=1 means no effect.</div></div>
+
+<div class="glossary-card"><div class="term-en">Log-Likelihood</div><div class="term-zh">對數似然</div>
+<div class="term-kid" data-lang="zh">這套參數能解釋資料的「分數」加起來。</div>
+<div class="term-kid" data-lang="en">A "score" of how well your parameters explain the data, summed up.</div>
+<div class="term-tech" data-lang="zh">ℓ(β)=Σ[y<sub>i</sub>·z<sub>i</sub>−log(1+e<sup>z<sub>i</sub></sup>)]，凸函數；MLE 透過 Newton-Raphson 或 L-BFGS 求最大。</div>
+<div class="term-tech" data-lang="en">ℓ(β)=Σ[y<sub>i</sub>·z<sub>i</sub>−log(1+e<sup>z<sub>i</sub></sup>)], convex; MLE solved via Newton-Raphson or L-BFGS.</div></div>
+
+<div class="glossary-card"><div class="term-en">L1 / LASSO</div><div class="term-zh">L1 / LASSO</div>
+<div class="term-kid" data-lang="zh">逼模型把不重要的特徵變成 0——「斷捨離」。</div>
+<div class="term-kid" data-lang="en">Forces unimportant features to exactly 0 — Marie Kondo for models.</div>
+<div class="term-tech" data-lang="zh">λΣ|β<sub>j</sub>| 懲罰；非平滑導致解在角點 (β<sub>j</sub>=0)。Tibshirani 1996 JRSS-B 提出。</div>
+<div class="term-tech" data-lang="en">λΣ|β<sub>j</sub>| penalty; non-smooth → corner solutions (β<sub>j</sub>=0). Tibshirani 1996 JRSS-B.</div></div>
+
+<div class="glossary-card"><div class="term-en">L2 / Ridge</div><div class="term-zh">L2 / Ridge</div>
+<div class="term-kid" data-lang="zh">把所有係數一起縮小，但不讓任何一個歸零。</div>
+<div class="term-kid" data-lang="en">Shrinks all coefficients together but doesn't kill any.</div>
+<div class="term-tech" data-lang="zh">λΣβ<sub>j</sub>² 懲罰；解析解 (XᵀX+λI)⁻¹Xᵀy；處理多重共線。Hoerl-Kennard 1970。</div>
+<div class="term-tech" data-lang="en">λΣβ<sub>j</sub>² penalty; closed form (XᵀX+λI)⁻¹Xᵀy; tames multicollinearity. Hoerl-Kennard 1970.</div></div>
+
+<div class="glossary-card"><div class="term-en">Softmax</div><div class="term-zh">Softmax</div>
+<div class="term-kid" data-lang="zh">把 K 個分數變成 K 個總和為 1 的機率。</div>
+<div class="term-kid" data-lang="en">Turns K scores into K probabilities that sum to 1.</div>
+<div class="term-tech" data-lang="zh">p(y=k|x) = e<sup>z<sub>k</sub></sup>/Σ<sub>j</sub>e<sup>z<sub>j</sub></sup>，多元 Logistic Regression 的鏈接函數。</div>
+<div class="term-tech" data-lang="en">p(y=k|x) = e<sup>z<sub>k</sub></sup>/Σ<sub>j</sub>e<sup>z<sub>j</sub></sup>, the link of multinomial logistic regression.</div></div>
+
+<div class="glossary-card"><div class="term-en">Lazy vs Eager Learner</div><div class="term-zh">惰性 vs 急切學習器</div>
+<div class="term-kid" data-lang="zh">惰性：考試才翻書；急切：每天讀，考試秒答。</div>
+<div class="term-kid" data-lang="en">Lazy: cram at exam. Eager: studies daily, answers instantly.</div>
+<div class="term-tech" data-lang="zh">KNN=lazy (訓練 O(1) 預測 O(n)；Logistic=eager (訓練 O(n·p²) 預測 O(p))。</div>
+<div class="term-tech" data-lang="en">KNN=lazy (train O(1), predict O(n)); Logistic=eager (train O(n·p²), predict O(p)).</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史脈絡" data-en="HISTORY">歷史脈絡</div>
+<h2 data-zh="從 1958 Perceptron 到 sklearn 1.6" data-en="From 1958 Perceptron to sklearn 1.6">從 1958 到 2025 的分類器演化</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1958</span><span class="tl-title" data-zh="Rosenblatt Perceptron" data-en="Rosenblatt Perceptron">Rosenblatt Perceptron</span><span class="tl-desc" data-zh="Cornell 心理學家用單層感知器分類器；紐約時報稱「電腦將會行走、說話、看見、書寫」。線性分類器的起點。" data-en="Cornell psychologist's single-layer classifier; NYT proclaimed it would 'walk, talk, see, write.' Origin of linear classifiers.">Cornell psychologist's single-layer classifier; NYT proclaimed it would 'walk, talk, see, write.'</span></div>
+<div class="timeline-item"><span class="tl-year">1967</span><span class="tl-title" data-zh="Cover & Hart KNN 證明" data-en="Cover & Hart KNN proof">Cover-Hart Bayes-Optimal Bound</span><span class="tl-desc" data-zh="證明 1-NN 錯誤率 ≤ 2× Bayes 最佳錯誤率——KNN 的理論基礎。" data-en="Proved 1-NN error ≤ 2× Bayes-optimal — theoretical foundation of KNN.">Proved 1-NN error ≤ 2× Bayes-optimal.</span></div>
+<div class="timeline-item"><span class="tl-year">1970</span><span class="tl-title" data-zh="Cox: Logistic Regression" data-en="Cox: Logistic Regression">Cox formalizes Logistic Regression</span><span class="tl-desc" data-zh="David Cox 在 JRSS-B 系統化 logit 模型，成為流行病學標配。" data-en="David Cox formalised logit in JRSS-B; epidemiology's default ever since.">David Cox formalised logit; epidemiology's default ever since.</span></div>
+<div class="timeline-item"><span class="tl-year">1996</span><span class="tl-title" data-zh="Tibshirani LASSO" data-en="Tibshirani LASSO">Tibshirani LASSO (JRSS-B)</span><span class="tl-desc" data-zh="L1 懲罰首次系統化發表，後續引爆稀疏學習與基因組分析。" data-en="L1 penalty paper that ignited sparse learning and genomics.">L1 penalty paper that ignited sparse learning and genomics.</span></div>
+<div class="timeline-item"><span class="tl-year">2001</span><span class="tl-title" data-zh="Hastie ESL 1st ed" data-en="Hastie ESL 1st edition">Hastie-Tibshirani-Friedman ESL</span><span class="tl-desc" data-zh="《The Elements of Statistical Learning》第一版，至今 ML 教學最權威之一。" data-en="ESL 1st edition — still one of ML's most authoritative texts.">ESL 1st edition — still one of ML's most authoritative texts.</span></div>
+<div class="timeline-item"><span class="tl-year">2005</span><span class="tl-title" data-zh="Niculescu-Mizil 校準論文" data-en="Niculescu-Mizil calibration">Niculescu-Mizil ICML</span><span class="tl-desc" data-zh="系統比較 boosted trees、NB、SVM 的機率校準，promoting Platt scaling + isotonic。" data-en="Systematic comparison of calibration across boosting/NB/SVM; Platt + isotonic standard.">Systematic comparison; Platt + isotonic become standard.</span></div>
+<div class="timeline-item"><span class="tl-year">2017</span><span class="tl-title" data-zh="sklearn calibrated_classifier" data-en="sklearn calibrated_classifier">CalibratedClassifierCV in sklearn 0.19</span><span class="tl-desc" data-zh="可用 sigmoid/isotonic 校準任何分類器，臨床部署門檻大降。" data-en="Wraps any estimator with sigmoid/isotonic — lowered clinical-deploy barrier.">Wraps any estimator with sigmoid/isotonic.</span></div>
+<div class="timeline-item"><span class="tl-year">2025</span><span class="tl-title" data-zh="sklearn 1.6 Newton-Cholesky" data-en="sklearn 1.6 Newton-Cholesky">sklearn 1.6 Newton-Cholesky solver</span><span class="tl-desc" data-zh="多元 Logistic Regression 在中型資料上比 lbfgs 快 3–10×，預設成為新主流 solver。" data-en="New solver makes multinomial logistic 3–10× faster than lbfgs on medium data.">3–10× faster than lbfgs on medium multinomial data.</span></div>
+</div>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">👫</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="朋友票決 vs 鏡子公式" data-en="Friends' Vote vs Mirror Formula">朋友票決 vs 鏡子公式</h4>
+<p data-lang="zh">KNN 像「早上不知道穿什麼，跑去問離你最近 5 個朋友——3 個說牛仔褲，那就牛仔褲」。沒有公式、沒有記憶、只有當下查表。Logistic Regression 像「你心裡已經有一條公式：天氣 ×0.4 + 場合 ×0.8 - 0.3，丟進 sigmoid 就得到答案」。一個是<strong>查資料庫</strong>，一個是<strong>背公式</strong>——延伸到分類器，就是 lazy vs eager 的根本哲學分歧。</p>
+<p data-lang="en">KNN is like "I don't know what to wear — let me ask my 5 closest friends. 3 say jeans, jeans it is." No formula, no memory, just a lookup right now. Logistic Regression is like "I have a formula in my head: weather ×0.4 + occasion ×0.8 − 0.3, run sigmoid, out comes the answer." One <strong>queries the database</strong>, the other <strong>recites a formula</strong> — the lazy-vs-eager philosophical split, applied to classifiers.</p>
+</div>
+</div>
+
+<section class="section">
+<div class="section-label" data-zh="新互動" data-en="NEW INTERACTIVE">新互動</div>
+<h2 data-zh="互動：Logistic Regression 係數對 sigmoid 的影響" data-en="Interactive: How Logistic Coefficients Reshape the Sigmoid">互動：係數如何重塑 sigmoid</h2>
+<div data-lang="zh"><p>調整下方 β₀（截距）與 β₁（斜率）兩個係數，觀察 sigmoid 曲線位置與陡度的變化——這是理解「為什麼 OR 不只是相關係數」的關鍵直覺。</p></div>
+<div data-lang="en"><p>Drag β₀ (intercept) and β₁ (slope) below and watch how the sigmoid shifts and steepens. This is the key intuition behind "why OR is not just correlation."</p></div>
+<div class="interactive-panel">
+<div class="slider-group"><label>β₀ (intercept) = <span id="b0Val">0</span></label><input type="range" id="b0" min="-5" max="5" value="0" step="0.1"></div>
+<div class="slider-group"><label>β₁ (slope) = <span id="b1Val">1</span></label><input type="range" id="b1" min="-3" max="3" value="1" step="0.1"></div>
+<div class="chart-container"><canvas id="sigChart"></canvas></div>
+<div id="sigStats" class="sim-stats"></div>
+</div>
+</section>
+
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算範例" data-en="WORKED EXAMPLE">手算範例</div>
+<h2 data-zh="手算：用 KNN+Logistic 預測乳癌惡性" data-en="Walkthrough: Predict Breast Cancer Malignancy">手算 KNN ↔ Logistic Regression</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">1</div><h3 data-zh="UCI Wisconsin Breast Cancer (569 病人)" data-en="UCI Wisconsin Breast Cancer (569 patients)">UCI Wisconsin Breast Cancer</h3><span class="wt-tag" data-zh="混合資料：邊算邊比" data-en="Hybrid: compute as you read">手算逐步</span></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>查詢病人：</strong>radius=15.0、texture=20.0、其他 28 個特徵省略。先做 <code>StandardScaler</code>：z<sub>radius</sub>=(15-14.13)/3.52=+0.247、z<sub>texture</sub>=(20-19.29)/4.30=+0.165。沒 scaling 半徑(mm)會壓過 texture(灰階變異)。</div><div class="wt-body" data-lang="en"><strong>Query patient:</strong> radius=15.0, texture=20.0, 28 other features omitted. First <code>StandardScaler</code>: z<sub>radius</sub>=(15-14.13)/3.52=+0.247, z<sub>texture</sub>=(20-19.29)/4.30=+0.165. Without scaling, radius (mm) would swamp texture (greylevel SD).</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>選 K=5：</strong>√569≈23 是粗估；先用 5 並交叉驗證決定。一定要 <em>odd</em> 避免二元分類平票。</div><div class="wt-body" data-lang="en"><strong>Pick K=5:</strong> √569≈23 is a rough rule of thumb; start at 5 then refine with CV. Must be <em>odd</em> in binary tasks to avoid ties.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>計算 569 個歐式距離：</strong>d(query, patient<sub>i</sub>) = √Σ(z<sub>j,query</sub> − z<sub>j,i</sub>)²。複雜度 O(n·p) = 569×30 ≈ 17k 次浮點運算——KNN 預測慢就慢在這裡。</div><div class="wt-body" data-lang="en"><strong>Compute 569 Euclidean distances:</strong> d(query, patient<sub>i</sub>) = √Σ(z<sub>j,query</sub> − z<sub>j,i</sub>)². Complexity O(n·p) = 569×30 ≈ 17k FLOPs — this is why KNN's prediction is slow.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>取出最近 5 個：</strong>distances 排序，得到 {d=0.31 (M), 0.38 (M), 0.42 (B), 0.51 (M), 0.55 (M)}。投票 → 4M, 1B → <strong>預測惡性</strong>。distance-weighted 版本：權重 1/d 給 M 加總 9.8、B 加總 2.4 → 仍是 M，但信心更高。</div><div class="wt-body" data-lang="en"><strong>Take 5 nearest:</strong> sort, get {d=0.31 (M), 0.38 (M), 0.42 (B), 0.51 (M), 0.55 (M)}. Vote → 4M, 1B → <strong>predict malignant</strong>. Distance-weighted version: weight 1/d gives M-total 9.8, B-total 2.4 → still M, but higher confidence.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>不確定性 (bootstrap)：</strong>對訓練集做 100 次 bootstrap 重抽，每次跑 KNN→得到 100 個機率估計。95% CI = [0.65, 0.92]。臨床上「點估 0.78、CI [0.65, 0.92]」遠比孤立的 0.78 有用。</div><div class="wt-body" data-lang="en"><strong>Uncertainty (bootstrap):</strong> resample training 100×, run KNN each time → 100 probability estimates. 95% CI = [0.65, 0.92]. "Point 0.78, CI [0.65, 0.92]" is clinically far more useful than a lonely 0.78.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 6</div><div class="wt-body" data-lang="zh"><strong>對照 Logistic Regression：</strong>同樣資料、L2 (C=1)。模型輸出 β₀ = −10.4、β<sub>radius</sub>=+0.83、β<sub>texture</sub>=+0.32、β<sub>concavity</sub>=+1.41。對此查詢 z=−10.4 + 0.83·0.247 + 0.32·0.165 + … = +1.86 → σ(1.86)=<strong>P(M)=0.87</strong>。</div><div class="wt-body" data-lang="en"><strong>Compare Logistic:</strong> same data, L2 (C=1). Fitted β₀ = −10.4, β<sub>radius</sub>=+0.83, β<sub>texture</sub>=+0.32, β<sub>concavity</sub>=+1.41. For this query z=−10.4 + 0.83·0.247 + 0.32·0.165 + … = +1.86 → σ(1.86)=<strong>P(M)=0.87</strong>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 7</div><div class="wt-body" data-lang="zh"><strong>解讀 OR：</strong>e<sup>0.83</sup>=2.29——半徑每多一個標準差，惡性勝算約 ×2.3。這是論文 Table 1 寫法，KNN 給不了。</div><div class="wt-body" data-lang="en"><strong>Interpret OR:</strong> e<sup>0.83</sup>=2.29 — each +1 SD in radius multiplies the malignancy odds by ≈2.3. This is the Table-1-of-the-paper output, which KNN cannot give.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 8</div><div class="wt-body" data-lang="zh"><strong>校準檢查：</strong>對驗證集分 10 bin 畫 reliability diagram。Logistic 通常很校準 (Brier=0.05)，KNN majority-vote 容易離散階梯狀 → 用 Platt scaling 後 Brier 降到 0.07。</div><div class="wt-body" data-lang="en"><strong>Calibration check:</strong> 10-bin reliability diagram on the holdout. Logistic is usually well-calibrated (Brier=0.05); KNN majority-vote tends to be stair-step → Platt scaling brings Brier to 0.07.</div></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論題" data-en="DEBATE">爭論題</div>
+<h2 data-zh="三個值得吵的問題" data-en="Three Worth-Arguing Questions">三個值得吵的問題</h2>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+<h3 data-zh="KNN 何時打贏 Logistic Regression？" data-en="When does KNN beat Logistic Regression?">KNN 何時打贏 Logistic Regression？</h3>
+<p class="disc-q" data-lang="zh">直覺上 KNN 比較土，但有研究顯示某些情境它就是會贏——什麼情境？</p>
+<p class="disc-q" data-lang="en">KNN feels "primitive" but it wins in specific scenarios — which ones?</p>
+<div class="disc-pov"><strong data-zh="觀點 A：" data-en="View A:">觀點 A：</strong><span data-lang="zh">當決策邊界<em>嚴重非線性且區域複雜</em>（多模態、簇分散），KNN 自動順應資料地形；Logistic 的單一線性平面無法捕捉，除非手動加大量交互特徵。</span><span data-lang="en">When the boundary is <em>strongly non-linear and locally complex</em> (multi-modal, scattered clusters), KNN adapts to the local terrain; Logistic's single linear plane can't capture this without massive feature engineering.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 B：" data-en="View B:">觀點 B：</strong><span data-lang="zh">中等樣本 (n≥1000)、低維 (p≤20)、且訓練資料覆蓋良好。高維時 curse of dimensionality 讓距離失去意義，KNN 立刻崩盤。</span><span data-lang="en">Medium n (≥1000), low p (≤20), well-covered training space. In high-D the curse of dimensionality makes distances meaningless and KNN collapses.</span></div>
+<div class="disc-pov"><strong data-zh="觀點 C：" data-en="View C:">觀點 C：</strong><span data-lang="zh">當你<em>不想做模型假設</em>。Logistic 假設 log-odds 線性，違反時偏差大；KNN 沒這個假設。</span><span data-lang="en">When you want <em>zero model assumptions</em>. Logistic assumes log-odds linearity; violate that and bias spikes. KNN makes none.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+<h3 data-zh="為什麼 L1 (LASSO) 是稀疏的？L2 不是？" data-en="Why is L1 sparse but L2 isn't?">為什麼 L1 是稀疏的？</h3>
+<p class="disc-q" data-lang="zh">兩個都是「縮小係數」，為什麼只有 L1 會「壓到零」？</p>
+<p class="disc-q" data-lang="en">Both shrink coefficients — why does only L1 zero them out?</p>
+<div class="disc-pov"><strong data-zh="幾何直觀：" data-en="Geometric:">幾何直觀：</strong><span data-lang="zh">L1 約束 |β₁|+|β₂|≤t 是<em>菱形</em>，等高線易在「尖角」（軸上）相切，產生 β<sub>j</sub>=0；L2 約束 β₁²+β₂²≤t 是<em>圓</em>，切點在曲面上幾乎不在軸。</span><span data-lang="en">L1's |β₁|+|β₂|≤t is a <em>diamond</em>; contours tangent at its corners (on axes) → β<sub>j</sub>=0. L2's β₁²+β₂²≤t is a <em>circle</em>; tangent points almost never on axes.</span></div>
+<div class="disc-pov"><strong data-zh="次梯度視角：" data-en="Subgradient:">次梯度視角：</strong><span data-lang="zh">L1 在 β<sub>j</sub>=0 有「kink」(不可微)；KKT 條件要求 |∂loss/∂β<sub>j</sub>| ≤ λ 時 β<sub>j</sub> 可恰為 0。L2 處處可微，最小值內點解。</span><span data-lang="en">L1 has a kink at β<sub>j</sub>=0 (non-smooth); KKT lets β<sub>j</sub>=0 whenever |∂loss/∂β<sub>j</sub>| ≤ λ. L2 is everywhere smooth → interior minimum.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+<h3 data-zh="Logistic Regression 前要不要做 scaling？" data-en="Should you scale features before Logistic Regression?">Logistic 前需要 scaling 嗎？</h3>
+<p class="disc-q" data-lang="zh">數學上 MLE 不變，但實務上 sklearn 為什麼建議？</p>
+<p class="disc-q" data-lang="en">Mathematically MLE is scale-invariant, but sklearn still recommends scaling — why?</p>
+<div class="disc-pov"><strong data-zh="數學觀點：" data-en="Math view:">數學觀點：</strong><span data-lang="zh">無正則化時 β<sub>j</sub>/scale<sub>j</sub> 不變，純預測機率相同。所以「報告 OR」時不 scaling 比較自然 (保留原始單位)。</span><span data-lang="en">Without regularization β<sub>j</sub>/scale<sub>j</sub> is invariant; pure prediction is identical. Reporting OR is more natural <em>without</em> scaling (keeps native units).</span></div>
+<div class="disc-pov"><strong data-zh="實務觀點：" data-en="Practical:">實務觀點：</strong><span data-lang="zh">L1/L2 懲罰對所有 β 一樣強——大尺度的特徵 (體重 kg vs 年齡 yr) 會被不公平處罰。<em>使用任何正則化都應先 scaling</em>。</span><span data-lang="en">L1/L2 penalises every β equally — large-scale features (weight kg vs age yr) get unfairly penalised. <em>Always scale when using any regularization.</em></span></div>
+<div class="disc-pov"><strong data-zh="收斂觀點：" data-en="Convergence:">收斂觀點：</strong><span data-lang="zh">L-BFGS / Newton-Cholesky 在尺度差異大的特徵上條件數差，收斂慢——scaling 直接加速。</span><span data-lang="en">L-BFGS / Newton-Cholesky have poor conditioning on mixed-scale features; scaling speeds up convergence dramatically.</span></div>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">🎬</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實案聚光燈" data-en="SPOTLIGHT">實案聚光燈</span>
+<h4 data-zh="Ardila 2019 Nature：CNN 擊敗放射科——但 baseline 是 Logistic" data-en="Ardila 2019 Nature: CNN beats radiologists — but baseline was Logistic">Ardila 2019 <em>Nature</em>：CNN 擊敗放射科</h4>
+<p data-lang="zh">Google Health 在 <em>Nature Medicine</em> (Ardila 2019, DOI:10.1038/s41591-019-0447-x) 提出一個端對端 3D-CNN 篩檢肺癌，<strong>AUROC=0.94</strong>，平均減少 11% 偽陽性，並在多中心 NLST 資料上勝過 6 位放射科醫師。但<em>整個論文最關鍵的對照</em>是一條老派的 Logistic Regression baseline——<strong>AUROC 仍有 0.91</strong>——意思是 CNN 多賺的那 0.03，要用 ×100 倍計算量、不可解釋、且須 GPU。</p>
+<p data-lang="en">Google Health's 2019 <em>Nature Medicine</em> paper (Ardila et al., DOI:10.1038/s41591-019-0447-x) showed an end-to-end 3D-CNN screened lung cancer at <strong>AUROC=0.94</strong>, cutting false-positives 11%, beating 6 radiologists on the NLST cohort. But the <em>most important comparison in the entire paper</em> was an old-school Logistic Regression baseline — it still hit <strong>AUROC=0.91</strong>. The CNN's extra 0.03 came with 100× compute, zero interpretability, and a GPU requirement.</p>
+<p data-lang="zh"><strong>啟示：</strong>研究員的義務不是「跑出最高 AUROC」，而是「跑一條老 baseline 才知道你的新模型多賺了多少」。</p>
+<p data-lang="en"><strong>Takeaway:</strong> your job as a researcher is not "highest AUROC" — it's "run the old baseline so you know how much new model actually buys you."</p>
+</div>
+</div>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="六個常見陷阱" data-en="Six Common Pitfalls">六個常見陷阱</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="忘記 scaling 就用 KNN" data-en="Forgetting to scale before KNN">忘記 scaling 就用 KNN</h4><p data-lang="zh">收縮壓 (mmHg, 80–200) 跟年齡 (yr, 0–100) 同維歐式距離 → 血壓壓垮其他特徵。<strong>scale 永遠先做</strong>。</p><p data-lang="en">SBP (mmHg, 80–200) and age (yr, 0–100) on the same Euclidean axis → SBP dominates. <strong>Always scale first.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="二元分類用偶數 K" data-en="Even K in binary problems">二元分類用偶數 K</h4><p data-lang="zh">K=4 時可能 2:2 平票，模型「擲硬幣」決定。<strong>二元任務 K 必須是奇數</strong>，或用 distance-weighted 投票。</p><p data-lang="en">K=4 can yield 2:2 ties; the model flips a coin. <strong>Use odd K in binary tasks</strong>, or distance-weighted voting.</p></div>
+<div class="pitfall-card"><h4 data-zh="把 ordinal 當 numeric" data-en="Ordinal treated as numeric">把 ordinal 當 numeric</h4><p data-lang="zh">把「無 / 輕 / 重 = 0/1/2」當連續，KNN 計算「輕到重」的距離=1 等於「無到輕」=1，假設了等距性。<em>用 one-hot 或設計好的 ordinal encoder</em>。</p><p data-lang="en">Coding "none/mild/severe" as 0/1/2 assumes equal spacing in clinical severity — KNN reads "mild→severe"=1 same as "none→mild"=1. Use one-hot or a true ordinal encoder.</p></div>
+<div class="pitfall-card"><h4 data-zh="小 N 不正則化" data-en="No regularization on small N">小 N 不正則化</h4><p data-lang="zh">N=50、p=20 跑無正則化 Logistic → 完美擬合訓練、驗證崩盤。<em>小資料一律 L2 (C=0.1–1)</em>。</p><p data-lang="en">N=50, p=20, unregularised logistic → perfect train fit, validation collapses. <strong>Always L2 (C=0.1–1) on small data.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="不平衡資料只看 Accuracy" data-en="Accuracy on imbalanced data">不平衡資料只看 Accuracy</h4><p data-lang="zh">陽性 2% 時，全猜陰性 → 98% Accuracy、Recall=0、毫無臨床價值。<strong>用 PR-AUC、Recall@k 或 F-β (β=2)</strong>。</p><p data-lang="en">With 2% positive prevalence, "always negative" yields 98% Accuracy, Recall=0, zero clinical value. <strong>Use PR-AUC, Recall@k, F-β (β=2).</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="多元未用 multinomial" data-en="Multiclass without multinomial">多元任務忘了切 multinomial</h4><p data-lang="zh">sklearn 預設 ovr (one-vs-rest)；對於互斥類別 (ICD chapter) 應切 <code>multi_class='multinomial'</code>，否則機率不加總到 1。</p><p data-lang="en">sklearn default is ovr; for mutually-exclusive classes (ICD chapter) set <code>multi_class='multinomial'</code> — otherwise probabilities don't sum to 1.</p></div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞範例：KNN 直接套" data-en="Bad: Vanilla KNN">壞範例：KNN 直接套</h4>
+<p data-lang="zh"><code>KNeighborsClassifier(n_neighbors=5).fit(X_train, y_train)</code>——沒 scaling、K 固定 5、用 accuracy 在 1:50 不平衡資料上 cross-validate，最後論文寫 "Accuracy = 97.8%"。三個錯：距離被大尺度特徵主導、K 沒做 CV、metric 撒謊。</p>
+<p data-lang="en"><code>KNeighborsClassifier(n_neighbors=5).fit(X_train, y_train)</code> — no scaling, K hard-coded to 5, validated by accuracy on a 1:50 imbalanced set, paper reads "Accuracy = 97.8%". Three errors: distance dominated by large-scale features, K not CV-tuned, metric lies.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好範例：Pipeline + CV + Recall" data-en="Good: Pipeline + CV + Recall">好範例：Pipeline + CV + Recall</h4>
+<p data-lang="zh"><code>Pipeline([("sc",StandardScaler()),("knn",KNeighborsClassifier(weights='distance'))])</code> 接 <code>GridSearchCV</code> 對 <code>n_neighbors ∈ {1,3,…,25}</code>，<code>scoring='average_precision'</code> 並 <code>StratifiedKFold(5)</code>。回報 PR-AUC、Recall@TopK、reliability diagram。</p>
+<p data-lang="en">Wrap in <code>Pipeline([("sc",StandardScaler()),("knn",KNeighborsClassifier(weights='distance'))])</code>, run <code>GridSearchCV</code> over <code>n_neighbors ∈ {1,3,…,25}</code>, <code>scoring='average_precision'</code>, <code>StratifiedKFold(5)</code>. Report PR-AUC, Recall@TopK, reliability diagram.</p>
+</div>
+</div>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="反思題（不用 Google，先想 30 秒）" data-en="Reflection (no Googling, think 30 s)">反思題</h4>
+<ol>
+<li data-lang="zh">如果把 Logistic Regression 的 sigmoid 換成 ReLU，會變成什麼模型？訓練還有解嗎？</li>
+<li data-lang="en">If you replaced the Logistic sigmoid with ReLU, what model would you get? Is it still trainable in closed form?</li>
+<li data-lang="zh">為什麼 KNN 的「機率」往往是離散階梯（0/0.2/0.4/…/1）？怎麼校準？</li>
+<li data-lang="en">Why does KNN's "probability" tend to be stair-stepped (0/0.2/0.4/…/1)? How to calibrate?</li>
+<li data-lang="zh">高維 (p=10,000 SNP) 時，KNN 為什麼失效？用什麼前處理可以拯救它？</li>
+<li data-lang="en">In high-D (p=10,000 SNPs) KNN collapses. Why, and what preprocessing might save it?</li>
+<li data-lang="zh">L1-Logistic 是否能完全取代 stepwise feature selection？兩者的核心差異是？</li>
+<li data-lang="en">Can L1-Logistic fully replace stepwise feature selection? What's the conceptual difference?</li>
+<li data-lang="zh">某論文用同一份 holdout 同時調 K 又算 accuracy。指出方法錯誤並提出改正方案。</li>
+<li data-lang="en">A paper tunes K and reports accuracy on the same holdout. Spot the error and propose a fix.</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="進階研究員彩蛋" data-en="ADVANCED · RESEARCHER">進階研究員彩蛋</span>
+<h4 data-zh="2024–2026 SOTA：Newton-Cholesky、Conformal、AlphaMissense" data-en="2024–2026 SOTA: Newton-Cholesky, Conformal, AlphaMissense">2024–2026 SOTA</h4>
+<p data-lang="zh"><strong>Newton-Cholesky solver (sklearn 1.5+):</strong> 對多元 Logistic Regression，<code>solver="newton-cholesky"</code> 利用 Hessian 的 Cholesky 分解，在 n≥10k、p≤500 的中型表格資料上比 lbfgs 快 3–10×。當你的特徵矩陣是稠密實數時應為首選。</p>
+<p data-lang="en"><strong>Newton-Cholesky solver (sklearn 1.5+):</strong> <code>solver="newton-cholesky"</code> uses a Cholesky factorisation of the Hessian; 3–10× faster than lbfgs on dense medium-size tabular data (n≥10k, p≤500). Should be your default for dense real-valued features.</p>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Conformal Prediction (Vovk 2005, Angelopoulos 2023)" data-en="🔍 Click: Conformal Prediction (Vovk 2005, Angelopoulos 2023)">🔍 Conformal Prediction</summary>
+<div class="detail-body" data-lang="zh">
+<p>Conformal prediction (Vovk-Gammerman 2005、Angelopoulos-Bates 2023 review, arXiv:2107.07511) 是一個分布無關的不確定性量化框架。給 KNN 或 Logistic Regression 訓練好的模型加上一個 calibration set，就能保證 <strong>P(true label ∈ prediction set) ≥ 1 − α</strong>，沒有任何分布假設。</p>
+<p>2024 sklearn-conformal 套件已提供 wrapper：<code>from sklearn_conformal import SplitConformalClassifier; cc = SplitConformalClassifier(LogisticRegression(), confidence_level=0.9)</code>。臨床部署日趨要求這類覆蓋保證。</p>
+</div>
+<div class="detail-body" data-lang="en">
+<p>Conformal prediction (Vovk-Gammerman 2005, Angelopoulos-Bates 2023 review, arXiv:2107.07511) is a distribution-free uncertainty framework. Wrap a trained KNN or Logistic with a calibration set and you get a guarantee: <strong>P(true label ∈ prediction set) ≥ 1 − α</strong>, no distribution assumption.</p>
+<p>The 2024 sklearn-conformal package gives a one-liner: <code>cc = SplitConformalClassifier(LogisticRegression(), confidence_level=0.9)</code>. Clinical deployments increasingly require this kind of coverage guarantee.</p>
+</div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Hierarchical Softmax (Goodman 2001 → 2025 重新流行)" data-en="🔍 Click: Hierarchical Softmax (Goodman 2001 → 2025 revival)">🔍 Hierarchical Softmax</summary>
+<div class="detail-body" data-lang="zh">
+<p>當類別數 K 很大 (如 ICD-10 有 70k+ 細項)，標準 softmax 每次預測 O(K)。Hierarchical softmax 把類別組成樹狀結構，每次預測只需 O(log K)。2024 在 PubMed-BERT 多標籤標註上重新被引入 (Lee et al, JAMIA 2024)。</p>
+<p>實作建議：<code>from torch.nn import AdaptiveLogSoftmaxWithLoss</code> 或自寫 huffman tree softmax。</p>
+</div>
+<div class="detail-body" data-lang="en">
+<p>For huge K (ICD-10 has 70k+ leaves), standard softmax costs O(K) per predict. Hierarchical softmax arranges classes into a tree → O(log K). Re-popularised in 2024 for PubMed-BERT multi-label tagging (Lee et al., JAMIA 2024).</p>
+<p>Implementation: <code>torch.nn.AdaptiveLogSoftmaxWithLoss</code> or a hand-rolled Huffman-tree softmax.</p>
+</div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Multiclass Brier Score & 校準" data-en="🔍 Click: Multiclass Brier & calibration">🔍 Multiclass Brier Score</summary>
+<div class="detail-body" data-lang="zh">
+<p>多元 Brier = (1/N) Σ Σ<sub>k</sub> (p̂<sub>ik</sub> − 𝟙{y<sub>i</sub>=k})²。可分解為 reliability + resolution + uncertainty (Murphy 1973)。2025 sklearn-1.6 加入了 <code>brier_score_loss(multioutput="raw")</code> 支援。</p>
+<p>對於多元 calibration，建議使用 temperature scaling (Guo et al, ICML 2017, arXiv:1706.04599)——只引入單一參數 T，softmax(z/T)，幾乎不影響 ranking 但顯著改善 ECE。</p>
+</div>
+<div class="detail-body" data-lang="en">
+<p>Multiclass Brier = (1/N) Σ Σ<sub>k</sub> (p̂<sub>ik</sub> − 𝟙{y<sub>i</sub>=k})². Decomposes into reliability + resolution + uncertainty (Murphy 1973). sklearn 1.6 (2025) added <code>brier_score_loss(multioutput="raw")</code>.</p>
+<p>For multiclass calibration, prefer temperature scaling (Guo et al., ICML 2017, arXiv:1706.04599) — a single parameter T, softmax(z/T); ranking-preserving, dramatically improves ECE.</p>
+</div>
+</details>
+
+<p data-lang="zh"><strong>2025 cheat-sheet code:</strong></p>
+<p data-lang="en"><strong>2025 cheat-sheet code:</strong></p>
+<p><code>from sklearn.linear_model import LogisticRegression<br>
+clf = LogisticRegression(solver="newton-cholesky", C=1.0,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;class_weight="balanced", max_iter=300).fit(Xs, y)<br>
+from sklearn.calibration import CalibratedClassifierCV<br>
+cal = CalibratedClassifierCV(clf, method="isotonic", cv=5).fit(Xs, y)<br>
+from sklearn_conformal import SplitConformalClassifier<br>
+cc  = SplitConformalClassifier(cal, confidence_level=0.9).fit(Xs, y)</code></p>
+</div>
+</section>
+
 <section class="section">
 <div class="section-label" data-zh="概覽" data-en="OVERVIEW">概覽</div>
 <h2 data-zh="什麼是分類？" data-en="What is Classification?">什麼是分類？</h2>
@@ -186,6 +498,12 @@ lr_bal = LogisticRegression(class_weight=<span class="str">"balanced"</span>)</p
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
 
+<div class="history-note">
+<strong data-zh="趣聞：" data-en="Anecdote:">趣聞：</strong>
+<span data-lang="zh">1958 年 Rosenblatt 在康乃爾發表 Perceptron 時，<em>紐約時報</em>寫下「海軍揭露了一個電子腦的胚胎，期望它能行走、說話、看見、書寫、自我複製、並意識到自己的存在」。然後 1969 年 Minsky-Papert 證明單層 perceptron 連 XOR 都學不會，AI 寒冬第一波開始。歷史告訴我們：今天的 LLM 熱也許 10 年後也會被某個小證明戳破——所以基本功 (KNN、Logistic、bias-variance) 才是長期投資。</span>
+<span data-lang="en">In 1958, when Rosenblatt unveiled the Perceptron at Cornell, the <em>New York Times</em> reported the Navy had revealed "the embryo of an electronic computer that it expects will be able to walk, talk, see, write, reproduce itself and be conscious of its existence." Then in 1969 Minsky-Papert proved a single-layer perceptron can't even learn XOR — and the first AI winter began. History whispers: today's LLM hype may be punctured by some small proof a decade from now. Which is why the fundamentals (KNN, Logistic, bias-variance) are the only long-term investment.</span>
+</div>
+
 <nav class="page-nav">
 <a href="similarity-distance.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 4: 相似度與距離度量" data-en="Ch 4: Similarity &amp; Distance Metrics">Ch 4: 相似度與距離度量</span></a>
 <a href="decision-trees-rf.html"><span class="nav-dir" data-zh="下一章 →" data-en="Next →">下一章 →</span><span class="nav-title" data-zh="Ch 6: 決策樹、隨機森林與梯度提升" data-en="Ch 6: Decision Trees, Random Forests &amp; Gradient Boosting">Ch 6: 決策樹、隨機森林與梯度提升</span></a>
@@ -236,6 +554,35 @@ function updateK(K){
 document.getElementById('knnK').addEventListener('input',e=>updateK(+e.target.value));
 document.addEventListener('langchange',()=>updateK(+document.getElementById('knnK').value));
 updateK(5);
+
+// ============= Sigmoid coefficient widget =============
+const sigXs=[];for(let x=-10;x<=10;x+=0.2)sigXs.push(+x.toFixed(2));
+function sigmoid(z){return 1/(1+Math.exp(-z));}
+const sigChart=new Chart(document.getElementById('sigChart'),{type:'line',data:{labels:sigXs,datasets:[
+ {label:'σ(β₀+β₁·x)',data:sigXs.map(x=>sigmoid(0+1*x)),borderColor:'#6D4C41',backgroundColor:'rgba(109,76,65,0.12)',fill:true,tension:0.2,pointRadius:0,borderWidth:2.5},
+ {label:'p=0.5 threshold',data:sigXs.map(()=>0.5),borderColor:'#94a3b8',borderDash:[6,4],pointRadius:0,fill:false}
+]},options:{responsive:true,maintainAspectRatio:false,animation:false,scales:{x:{title:{display:true,text:'feature x'}},y:{min:0,max:1,title:{display:true,text:'P(y=1 | x)'}}},plugins:{legend:{position:'top'}}}});
+function updateSig(){
+  const b0=+document.getElementById('b0').value, b1=+document.getElementById('b1').value;
+  document.getElementById('b0Val').textContent=b0.toFixed(1);
+  document.getElementById('b1Val').textContent=b1.toFixed(1);
+  sigChart.data.datasets[0].data=sigXs.map(x=>sigmoid(b0+b1*x));
+  sigChart.update();
+  const L=I18n.get();
+  const x50 = b1!==0 ? (-b0/b1).toFixed(2) : '∞';
+  const OR = Math.exp(b1).toFixed(3);
+  const slopeL = L==='zh'?'OR=exp(β₁)':'OR=exp(β₁)';
+  const x50L = L==='zh'?'p=0.5 處 x =':'p=0.5 at x =';
+  const slopeStatus = Math.abs(b1)<0.3 ? (L==='zh'?'微弱效應':'weak effect') : Math.abs(b1)>2 ? (L==='zh'?'極強效應':'strong effect') : (L==='zh'?'中度效應':'moderate');
+  document.getElementById('sigStats').innerHTML=
+    `<span class="sim-stat neutral">${x50L} ${x50}</span>`+
+    `<span class="sim-stat neutral">${slopeL} = ${OR}</span>`+
+    `<span class="sim-stat ${Math.abs(b1)>2?'warn':'pass'}">${slopeStatus}</span>`;
+}
+document.getElementById('b0').addEventListener('input',updateSig);
+document.getElementById('b1').addEventListener('input',updateSig);
+document.addEventListener('langchange',updateSig);
+updateSig();
 
 const QF={zh:{q1_y:'K 越大越平滑：變異減低、偏差升高。',q1_n:'B 為正確答案。',q2_y:'Sigmoid 是 Logistic Regression 的核心。',q2_n:'C 為正確答案。',q3_y:'L1 (Lasso) 會把不重要係數壓到零，產生稀疏解。',q3_n:'A 為正確答案。'},
           en:{q1_y:'Larger K → smoother boundary, lower variance, higher bias.',q1_n:'Correct answer is B.',q2_y:'Sigmoid is the core of Logistic Regression.',q2_n:'Correct answer is C.',q3_y:'L1 zeros out unimportant coefficients — sparse solution.',q3_n:'Correct answer is A.'}};

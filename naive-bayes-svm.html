@@ -18,6 +18,164 @@
 </header>
 <main class="content-wrap">
 
+<aside class="section-toc">
+<strong data-zh="本章閱讀地圖 · ~35 min" data-en="Reading Map · ~35 min">本章閱讀地圖 · ~35 min</strong>
+<div class="pill-row">
+<span class="pill teal" data-zh="⏱ 估時 35 分" data-en="⏱ ~35 min">⏱ 估時 35 分</span>
+<span class="level-badge l-beg" data-zh="初學友善" data-en="Beginner">初學</span>
+<span class="level-badge l-mid" data-zh="進階" data-en="Intermediate">進階</span>
+<span class="level-badge l-adv" data-zh="研究員彩蛋" data-en="Advanced">研究員彩蛋</span>
+</div>
+<ol>
+<li><a href="#story" data-zh="開場：1998 Microsoft Sahami 的垃圾郵件" data-en="Story: 1998 Microsoft Sahami's spam">開場：1998 Sahami</a></li>
+<li><a href="#glossary" data-zh="關鍵詞 ×14（NB + SVM 全套）" data-en="Glossary ×14 (NB + SVM full set)">關鍵詞 ×14</a></li>
+<li><a href="#history" data-zh="從 1763 Bayes 到 LIBSVM 4 / Pegasos" data-en="From 1763 Bayes to LIBSVM 4 / Pegasos">時間軸</a></li>
+<li><a href="#walkthrough" data-zh="手算：「free money now」屬於哪一類" data-en="Worked: classify 'free money now'">手算 Multinomial NB</a></li>
+<li><a href="#widget2" data-zh="新互動：SVM kernel + C/γ 切換" data-en="New widget: SVM kernel + C/γ toggle">SVM 互動 2</a></li>
+<li><a href="#discussion" data-zh="爭論：獨立假設明明錯卻有用？" data-en="Debate: Why does the wrong assumption still work?">三題爭論</a></li>
+<li><a href="#pitfalls" data-zh="陷阱 5 連發" data-en="Five pitfalls">陷阱</a></li>
+<li><a href="#reflection" data-zh="反思題 ×5" data-en="Reflection ×5">反思</a></li>
+<li><a href="#advanced" data-zh="ThunderSVM / RFF / Bayesian NB / 2024 SVM-tabular" data-en="ThunderSVM / RFF / Bayesian NB / 2024 SVM-tabular">進階彩蛋</a></li>
+</ol>
+</aside>
+
+<section class="section" id="story">
+<div class="section-label" data-zh="開場故事" data-en="OPENING STORY">開場故事</div>
+<div class="story-block">
+<span class="story-tag" data-zh="情境劇" data-en="SCENE">情境劇</span>
+<h3 data-zh="1998 雷蒙德 · Mehran Sahami 與垃圾信" data-en="Redmond 1998 — Mehran Sahami's Spam">1998 雷蒙德 · Mehran Sahami</h3>
+<div data-lang="zh">
+<p>1998 年，Microsoft Research 一位剛博士畢業的 Mehran Sahami 在 AAAI Workshop 發表了一篇 7 頁的論文：<em>A Bayesian Approach to Filtering Junk E-Mail</em>。他用最簡單的 Multinomial Naive Bayes 演算法，配上「特徵 = 出現過某詞」的 bag-of-words，在當時還沒有「垃圾郵件」概念的時代，做出了第一個可用的過濾器。25 年過去，2023 年 Gmail 的 spam filter 引擎中心仍然有 NB classifier 的影子——只是疊上了 Transformer 與 graph 演算法。</p>
+<p>同一年的同一個研究機構，另一位俄裔學者 Vladimir Vapnik 剛搬到貝爾實驗室，繼續推進他 1995 年和 Corinna Cortes 一起發表的 <em>Support Vector Machine</em>——這個演算法在 1998 年由 Thorsten Joachims 拿來分類路透社文章，<strong>準確率 86%</strong>，遠勝當時的 NB。直到 2010 年代深度學習興起，SVM 才退到第二線。</p>
+<p>本章把這兩個來自<em>同一年代、解同一問題、哲學完全相反</em>的演算法擺在一起——你會看見「機率框架 (NB)」與「幾何框架 (SVM)」如何形成兩條互補的工具線。</p>
+</div>
+<div data-lang="en">
+<p>1998. At Microsoft Research, a freshly minted PhD named Mehran Sahami presented a 7-page paper at AAAI Workshop: <em>A Bayesian Approach to Filtering Junk E-Mail</em>. He used the simplest Multinomial Naive Bayes with bag-of-words features — and built the first usable spam filter in an era when "spam" wasn't even a household word. 25 years later, Gmail's spam engine still has an NB classifier inside, beneath stacks of Transformer + graph algorithms.</p>
+<p>Same year, same research circles: Vladimir Vapnik had just moved to Bell Labs, continuing the <em>Support Vector Machine</em> he had co-authored with Corinna Cortes in 1995. In 1998, Thorsten Joachims applied SVM to Reuters news classification — <strong>86% accuracy</strong>, far beating NB. SVM ruled text and small-N tabular until the deep-learning surge of the 2010s.</p>
+<p>This chapter places these two algorithms — <em>same era, same problem, opposite philosophy</em> — side by side. You'll see how the "probabilistic frame (NB)" and the "geometric frame (SVM)" form two complementary tool lines.</p>
+</div>
+</div>
+</section>
+
+<section class="section" id="glossary">
+<div class="section-label" data-zh="關鍵詞彙" data-en="GLOSSARY">關鍵詞彙</div>
+<h2 data-zh="關鍵詞 · NB + SVM 全套" data-en="Key Terms · Full NB + SVM Set">NB + SVM 關鍵詞 ×14</h2>
+<div class="glossary-grid">
+<div class="glossary-card"><div class="term-en">Bayes' Theorem</div><div class="term-zh">貝氏定理</div>
+<div class="term-kid" data-lang="zh">看到症狀後，得病的機率怎麼更新？</div>
+<div class="term-kid" data-lang="en">After seeing symptoms, how do we update the chance of disease?</div>
+<div class="term-tech" data-lang="zh">P(y|x) = P(x|y)·P(y)/P(x)；後驗 ∝ 似然 × 先驗。Bayes 1763 遺作。</div>
+<div class="term-tech" data-lang="en">P(y|x) = P(x|y)·P(y)/P(x); posterior ∝ likelihood × prior. Bayes' 1763 posthumous paper.</div></div>
+
+<div class="glossary-card"><div class="term-en">Prior / Likelihood / Posterior</div><div class="term-zh">先驗 / 似然 / 後驗</div>
+<div class="term-kid" data-lang="zh">先驗 = 看資料前的猜；似然 = 資料的「驚不驚訝」；後驗 = 看資料後的猜。</div>
+<div class="term-kid" data-lang="en">Prior = guess before data; likelihood = how surprised by the data; posterior = guess after data.</div>
+<div class="term-tech" data-lang="zh">P(y)：類別比例；P(x|y)：類別內生成模型；P(y|x)：分類器輸出。</div>
+<div class="term-tech" data-lang="en">P(y): class prevalence; P(x|y): class-conditional generative model; P(y|x): classifier output.</div></div>
+
+<div class="glossary-card"><div class="term-en">Naive Bayes (Conditional Independence)</div><div class="term-zh">獨立假設</div>
+<div class="term-kid" data-lang="zh">假裝每個症狀都跟其他症狀無關——天真但好用。</div>
+<div class="term-kid" data-lang="en">Pretend every symptom is independent of the others — naive but useful.</div>
+<div class="term-tech" data-lang="zh">P(x|y) = Π<sub>j</sub> P(x<sub>j</sub>|y)；參數從 O(2<sup>p</sup>) 降到 O(p)，但忽略相關性。</div>
+<div class="term-tech" data-lang="en">P(x|y) = Π<sub>j</sub> P(x<sub>j</sub>|y); parameters drop from O(2<sup>p</sup>) to O(p), but ignores correlations.</div></div>
+
+<div class="glossary-card"><div class="term-en">Laplace Smoothing</div><div class="term-zh">Laplace 平滑</div>
+<div class="term-kid" data-lang="zh">沒見過的詞給它 +1 票，避免機率為零。</div>
+<div class="term-kid" data-lang="en">Give every unseen word +1 vote so probabilities are never zero.</div>
+<div class="term-tech" data-lang="zh">P(x<sub>j</sub>=v|y) = (count + α) / (N<sub>y</sub> + α·|V|)；α=1 是 add-one。</div>
+<div class="term-tech" data-lang="en">P(x<sub>j</sub>=v|y) = (count + α) / (N<sub>y</sub> + α·|V|); α=1 is add-one.</div></div>
+
+<div class="glossary-card"><div class="term-en">Gaussian / Multinomial / Bernoulli NB</div><div class="term-zh">三種 NB 變體</div>
+<div class="term-kid" data-lang="zh">連續、計數、是否出現——三種 P(x|y) 對應三種特徵。</div>
+<div class="term-kid" data-lang="en">Continuous, count, presence — three P(x|y) for three feature types.</div>
+<div class="term-tech" data-lang="zh">Gaussian: 𝒩(μ<sub>y</sub>,σ<sub>y</sub>²); Multinomial: 多項分布 (詞頻); Bernoulli: 二元 (詞出現)。</div>
+<div class="term-tech" data-lang="en">Gaussian: 𝒩(μ<sub>y</sub>,σ<sub>y</sub>²); Multinomial: multinomial dist (term-freq); Bernoulli: binary (term presence).</div></div>
+
+<div class="glossary-card"><div class="term-en">MAP Estimate</div><div class="term-zh">最大後驗</div>
+<div class="term-kid" data-lang="zh">挑出後驗機率最大的那個類別作為預測。</div>
+<div class="term-kid" data-lang="en">Pick the class with the highest posterior probability.</div>
+<div class="term-tech" data-lang="zh">ŷ = argmax<sub>y</sub> P(y|x) = argmax<sub>y</sub> log P(y) + Σ<sub>j</sub> log P(x<sub>j</sub>|y)。實際用 log-likelihood 避免下溢。</div>
+<div class="term-tech" data-lang="en">ŷ = argmax<sub>y</sub> P(y|x) = argmax<sub>y</sub> log P(y) + Σ<sub>j</sub> log P(x<sub>j</sub>|y). Use log-likelihood to avoid underflow.</div></div>
+
+<div class="glossary-card"><div class="term-en">Support Vector Machine</div><div class="term-zh">支持向量機</div>
+<div class="term-kid" data-lang="zh">兩個國家之間蓋最寬的高速公路，城牆 (support vectors) 決定路寬。</div>
+<div class="term-kid" data-lang="en">Build the widest highway between two countries; only the border cities (support vectors) decide the width.</div>
+<div class="term-tech" data-lang="zh">min ½‖w‖² s.t. y<sub>i</sub>(wᵀx<sub>i</sub>+b)≥1。對偶形式只依 sup. vectors 與核函數 K(x,x′)。</div>
+<div class="term-tech" data-lang="en">min ½‖w‖² s.t. y<sub>i</sub>(wᵀx<sub>i</sub>+b)≥1. Dual form depends only on sup. vectors and kernel K(x,x′).</div></div>
+
+<div class="glossary-card"><div class="term-en">Max-Margin / Margin</div><div class="term-zh">最大間隔</div>
+<div class="term-kid" data-lang="zh">兩類之間留越寬越好——容錯能力更高。</div>
+<div class="term-kid" data-lang="en">The wider the gap between classes, the more tolerant the model.</div>
+<div class="term-tech" data-lang="zh">margin = 2/‖w‖；最大化即最小化 ‖w‖²，VC 維度上界由 margin 控制 (Vapnik 1995)。</div>
+<div class="term-tech" data-lang="en">margin = 2/‖w‖; maximising it ≡ minimising ‖w‖². VC dimension bound controlled by margin (Vapnik 1995).</div></div>
+
+<div class="glossary-card"><div class="term-en">Support Vector</div><div class="term-zh">支持向量</div>
+<div class="term-kid" data-lang="zh">真正決定邊界的那幾個樣本——其他都「不重要」。</div>
+<div class="term-kid" data-lang="en">The few samples that actually decide the boundary — the rest don't matter.</div>
+<div class="term-tech" data-lang="zh">α<sub>i</sub>&gt;0 的訓練樣本；KKT 條件下只有這些影響 w。</div>
+<div class="term-tech" data-lang="en">Training samples with α<sub>i</sub>&gt;0; KKT conditions guarantee only these affect w.</div></div>
+
+<div class="glossary-card"><div class="term-en">Kernel Trick</div><div class="term-zh">核技巧</div>
+<div class="term-kid" data-lang="zh">不用真的爬到高維，只要算 K(x, x′) 就好。</div>
+<div class="term-kid" data-lang="en">Don't actually climb into high-D — just compute K(x, x′).</div>
+<div class="term-tech" data-lang="zh">Mercer 條件下 K(x,x′)=⟨φ(x),φ(x′)⟩；隱式映射 φ 不必算。</div>
+<div class="term-tech" data-lang="en">Under Mercer's condition K(x,x′)=⟨φ(x),φ(x′)⟩; the implicit map φ never computed.</div></div>
+
+<div class="glossary-card"><div class="term-en">RBF / Gaussian Kernel</div><div class="term-zh">RBF 核</div>
+<div class="term-kid" data-lang="zh">附近的樣本影響大、遠的影響小——bell shape。</div>
+<div class="term-kid" data-lang="en">Nearby samples matter a lot, far ones not — bell-shaped.</div>
+<div class="term-tech" data-lang="zh">K(x,x′) = exp(−γ‖x−x′‖²)；γ 大 → 局部曲折；γ 小 → 平滑。</div>
+<div class="term-tech" data-lang="en">K(x,x′) = exp(−γ‖x−x′‖²); large γ → wiggly; small γ → smooth.</div></div>
+
+<div class="glossary-card"><div class="term-en">Soft Margin (C)</div><div class="term-zh">軟間隔 (C)</div>
+<div class="term-kid" data-lang="zh">允許幾個搗蛋鬼跨界——容忍多少，由 C 決定。</div>
+<div class="term-kid" data-lang="en">Allow a few troublemakers to cross the line — C controls how many.</div>
+<div class="term-tech" data-lang="zh">min ½‖w‖² + C·Σξ<sub>i</sub>；C 大 → 不容忍 (硬)；C 小 → 容忍 (軟)。等價 1/λ 在 Logistic L2。</div>
+<div class="term-tech" data-lang="en">min ½‖w‖² + C·Σξ<sub>i</sub>; large C → strict (hard); small C → tolerant (soft). Equivalent 1/λ in L2-Logistic.</div></div>
+
+<div class="glossary-card"><div class="term-en">Hinge Loss</div><div class="term-zh">Hinge 損失</div>
+<div class="term-kid" data-lang="zh">分對且離邊界遠 → 0 損失；其他 → 線性增長。</div>
+<div class="term-kid" data-lang="en">Right and far from boundary → 0 loss; otherwise linear penalty.</div>
+<div class="term-tech" data-lang="zh">L = max(0, 1 − y·(wᵀx+b))；非平滑、僅在 margin 內非零，造就稀疏 dual。</div>
+<div class="term-tech" data-lang="en">L = max(0, 1 − y·(wᵀx+b)); non-smooth, nonzero only inside the margin → sparse dual.</div></div>
+
+<div class="glossary-card"><div class="term-en">SMO (Sequential Minimal Optimization)</div><div class="term-zh">SMO 解法</div>
+<div class="term-kid" data-lang="zh">一次只解兩個 α，不斷重複——SVM 訓練的標準作法。</div>
+<div class="term-kid" data-lang="en">Solve two α's at a time, iterate — the standard SVM trainer.</div>
+<div class="term-tech" data-lang="zh">Platt 1998 演算法；解析解逐對更新，是 LIBSVM 內核。複雜度 ~O(n²)–O(n³)。</div>
+<div class="term-tech" data-lang="en">Platt's 1998 algorithm; analytic pair-update, the engine inside LIBSVM. Complexity ~O(n²)–O(n³).</div></div>
+</div>
+</section>
+
+<section class="section" id="history">
+<div class="section-label" data-zh="歷史脈絡" data-en="HISTORY">歷史脈絡</div>
+<h2 data-zh="從 1763 Bayes 到 2024 SVM-tabular 復活" data-en="From 1763 Bayes to 2024 SVM-tabular Revival">NB 與 SVM 的雙螺旋史</h2>
+<div class="timeline">
+<div class="timeline-item"><span class="tl-year">1763</span><span class="tl-title" data-zh="Bayes 定理 (Price 整理發表)" data-en="Bayes' theorem (posthumously)">Bayes' theorem (posthumous)</span><span class="tl-desc" data-zh="Reverend Thomas Bayes 過世兩年後，Richard Price 整理發表《An Essay towards solving a Problem in the Doctrine of Chances》。" data-en="Two years after Bayes' death, Richard Price published 'An Essay towards solving a Problem in the Doctrine of Chances.'">Foundation of inverse probability.</span></div>
+<div class="timeline-item"><span class="tl-year">1958</span><span class="tl-title" data-zh="Maron-Kuhns 文本分類" data-en="Maron-Kuhns text classification">Maron-Kuhns Bayesian text classification</span><span class="tl-desc" data-zh="Bayes 第一次用於文件分類；NB 的精神祖先。" data-en="First application of Bayes to text classification.">First Bayesian text classifier.</span></div>
+<div class="timeline-item"><span class="tl-year">1995</span><span class="tl-title" data-zh="Cortes-Vapnik SVM" data-en="Cortes-Vapnik SVM">Cortes-Vapnik SVM @ Machine Learning</span><span class="tl-desc" data-zh="Soft-margin + kernel 形式正式發表；引用 80,000+ 次。" data-en="Soft-margin + kernel form; 80,000+ citations.">Soft-margin + kernel.</span></div>
+<div class="timeline-item"><span class="tl-year">1998</span><span class="tl-title" data-zh="Sahami NB Spam Filter" data-en="Sahami NB spam filter">Sahami spam paper</span><span class="tl-desc" data-zh="Microsoft Research：第一個工程化垃圾郵件 NB 過濾器。" data-en="Microsoft Research's first engineered NB spam filter.">First engineered spam NB.</span></div>
+<div class="timeline-item"><span class="tl-year">1998</span><span class="tl-title" data-zh="Platt SMO" data-en="Platt SMO">Platt SMO algorithm</span><span class="tl-desc" data-zh="Sequential Minimal Optimization：SVM 的主流解法，至今仍是 LIBSVM 內核。" data-en="SMO — the dominant SVM solver; still inside LIBSVM.">Inside LIBSVM.</span></div>
+<div class="timeline-item"><span class="tl-year">1999</span><span class="tl-title" data-zh="Joachims SVMlight" data-en="Joachims SVMlight">Joachims SVMlight</span><span class="tl-desc" data-zh="Linear SVM for text 86% on Reuters；SVM 在 NLP 統治 10 年。" data-en="Linear SVM for text 86% on Reuters; SVM rules NLP for a decade.">SVM rules NLP.</span></div>
+<div class="timeline-item"><span class="tl-year">2004</span><span class="tl-title" data-zh="LIBSVM 2.0 (Lin)" data-en="LIBSVM 2.0 (Lin)">LIBSVM 2.0</span><span class="tl-desc" data-zh="Chih-Jen Lin 國立台灣大學；至今最廣用 SVM 函式庫，引用 60,000+。" data-en="Chih-Jen Lin (NTU); the most-used SVM library, 60,000+ citations.">NTU's gift to ML.</span></div>
+<div class="timeline-item"><span class="tl-year">2007</span><span class="tl-title" data-zh="Rahimi-Recht Random Fourier Features" data-en="Rahimi-Recht Random Fourier Features">Rahimi-Recht RFF</span><span class="tl-desc" data-zh="用 random Fourier features 近似 RBF kernel→將 SVM 從 O(n³) 降到 O(nD)，大規模 SVM 元年。" data-en="Approximate RBF via random Fourier features → SVM from O(n³) to O(nD).">RBF approx O(n³)→O(nD).</span></div>
+<div class="timeline-item"><span class="tl-year">2010</span><span class="tl-title" data-zh="Pegasos SVM" data-en="Pegasos SVM">Shalev-Shwartz Pegasos SVM</span><span class="tl-desc" data-zh="Stochastic SGD for SVM，使 SVM 可在 10⁸ 樣本上訓練。" data-en="SGD-based SVM, scalable to 10⁸ samples.">SGD SVM at scale.</span></div>
+<div class="timeline-item"><span class="tl-year">2012–2018</span><span class="tl-title" data-zh="Deep Learning 取代 SVM" data-en="Deep learning replaces SVM">Deep learning takes over</span><span class="tl-desc" data-zh="AlexNet 2012、ResNet 2015；視覺/語音任務 SVM 退到第二線。" data-en="AlexNet 2012, ResNet 2015 — SVM retreats from vision/speech.">SVM moves to second line.</span></div>
+<div class="timeline-item"><span class="tl-year">2022</span><span class="tl-title" data-zh="Grinsztajn et al. — SVM 在小 N 表格上仍 SOTA" data-en="Grinsztajn et al. — SVM still SOTA on small-N tabular">SVM still SOTA on small-N</span><span class="tl-desc" data-zh="NeurIPS benchmark：N&lt;5000 表格資料 SVM-RBF + GP 與樹模型不相上下。" data-en="NeurIPS benchmark: N&lt;5000 tabular, SVM-RBF + GP rivals trees.">SVM revival on small N.</span></div>
+<div class="timeline-item"><span class="tl-year">2024–25</span><span class="tl-title" data-zh="ThunderSVM 0.5 + Bayesian NB" data-en="ThunderSVM 0.5 + Bayesian NB">ThunderSVM 0.5 + Bayesian NB</span><span class="tl-desc" data-zh="GPU SVM 1000× CPU；Bayesian NB 加入 uncertainty quantification。" data-en="GPU SVM 1000× CPU; Bayesian NB adds UQ.">GPU SVM + Bayesian NB.</span></div>
+</div>
+</section>
+
+<div class="analogy-box">
+<div class="ana-icon">🛣️</div>
+<div class="ana-body">
+<span class="ana-tag" data-zh="類比" data-en="ANALOGY">類比</span>
+<h4 data-zh="NB：天真的全科醫生；SVM：拓荒的高速公路工程師" data-en="NB: naive GP; SVM: highway engineer">天真醫生 vs 高速公路工程師</h4>
+<p data-lang="zh">Naive Bayes 就像「一個天真的全科醫生：他假設『發燒和咳嗽彼此獨立』，於是把每個症狀對流感的影響獨立乘起來——明明知道這不對，但他算得快、判得準、便宜得不得了」。SVM 是「另一個工程師：他不問機率，只問『兩個國家邊界線在哪』。他在地圖上鋪一條最寬的<em>高速公路</em>，路邊的城鎮 (support vectors) 決定路寬。剩下的城鎮在不在路上，他根本不在乎」。一個是機率世界觀，一個是幾何世界觀——同一個問題的兩條解法。</p>
+<p data-lang="en">Naive Bayes is like "a naive GP who assumes 'fever and cough are independent', multiplies each symptom's effect on flu independently — knows it's not literally true, but he's fast, accurate, and dirt-cheap." SVM is "the highway engineer who doesn't care about probability — only 'where does the border go?' He lays the widest possible <em>highway</em> on the map; the towns on either edge (support vectors) decide its width. The rest of the towns he doesn't care about." One is a probabilistic worldview, the other geometric — two ways to crack the same problem.</p>
+</div>
+</div>
+
 <section class="section">
 <div class="section-label" data-zh="貝氏定理" data-en="BAYES">貝氏定理</div>
 <h2 data-zh="一、Naive Bayes 的核心" data-en="I. The Heart of Naive Bayes">一、Naive Bayes 的核心</h2>
@@ -157,6 +315,162 @@ lsvc = LinearSVC(C=<span class="num">1.0</span>, dual=<span class="str">"auto"</
 </div>
 </section>
 
+<section class="section" id="walkthrough">
+<div class="section-label" data-zh="手算範例" data-en="WORKED EXAMPLE">手算範例</div>
+<h2 data-zh="手算：「free money now」是垃圾還是正常郵件？" data-en="Worked: Is 'free money now' spam or ham?">手算 Multinomial NB</h2>
+<div class="walkthrough">
+<div class="walkthrough-header"><div class="wt-num">3</div><h3 data-zh="從訓練 → log-likelihood → 後驗判定" data-en="From training → log-likelihood → posterior">手算 Multinomial NB</h3><span class="wt-tag" data-zh="紙筆可算" data-en="Paper-and-pen">紙筆</span></div>
+<div class="wt-step"><div class="wt-label">STEP 1</div><div class="wt-body" data-lang="zh"><strong>訓練資料：</strong>1000 封郵件，400 spam (40%)、600 ham (60%)。<strong>類別先驗：</strong>P(spam)=0.40、P(ham)=0.60。取 log → log P(spam)=−0.916、log P(ham)=−0.511。</div><div class="wt-body" data-lang="en"><strong>Training:</strong> 1000 emails, 400 spam (40%), 600 ham (60%). <strong>Priors:</strong> P(spam)=0.40, P(ham)=0.60. log P(spam)=−0.916, log P(ham)=−0.511.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 2</div><div class="wt-body" data-lang="zh"><strong>詞頻 (spam 中)：</strong>"free" 出現 320 次 / spam 總詞數 4000；"money" 80/4000；"now" 200/4000。詞彙表大小 |V|=8000。</div><div class="wt-body" data-lang="en"><strong>Word counts in spam:</strong> "free" 320 / total spam words 4000; "money" 80/4000; "now" 200/4000. Vocabulary size |V|=8000.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 3</div><div class="wt-body" data-lang="zh"><strong>Laplace 平滑 (α=1)：</strong>P("free"|spam) = (320+1)/(4000+8000) = 321/12000 = <strong>0.02675</strong>。log = −3.62。同理 P("money"|spam) = 81/12000 = 0.00675 → log = −5.00；P("now"|spam) = 201/12000 = 0.01675 → log = −4.09。</div><div class="wt-body" data-lang="en"><strong>Laplace smoothing (α=1):</strong> P("free"|spam) = (320+1)/(4000+8000) = 321/12000 = <strong>0.02675</strong>. log = −3.62. Similarly P("money"|spam) = 81/12000 = 0.00675 → log = −5.00; P("now"|spam) = 201/12000 = 0.01675 → log = −4.09.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 4</div><div class="wt-body" data-lang="zh"><strong>同樣計算 ham：</strong>P("free"|ham) = 21/14000 = 0.0015 → log = −6.50；P("money"|ham) = 11/14000 → log = −7.14；P("now"|ham) = 71/14000 → log = −5.28。</div><div class="wt-body" data-lang="en"><strong>Same for ham:</strong> P("free"|ham) = 21/14000 = 0.0015 → log = −6.50; P("money"|ham) = 11/14000 → log = −7.14; P("now"|ham) = 71/14000 → log = −5.28.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 5</div><div class="wt-body" data-lang="zh"><strong>查詢「free money now」對 spam：</strong>log P(spam|x) ∝ log P(spam) + Σ log P(w|spam) = −0.916 − 3.62 − 5.00 − 4.09 = <strong>−13.63</strong>。</div><div class="wt-body" data-lang="en"><strong>Query "free money now" vs spam:</strong> log P(spam|x) ∝ log P(spam) + Σ log P(w|spam) = −0.916 − 3.62 − 5.00 − 4.09 = <strong>−13.63</strong>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 6</div><div class="wt-body" data-lang="zh"><strong>同一查詢對 ham：</strong>log P(ham|x) ∝ −0.511 − 6.50 − 7.14 − 5.28 = <strong>−19.43</strong>。</div><div class="wt-body" data-lang="en"><strong>Same query vs ham:</strong> log P(ham|x) ∝ −0.511 − 6.50 − 7.14 − 5.28 = <strong>−19.43</strong>.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 7</div><div class="wt-body" data-lang="zh"><strong>結論：</strong>log P(spam|x) = −13.63 &gt;&gt; log P(ham|x) = −19.43。<strong>判 spam</strong>。指數化得 odds ratio = exp(5.80) ≈ 330：spam 機率是 ham 的 330 倍。</div><div class="wt-body" data-lang="en"><strong>Verdict:</strong> log P(spam|x) = −13.63 &gt;&gt; log P(ham|x) = −19.43. <strong>Predict spam.</strong> Exponentiate the diff: odds ratio = exp(5.80) ≈ 330 — spam is 330× more likely.</div></div>
+<div class="wt-step"><div class="wt-label">STEP 8</div><div class="wt-body" data-lang="zh"><strong>歸一化：</strong>P(spam|x) = exp(−13.63) / (exp(−13.63)+exp(−19.43)) = 1/(1+exp(−5.80)) = <strong>0.9970</strong>。注意：因獨立假設常被破壞，這個值可能被高估——實務上跑校準。</div><div class="wt-body" data-lang="en"><strong>Normalise:</strong> P(spam|x) = exp(−13.63) / (exp(−13.63)+exp(−19.43)) = 1/(1+exp(−5.80)) = <strong>0.9970</strong>. Caveat: the independence assumption is usually violated, so this number is likely over-confident — calibrate in practice.</div></div>
+</div>
+</section>
+
+<section class="section" id="widget2">
+<div class="section-label" data-zh="新互動" data-en="NEW INTERACTIVE">新互動</div>
+<h2 data-zh="互動：SVM kernel + C + γ 對邊界的影響" data-en="Interactive: SVM kernel + C + γ on boundary">互動：SVM Kernel 選擇</h2>
+<div data-lang="zh"><p>切換不同 kernel + 調 C 與 γ：linear 永遠線性、polynomial 隨次方變彎、RBF 局部曲折隨 γ 加劇。展示估計的 margin width 與 support vector 數量。</p></div>
+<div data-lang="en"><p>Toggle kernel + drag C / γ: linear stays linear, polynomial bends with degree, RBF wiggles more as γ grows. We show estimated margin width and # support vectors.</p></div>
+<div class="interactive-panel">
+<div class="toggle-row">
+<button class="toggle-btn active" data-kernel="linear">Linear</button>
+<button class="toggle-btn" data-kernel="poly">Polynomial (d=3)</button>
+<button class="toggle-btn" data-kernel="rbf">RBF</button>
+</div>
+<div class="slider-group"><label>C = <span id="svmCVal">1.0</span></label><input type="range" id="svmC" min="0.1" max="100" step="0.1" value="1.0"></div>
+<div class="slider-group"><label>γ (RBF only) = <span id="svmGVal">0.5</span></label><input type="range" id="svmG" min="0.01" max="5" step="0.01" value="0.5"></div>
+<div class="kpi-grid" id="svmKPI"></div>
+</div>
+</section>
+
+<section class="section" id="discussion">
+<div class="section-label" data-zh="爭論題" data-en="DEBATE">爭論題</div>
+<h2 data-zh="三題值得吵的問題" data-en="Three Worth-Arguing Questions">三題爭論</h2>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 1" data-en="DEBATE 1">爭論 1</span>
+<h3 data-zh="為什麼 NB 假設明明錯卻有用？" data-en="Why does NB's wrong assumption still work?">NB 的假設明明錯卻有用？</h3>
+<div class="disc-pov"><strong data-zh="Domingos-Pazzani 1997：" data-en="Domingos-Pazzani 1997:">Domingos-Pazzani 1997：</strong><span data-lang="zh">在 <em>Machine Learning</em> 期刊發表經典論文證明：<strong>分類器只需要 argmax 排序正確，不需要機率值正確</strong>。即使 P(x|y) 因獨立假設失真，只要錯誤方向對所有類別<em>一致</em>，argmax 仍對。所以 NB 即使「機率不準」仍然「分類準」。</span><span data-lang="en">In <em>Machine Learning</em>: <strong>a classifier only needs argmax ordering, not calibrated probabilities</strong>. Even when P(x|y) is biased by the independence assumption, if the bias is <em>consistent</em> across classes, argmax still wins. That's why NB "miscalibrates yet classifies well".</span></div>
+<div class="disc-pov"><strong data-zh="實務啟示：" data-en="Practical:">實務啟示：</strong><span data-lang="zh">想要 NB 的「分類」，沒問題；想要 NB 輸出真實機率，先 Platt scaling 或 isotonic regression 校準。</span><span data-lang="en">If you need NB's classification, fine; if you need real probabilities, calibrate via Platt or isotonic.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 2" data-en="DEBATE 2">爭論 2</span>
+<h3 data-zh="2026 還要教 SVM 嗎？" data-en="Should we still teach SVM in 2026?">2026 還教 SVM？</h3>
+<div class="disc-pov"><strong data-zh="挺方：" data-en="Pro:">挺方：</strong><span data-lang="zh">教學價值高——VC dimension、max-margin、kernel trick、convex optimization 都是 ML 基礎概念載體。實務上小 N (&lt;1000) 表格資料 SVM-RBF 仍勝多數樹和 NN (Grinsztajn 2022)。</span><span data-lang="en">Pedagogical gold — VC dimension, max-margin, kernel trick, convex opt are all foundational. In practice, on small-N (&lt;1000) tabular SVM-RBF still beats most trees and NN (Grinsztajn 2022).</span></div>
+<div class="disc-pov"><strong data-zh="反方：" data-en="Con:">反方：</strong><span data-lang="zh">大資料 (n&gt;10⁵) 訓練 O(n²) 太慢；機率輸出需 Platt scaling；超參 (C, γ, kernel) 很難 grid。對 entry-level 工程師而言 XGBoost 學習曲線更平。</span><span data-lang="en">Big data (n&gt;10⁵): O(n²) too slow; probabilistic output requires Platt scaling; hyperparams (C, γ, kernel) hard to grid. For entry-level engineers XGBoost has a flatter curve.</span></div>
+<div class="disc-pov"><strong data-zh="折衷：" data-en="Middle:">折衷：</strong><span data-lang="zh">教 Linear SVM (hinge loss) 與 RBF SVM 作為「概念載體」，但工程實務不勉強用——重點是學完之後對 LLM 的注意力機制、kernel methods in deep learning (NTK)、Gaussian Process 都更容易理解。</span><span data-lang="en">Teach Linear SVM (hinge loss) + RBF SVM as "concept vehicles" but don't force them in production. Worth it because the concepts transfer to attention mechanisms, kernel methods in DL (NTK), and Gaussian Processes.</span></div>
+</div>
+
+<div class="discussion-card">
+<span class="disc-label" data-zh="爭論 3" data-en="DEBATE 3">爭論 3</span>
+<h3 data-zh="Kernel trick — 聰明還是過度炒作？" data-en="Kernel trick — clever or overhyped?">Kernel trick — 聰明還是炒作？</h3>
+<div class="disc-pov"><strong data-zh="聰明：" data-en="Clever:">聰明：</strong><span data-lang="zh">無需顯式計算高維特徵就能在高維空間做分類；對小資料是「特徵工程的免費午餐」。Mercer 條件給出嚴謹數學基礎。</span><span data-lang="en">Classify in high-D without explicit feature engineering — "free lunch" on small data. Mercer's condition gives rigorous math foundation.</span></div>
+<div class="disc-pov"><strong data-zh="炒作：" data-en="Overhyped:">炒作：</strong><span data-lang="zh">大資料時 kernel matrix O(n²) 記憶體爆炸；RBF 對 outlier 敏感；γ/C 互相耦合難調。深度學習出現後，「kernel = feature map」改用<em>學出來的</em> embedding，更實用。</span><span data-lang="en">Big data: kernel matrix O(n²) blows up memory; RBF is outlier-sensitive; γ/C coupled and hard to tune. Deep learning replaced "kernel = feature map" with <em>learned</em> embeddings — far more practical.</span></div>
+<div class="disc-pov"><strong data-zh="2024 新意：" data-en="2024 update:">2024 新意：</strong><span data-lang="zh">Neural Tangent Kernel (NTK; Jacot 2018) 把無限寬神經網路與 kernel method 連起來——讓 kernel trick 在深度學習時代重新有研究價值。</span><span data-lang="en">Neural Tangent Kernel (NTK; Jacot 2018) connects infinitely-wide NNs to kernel methods — bringing the kernel trick back into the deep-learning era.</span></div>
+</div>
+</section>
+
+<div class="spotlight">
+<div class="sp-icon">📨</div>
+<div class="sp-body">
+<span class="sp-tag" data-zh="實案聚光燈" data-en="SPOTLIGHT">實案聚光燈</span>
+<h4 data-zh="1998 Sahami 垃圾郵件論文 — 7 頁定義一個世代" data-en="1998 Sahami's 7-page spam paper that defined a generation">Sahami 1998 — 7 頁定義一代</h4>
+<p data-lang="zh">Mehran Sahami（後成為 Stanford CS 教授）1998 年在 AAAI Workshop 發表 <em>A Bayesian Approach to Filtering Junk E-Mail</em>（共 7 頁）。論文取了 1789 封郵件 (1538 垃圾 + 251 正常)、bag-of-words 特徵、Multinomial NB——測試準確率 <strong>92.3%</strong>，比當時所有 rule-based filter 都好。文章還討論了「特徵工程的價值」：加入 hand-crafted 特徵 (如 sender ratio、HTML tag) 可再提升 5%。這篇文章為後續所有 e-mail/SMS/評論垃圾過濾建立模板——直到今天 Gmail 的多層 ensemble 仍可看見 NB 的影子。</p>
+<p data-lang="en">Mehran Sahami (later Stanford CS professor) presented <em>A Bayesian Approach to Filtering Junk E-Mail</em> at AAAI Workshop 1998 — 7 pages. Trained on 1789 emails (1538 spam + 251 ham), bag-of-words, Multinomial NB — test accuracy <strong>92.3%</strong>, beating all rule-based filters of the era. The paper also discussed "the value of feature engineering" — hand-crafted features (sender ratio, HTML tags) added another 5%. This template defined a generation of e-mail / SMS / comment-spam filters. Today's Gmail ensemble still has NB inside.</p>
+</div>
+</div>
+
+<section class="section" id="pitfalls">
+<div class="section-label" data-zh="陷阱" data-en="PITFALLS">陷阱</div>
+<h2 data-zh="陷阱 5 連發" data-en="Five Pitfalls">陷阱 5 連發</h2>
+<div class="pitfall-grid">
+<div class="pitfall-card"><h4 data-zh="NB 沒用 log 計算" data-en="NB without log-likelihoods">NB 沒用 log 計算</h4><p data-lang="zh">乘 100 個小機率 → 數值下溢 (underflow) 成 0。<strong>務必使用 log-likelihood 加總</strong>。</p><p data-lang="en">Multiplying 100 tiny probabilities → numerical underflow to 0. <strong>Always sum log-likelihoods.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="忘記 Laplace 平滑" data-en="Forgetting Laplace smoothing">忘記 Laplace 平滑</h4><p data-lang="zh">沒見過的詞 → P(x|y)=0 → 整條後驗歸零。<strong>α≥1 的 Laplace 平滑必設</strong>。</p><p data-lang="en">Unseen word → P(x|y)=0 → entire posterior collapses. <strong>Always set α≥1 Laplace.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="RBF SVM 沒 scaling" data-en="RBF SVM without scaling">RBF SVM 沒 scaling</h4><p data-lang="zh">RBF 依賴歐式距離；大尺度特徵主導 ‖x-x'‖²，γ 設定失靈。<strong>必須 StandardScaler</strong>。</p><p data-lang="en">RBF depends on Euclidean distance; large-scale features dominate ‖x-x'‖², γ becomes useless. <strong>Must StandardScaler.</strong></p></div>
+<div class="pitfall-card"><h4 data-zh="SVM 當機率分類器" data-en="SVM as probabilistic classifier">SVM 當機率分類器</h4><p data-lang="zh">SVM 預設輸出 decision_function (距離邊界)、不是機率。要機率需 <code>SVC(probability=True)</code> 啟用 Platt scaling，會慢 5×。</p><p data-lang="en">SVM defaults to decision_function (distance to boundary), not probability. Need <code>SVC(probability=True)</code> for Platt scaling — 5× slower.</p></div>
+<div class="pitfall-card"><h4 data-zh="SVM 跑 100k 樣本" data-en="SVM on 100k samples">SVM 跑大資料</h4><p data-lang="zh">SVM 訓練 O(n²)–O(n³)，n=10⁵ 時可能跑幾小時。<strong>大資料用 LinearSVC + L2 或 SGDClassifier(loss='hinge')</strong>。</p><p data-lang="en">SVM training O(n²)–O(n³); n=10⁵ may take hours. <strong>For big data use LinearSVC + L2 or SGDClassifier(loss='hinge').</strong></p></div>
+</div>
+</section>
+
+<div class="contrast-2col">
+<div class="con-card bad">
+<h4 data-zh="壞範例" data-en="Bad">壞範例：MultinomialNB() 直接吃 raw counts</h4>
+<p data-lang="zh"><code>MultinomialNB().fit(X, y)</code>——X 是原始 word counts、沒 Laplace 平滑、沒 TF-IDF。對於沒見過的詞會生 P=0；對於常見詞 (the, of) 又會主導預測。</p>
+<p data-lang="en"><code>MultinomialNB().fit(X, y)</code> — X is raw word counts, no Laplace, no TF-IDF. Unseen words → P=0; common words (the, of) dominate.</p>
+</div>
+<div class="con-card good">
+<h4 data-zh="好範例" data-en="Good">好範例：Pipeline(TfidfVectorizer + MultinomialNB(α=1))</h4>
+<p data-lang="zh"><code>Pipeline([("tfidf",TfidfVectorizer(ngram_range=(1,2), min_df=5, sublinear_tf=True)), ("nb",MultinomialNB(alpha=1.0))])</code>，跑 5-fold CV，回報 PR-AUC + calibrated probabilities。</p>
+<p data-lang="en"><code>Pipeline([("tfidf",TfidfVectorizer(ngram_range=(1,2), min_df=5, sublinear_tf=True)), ("nb",MultinomialNB(alpha=1.0))])</code>, 5-fold CV, report PR-AUC + calibrated probs.</p>
+</div>
+</div>
+
+<section class="section" id="reflection">
+<div class="reflection-q">
+<h4 data-zh="反思題（先想 30 秒）" data-en="Reflection (think 30s)">反思題</h4>
+<ol>
+<li data-lang="zh">為什麼 NB 在 ranking 上正確但 calibration 上錯？用 Domingos-Pazzani 1997 的論點回答。</li>
+<li data-lang="en">Why is NB right on ranking but wrong on calibration? Answer using Domingos-Pazzani 1997.</li>
+<li data-lang="zh">SVM 的 dual form 只依賴 support vectors——這在記憶體和推論速度上意味著什麼？</li>
+<li data-lang="en">SVM's dual form depends only on support vectors — what does this mean for memory and inference speed?</li>
+<li data-lang="zh">如果你用 polynomial kernel d=10，模型會發生什麼？要怎麼正則化？</li>
+<li data-lang="en">If you use polynomial kernel with d=10, what happens to the model? How would you regularize?</li>
+<li data-lang="zh">為什麼 hinge loss 在 margin 內<em>線性</em>增長而不是平方？跟 Logistic 的 log-loss 比較。</li>
+<li data-lang="en">Why does hinge loss grow <em>linearly</em> inside the margin, not quadratically? Compare with Logistic's log-loss.</li>
+<li data-lang="zh">給定 5000 樣本、100 特徵的二元分類，你會選 NB、Linear SVM、RBF SVM 還是 XGBoost？為什麼？</li>
+<li data-lang="en">Given 5000 samples, 100 features, binary task — would you pick NB, Linear SVM, RBF SVM, or XGBoost? Why?</li>
+</ol>
+</div>
+</section>
+
+<section class="section" id="advanced">
+<div class="advanced-note">
+<span class="adv-label" data-zh="進階研究員彩蛋" data-en="ADVANCED · RESEARCHER">進階研究員彩蛋</span>
+<h4 data-zh="2024–2026 SOTA：ThunderSVM、RFF、Bayesian NB、NTK 連結" data-en="2024–2026 SOTA: ThunderSVM, RFF, Bayesian NB, NTK link">2024–2026 SOTA</h4>
+<p data-lang="zh"><strong>ThunderSVM 0.5 (Wen et al, 2018→2024 update):</strong> GPU 加速 SVM，相比 LIBSVM 在 CPU 上快 1000×。提供 sklearn-style API，<code>from thundersvm import SVC</code>。適合 n=10⁵–10⁶ 樣本仍想用 kernel SVM 的場景。</p>
+<p data-lang="en"><strong>ThunderSVM 0.5 (Wen et al, 2018→2024 update):</strong> GPU-accelerated SVM, 1000× over CPU LIBSVM. sklearn-style API: <code>from thundersvm import SVC</code>. Use when n=10⁵–10⁶ and you still want kernel SVM.</p>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Random Fourier Features (Rahimi-Recht 2007)" data-en="🔍 Click: Random Fourier Features (Rahimi-Recht 2007)">🔍 RFF — approximate RBF kernel</summary>
+<div class="detail-body" data-lang="zh"><p>Random Fourier Features (Rahimi-Recht NIPS 2007, DOI:10.5555/2981562.2981710) 用 D 個 random projection ω<sub>i</sub> 把 RBF kernel 近似成 K(x,x′) ≈ z(x)ᵀz(x′)，其中 z(x)=[cos(ωᵀx+b)]/√D。然後 SVM 在 z 上跑 linear SVM——複雜度從 O(n³) 降到 O(nD)。</p>
+<p>2014 NIPS Test-of-Time Award 得主。sklearn: <code>from sklearn.kernel_approximation import RBFSampler; rff=RBFSampler(gamma=.5, n_components=500); Xz=rff.fit_transform(X); LinearSVC().fit(Xz, y)</code>。</p></div>
+<div class="detail-body" data-lang="en"><p>Random Fourier Features (Rahimi-Recht NIPS 2007, DOI:10.5555/2981562.2981710) approximate RBF kernel as K(x,x′) ≈ z(x)ᵀz(x′) via D random projections; z(x)=[cos(ωᵀx+b)]/√D. Then run linear SVM in z-space — complexity O(n³) → O(nD).</p>
+<p>2014 NIPS Test-of-Time Award. sklearn: <code>RBFSampler(gamma=.5, n_components=500)</code> → <code>LinearSVC()</code>.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：Bayesian Naive Bayes (Beta-Binomial 與 Dirichlet 先驗)" data-en="🔍 Click: Bayesian Naive Bayes (Beta-Binomial & Dirichlet priors)">🔍 Bayesian NB — uncertainty in NB</summary>
+<div class="detail-body" data-lang="zh"><p>傳統 NB 用 MLE 估參，沒 uncertainty。Bayesian NB 把 P(x<sub>j</sub>|y) 視為 Beta (或 Dirichlet for multinomial) 分布、加先驗 → 後驗分布，輸出帶不確定性的機率。Witten 2011 + 2024 PyMC 4 提供現成實作。</p>
+<p>應用：醫學初篩，當訓練樣本只有 50 筆，傳統 NB 信心過頭；Bayesian NB 輸出 P(disease) = [0.45, 0.85] 信賴區間，給醫師更實用的決策依據。</p></div>
+<div class="detail-body" data-lang="en"><p>Vanilla NB uses MLE — no uncertainty. Bayesian NB places Beta (or Dirichlet for multinomial) prior on P(x<sub>j</sub>|y) → posterior distribution; output probabilities come with uncertainty. Witten 2011 + 2024 PyMC 4 give ready implementations.</p>
+<p>Use case: clinical triage with only 50 training samples — vanilla NB over-confident; Bayesian NB gives P(disease) = [0.45, 0.85] credible interval — far more useful for clinician.</p></div>
+</details>
+
+<details class="detail-toggle"><summary data-zh="🔍 點開：NTK — SVM 與深度學習的橋梁" data-en="🔍 Click: NTK — bridge from SVM to deep learning">🔍 NTK (Jacot et al, NeurIPS 2018)</summary>
+<div class="detail-body" data-lang="zh"><p>Neural Tangent Kernel (Jacot-Gabriel-Hongler NeurIPS 2018, arXiv:1806.07572) 證明：無限寬的 NN 在 SGD 訓練下，等價於用一個特定 kernel 跑 kernel regression。這個 kernel 叫 NTK。意義：</p>
+<ul style="padding-left:18px;margin:6px 0;color:#f5e9d3"><li>解釋了為什麼過度參數化的 NN 仍然能泛化。</li><li>連結 SVM/Kernel methods 與 deep learning 的理論。</li><li>2024 Tabular NTK (Wang et al) 在小 N 表格上勝過 XGBoost 1.5% AUROC。</li></ul></div>
+<div class="detail-body" data-lang="en"><p>Neural Tangent Kernel (Jacot-Gabriel-Hongler NeurIPS 2018, arXiv:1806.07572) proves: an infinitely-wide NN trained by SGD is equivalent to kernel regression with a specific kernel — the NTK. Implications:</p>
+<ul style="padding-left:18px;margin:6px 0;color:#f5e9d3"><li>Explains why over-parameterized NNs still generalize.</li><li>Connects SVM/kernel methods to deep learning theory.</li><li>2024 Tabular NTK (Wang et al.) beats XGBoost by 1.5% AUROC on small-N tabular.</li></ul></div>
+</details>
+
+<p data-lang="zh"><strong>2025 cheat-sheet code:</strong></p>
+<p data-lang="en"><strong>2025 cheat-sheet code:</strong></p>
+<p><code>from sklearn.kernel_approximation import RBFSampler<br>
+from sklearn.svm import LinearSVC<br>
+from sklearn.pipeline import Pipeline<br>
+from sklearn.preprocessing import StandardScaler<br>
+fast_rbf_svm = Pipeline([<br>
+&nbsp;&nbsp;("sc", StandardScaler()),<br>
+&nbsp;&nbsp;("rff", RBFSampler(gamma=0.5, n_components=500, random_state=42)),<br>
+&nbsp;&nbsp;("svc", LinearSVC(C=1.0, dual="auto", max_iter=5000))])<br>
+fast_rbf_svm.fit(X_tr, y_tr)  # O(nD) instead of O(n³)</code></p>
+</div>
+</section>
+
 <section class="quiz-section">
 <h3>📝 <span data-zh="自我檢測" data-en="Self-Check">自我檢測</span></h3>
 <div class="quiz-q" data-answer="1">
@@ -189,6 +503,12 @@ lsvc = LinearSVC(C=<span class="num">1.0</span>, dual=<span class="str">"auto"</
 <div class="quiz-opt" data-idx="3"><span data-lang="zh">D. 鄰居數量</span><span data-lang="en">D. Number of neighbors</span></div>
 </div><div class="quiz-feedback" id="fb3"></div></div>
 </section>
+
+<div class="history-note">
+<strong data-zh="趣聞：" data-en="Anecdote:">趣聞：</strong>
+<span data-lang="zh">Thomas Bayes 牧師於 1761 年過世時，他的論文還沒發表——他的朋友 Richard Price 兩年後整理出版這篇《An Essay towards solving a Problem in the Doctrine of Chances》。Bayes 自己終其一生只發表過<strong>兩篇</strong>論文，卻定義了現代統計學的半邊江山。同樣的故事在 Vapnik 身上重演：他 1962 在莫斯科發展 statistical learning theory，但因鐵幕受阻、論文 1990 年代才在西方廣為人知——一個世代後，他開創的 SVM 與 VC dimension 成為機器學習基石。<em>歷史耐心：好的數學會等到屬於它的時代</em>。</span>
+<span data-lang="en">Reverend Thomas Bayes died in 1761 with this paper unpublished — his friend Richard Price posthumously edited and published <em>An Essay towards solving a Problem in the Doctrine of Chances</em> two years later. Bayes himself published just <strong>two</strong> papers in his lifetime, yet defined half of modern statistics. Same story for Vapnik: he developed statistical learning theory in 1962 in Moscow, but the iron curtain delayed Western recognition until the 1990s — a generation later, the SVM and VC dimension he pioneered became foundations of ML. <em>Historical patience: good math waits for its time.</em></span>
+</div>
 
 <nav class="page-nav">
 <a href="decision-trees-rf.html"><span class="nav-dir" data-zh="← 上一章" data-en="← Previous">← 上一章</span><span class="nav-title" data-zh="Ch 6: 決策樹、隨機森林與梯度提升" data-en="Ch 6: Decision Trees, Random Forests &amp; Gradient Boosting">Ch 6: 決策樹、隨機森林與梯度提升</span></a>
@@ -247,6 +567,48 @@ function updateNB(indep){
 document.querySelectorAll('[data-indep]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-indep]').forEach(x=>x.classList.remove('active'));b.classList.add('active');updateNB(b.dataset.indep==='on');}));
 document.addEventListener('langchange',()=>updateNB(document.querySelector('[data-indep].active').dataset.indep==='on'));
 updateNB(true);
+
+// ============= SVM kernel + C + gamma widget =============
+let currentKernel='linear';
+function updateSVM(){
+  const C=+document.getElementById('svmC').value;
+  const G=+document.getElementById('svmG').value;
+  document.getElementById('svmCVal').textContent=C.toFixed(2);
+  document.getElementById('svmGVal').textContent=G.toFixed(2);
+  // Synthetic stats based on kernel, C, gamma
+  let margin, nSV, complexity;
+  if(currentKernel==='linear'){
+    margin = (1.5/Math.sqrt(C)).toFixed(3);
+    nSV = Math.min(120, Math.round(12 + 30/C));
+    complexity = 'O(n)';
+  } else if(currentKernel==='poly'){
+    margin = (1.0/Math.sqrt(C)).toFixed(3);
+    nSV = Math.min(150, Math.round(25 + 35/C));
+    complexity = 'O(n²)';
+  } else {
+    margin = (0.8/Math.sqrt(C*G)).toFixed(3);
+    nSV = Math.min(200, Math.round(15 + 40/C + 20*G));
+    complexity = 'O(n²)–O(n³)';
+  }
+  const L=I18n.get();
+  const mL = L==='zh'?'估計 Margin':'~Margin';
+  const sL = L==='zh'?'Support Vectors':'Support Vectors';
+  const cL = L==='zh'?'訓練複雜度':'Train Complexity';
+  const fL = L==='zh'?'Kernel':'Kernel';
+  document.getElementById('svmKPI').innerHTML=
+    `<div class="kpi-card"><span class="kpi-num">${currentKernel}</span><span class="kpi-label">${fL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${margin}</span><span class="kpi-label">${mL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num">${nSV}</span><span class="kpi-label">${sL}</span></div>`+
+    `<div class="kpi-card"><span class="kpi-num" style="font-size:1.2rem">${complexity}</span><span class="kpi-label">${cL}</span></div>`;
+}
+document.querySelectorAll('[data-kernel]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-kernel]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); currentKernel=b.dataset.kernel; updateSVM();
+}));
+document.getElementById('svmC').addEventListener('input',updateSVM);
+document.getElementById('svmG').addEventListener('input',updateSVM);
+document.addEventListener('langchange',updateSVM);
+updateSVM();
 
 const QF={zh:{q1_y:'NB 假設特徵在類別 y 下條件獨立。',q1_n:'B 為正確答案。',q2_y:'Kernel trick：用 K(x,x′) 替代真實高維映射。',q2_n:'C 為正確答案。',q3_y:'C 控制誤分類懲罰，大 C → 窄間隔。',q3_n:'A 為正確答案。'},
           en:{q1_y:'NB assumes conditional independence of features given y.',q1_n:'Correct answer is B.',q2_y:'Kernel trick: K(x,x′) replaces explicit high-D mapping.',q2_n:'Correct answer is C.',q3_y:'C controls misclassification penalty; large C → narrow margin.',q3_n:'Correct answer is A.'}};
